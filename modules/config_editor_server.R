@@ -1,0 +1,882 @@
+#config_editor_server
+config_editor_server<- function(input, output, session){
+  
+  ns <- session$ns
+  
+  #contact handlers
+  #---------------------------------------------------------------------------------------------
+  addContactSource <- function(handler = character(0), source = character(0)){
+    if(length(handler)>0) if(!handler %in% geoflow::list_contact_handlers()$id) handler <- ""
+    data.frame(
+      handler = handler,
+      source = source
+    )
+  }
+  
+  #entity handlers
+  #---------------------------------------------------------------------------------------------
+  addEntitySource <- function(handler = character(0), source = character(0)){
+    if(length(handler)>0) if(!handler %in% geoflow::list_entity_handlers()$id) handler <- ""
+    data.frame(
+      handler = handler, 
+      source = source
+    )
+  }
+  
+  #dictionary handlers
+  #---------------------------------------------------------------------------------------------
+  addDictionarySource <- function(handler = character(0), source = character(0)){
+    if(length(handler)>0) if(!handler %in% geoflow::list_dictionary_handlers()$id) handler <- ""
+    data.frame(
+      handler = handler, 
+      source = source
+    )
+  }
+  
+  #configuration loader
+  #---------------------------------------------------------------------------------------------
+  #loadConfigurationFile
+  loadConfigurationFile <- function(){
+    config <- try(jsonlite::read_json(input$jsonfile$datapath))
+    return(config)
+  }
+  
+  #loadConfigurationUI
+  loadConfigurationUI <- function(config){
+    
+    #load profile
+    ctrl_profile$id = config$id
+    if(!is.null(config$profile$id)) ctrl_profile$id = config$profile$id
+    ctrl_profile$mode = config$mode
+    if(!is.null(config$profile$mode)) ctrl_profile$mode = config$profile$mode
+    ctrl_profile$name = config$profile$name
+    ctrl_profile$project = config$profile$project
+    ctrl_profile$organization = config$profile$organization
+    ctrl_profile$logos = unlist(config$profile$logos)
+    
+    #load metadata
+    #contacts
+    config_contacts <- config$metadata$contacts
+    if(!is.null(names(config_contacts))) config_contacts <- list(config_contacts)
+    ctrl_metadata$contacts = do.call("rbind", lapply(config_contacts, function(config_contact){
+      addContactSource(handler = config_contact$handler, source = config_contact$source)
+    }))
+    #entities
+    config_entities <- config$metadata$entities
+    if(!is.null(names(config_entities))) config_entities <- list(config_entities)
+    ctrl_metadata$entities = do.call("rbind", lapply(config_entities, function(config_entity){
+      addEntitySource(handler = config_entity$handler, source = config_entity$source)
+    }))
+    
+    #load software
+    ctrl_software$list <- config$software
+    
+    #load actions
+    ctrl_actions$list <- config$actions
+  }
+  
+  #controllers
+  #------------------------------------------------------------------------------------
+  #profile controller
+  ctrl_profile <- reactiveValues(
+    id = "",
+    mode = "entity",
+    name = "",
+    project = "",
+    organization = "",
+    logos = list()
+  )
+  #metadata controller
+  ctrl_metadata <- reactiveValues(
+    contacts = addContactSource(),
+    entities = addEntitySource(),
+    dictionary = addDictionarySource()
+  )
+  #software controller
+  ctrl_software <- reactiveValues(
+    list = NULL
+  )
+  #actions controller
+  ctrl_actions <- reactiveValues(
+    list = NULL
+  )
+  #options controller
+  ctrl_options <- reactiveValues(
+    line_separator = geoflow::get_line_separator()
+  )
+  #------------------------------------------------------------------------------------
+  
+  #PROFILE
+  #=====================================================================================
+  output$profile <- renderUI({
+    tagList(
+      textInput(inputId = "profile_id", label = "Workflow identifier", value = ctrl_profile$id),
+      selectizeInput(inputId = "profile_mode", label = "Workflow mode", choices = c("raw", "entity"), selected = ctrl_profile$mode),
+      textInput(inputId = "profile_name", label = "Name", value = ctrl_profile$name),
+      textInput(inputId = "profile_project", label = "Project", value = ctrl_profile$project),
+      textInput(inputId = "profile_organization", label = "Organization", value = ctrl_profile$organization),
+      selectizeInput(inputId = "profile_logos", label = "Logos", choices = ctrl_profile$logos, selected = ctrl_profile$logos,
+                     multiple = TRUE, options = list(create = TRUE))
+    )
+  })
+  
+  #METADATA
+  #=====================================================================================
+  #metadata table handler
+  metadataTableHandler <- function(data){
+    DT::datatable({
+      colnames(data) <- c("Source", "Handler")
+      data
+      }, 
+      #editable = "cell",
+      #editable = list(target = "cell", disable = list(columns = 0)), 
+      selection='single', escape=FALSE,rownames=FALSE,
+      options=list(
+        paging = FALSE,
+        searching = FALSE,
+        preDrawCallback = JS(
+          'function() {
+                  Shiny.unbindAll(this.api().table().node()); }'
+        ),
+        drawCallback = JS('function() {
+                        Shiny.bindAll(this.api().table().node()); }'
+        ),
+        autoWidth = FALSE,
+        columnDefs = list(
+          list(width = '100px', targets = c(0)),
+          list(width = '400px', targets = c(1),
+               render = JS("function(data, type, full, meta) {
+                           var html = data;
+                           if(data.startsWith(\"http://\") | data.startsWith(\"https://\")){
+                              html = '<a href=\"' + data + '\" target=\"_blank\">'+data+'</a>';
+                           }
+                           var gsheet_handler = full[0] == \"gsheet\";
+                           if(gsheet_handler) if(!data.startsWith(\"https://docs.google.com/spreadsheets\")){
+                              html += '<br><div style=\"color:red;padding:2px;\" role=\"alert\">Invalid Google spreadsheets link</div>';
+                           }
+                           return html;
+                        }"))
+        )
+      ))
+  }
+  
+  #contacts
+  #-----------------------------------------------------------------------------------------------------
+  output$tbl_contacts = DT::renderDT(
+    metadataTableHandler(ctrl_metadata$contacts),
+    options = list(lengthChange = FALSE)
+  )
+  #contact form
+  showContactModal <- function(new = TRUE, handler = "", source = ""){
+    title_prefix <- ifelse(new, "Add", "Modify")
+    form_action <- tolower(title_prefix)
+    showModal(modalDialog(title = sprintf("%s contact source", title_prefix),
+                          selectInput(ns("contact_form_handler"), "Handler:",choices=geoflow::list_contact_handlers()$id, selected = handler),
+                          textInput(ns("contact_form_source"), "Source", value = source), 
+                          actionButton(ns(sprintf("contact_%s_go", form_action)), title_prefix),
+                          easyClose = TRUE, footer = NULL ))
+  }
+  #contact/add
+  observeEvent(input$add_contact,{
+    showContactModal(new = TRUE)
+  })
+  observeEvent(input$contact_add_go, {
+    new_contact <- addContactSource(handler = input$contact_form_handler, source = input$contact_form_source)
+    ctrl_metadata$contacts <- rbind(ctrl_metadata$contacts, new_contact)
+    removeModal()
+  })
+  #contact/modify
+  observeEvent(input$modify_contact,{
+    if(length(input$tbl_contacts_rows_selected)>=1 ){
+      contact_sel <- ctrl_metadata$contacts[input$tbl_contacts_rows_selected,]
+      showContactModal(new = FALSE, handler = contact_sel$handler, contact_sel$source)
+    }else{
+      modalDialog(
+        title = "Warning",
+        paste("Please select the row that you want to edit!" ),easyClose = TRUE
+      )
+    }
+  })
+  observeEvent(input$contact_modify_go, {
+    mod_contact <- addContactSource(handler = input$contact_form_handler, source = input$contact_form_source)
+    ctrl_metadata$contacts[input$tbl_contacts_rows_selected,"handler"] <- mod_contact$handler
+    ctrl_metadata$contacts[input$tbl_contacts_rows_selected,"source"] <- mod_contact$source
+    removeModal()
+  })
+  #contact/delete
+  observeEvent(input$delete_contact,{
+    showModal(
+      if(length(input$tbl_contacts_rows_selected)>=1 ){
+        modalDialog(
+          title = "Warning",
+          paste("Are you sure to delete",length(input$tbl_contacts_rows_selected),"contact source(s)?" ),
+          footer = tagList(
+            modalButton("Cancel"),
+            actionButton(ns("contact_delete_go"), "Yes")
+          ), easyClose = TRUE)
+      }else{
+        modalDialog(
+          title = "Warning",
+          paste("Please select contact source(s) that you want to delete!" ),easyClose = TRUE
+        )
+      }
+    )
+  })
+  observeEvent(input$contact_delete_go, {
+    ctrl_metadata$contacts=ctrl_metadata$contacts[-input$tbl_contacts_rows_selected, ]
+    removeModal()
+  })
+  
+  
+  #entities
+  #----------------------------------------------------------------------------------------------------
+  output$tbl_entities = DT::renderDT(
+    metadataTableHandler(ctrl_metadata$entities),
+    options = list(lengthChange = FALSE)
+  )
+  #entity form
+  showEntityModal <- function(new = TRUE, handler = "", source = ""){
+    title_prefix <- ifelse(new, "Add", "Modify")
+    form_action <- tolower(title_prefix)
+    showModal(modalDialog(title = sprintf("%s entity source", title_prefix),
+                          selectInput(ns("entity_form_handler"), "Handler:",choices=geoflow::list_entity_handlers()$id, selected = handler),
+                          textInput(ns("entity_form_source"), "Source", value = source), 
+                          actionButton(ns(sprintf("entity_%s_go", form_action)), title_prefix),
+                          easyClose = TRUE, footer = NULL ))
+  }
+  #entity/add
+  observeEvent(input$add_entity,{
+    showEntityModal(new = TRUE)
+  })
+  observeEvent(input$entity_add_go, {
+    new_entity <- addEntitySource(handler = input$entity_form_handler, source = input$entity_form_source)
+    ctrl_metadata$entities <- rbind(ctrl_metadata$entities, new_entity)
+    removeModal()
+  })
+  #entity/modify
+  observeEvent(input$modify_entity,{
+    if(length(input$tbl_entities_rows_selected)>=1 ){
+      entity_sel <- ctrl_metadata$entities[input$tbl_entities_rows_selected,]
+      showEntityModal(new = FALSE, handler = entity_sel$handler, entity_sel$source)
+    }else{
+      modalDialog(
+        title = "Warning",
+        paste("Please select the row that you want to edit!" ),
+        easyClose = TRUE
+      )
+    }
+  })
+  observeEvent(input$entity_modify_go, {
+    mod_entity <- addEntitySource(handler = input$entity_form_handler, source = input$entity_form_source)
+    ctrl_metadata$entities[input$tbl_entities_rows_selected,"handler"] <- mod_entity$handler
+    ctrl_metadata$entities[input$tbl_entities_rows_selected,"source"] <- mod_entity$source
+    removeModal()
+  })
+  #entity/delete
+  observeEvent(input$delete_entity,{
+    showModal(
+      if(length(input$tbl_entities_rows_selected)>=1 ){
+        modalDialog(
+          title = "Warning",
+          paste("Are you sure to delete",length(input$tbl_entities_rows_selected),"entity source(s)?" ),
+          footer = tagList(
+            modalButton("Cancel"),
+            actionButton(ns("entity_delete_go"), "Yes")
+          ), easyClose = TRUE)
+      }else{
+        modalDialog(
+          title = "Warning",
+          paste("Please select entity source(s) that you want to delete!" ),easyClose = TRUE
+        )
+      }
+    )
+  })
+  observeEvent(input$entity_delete_go, {
+    ctrl_metadata$entities=ctrl_metadata$entities[-input$tbl_entities_rows_selected, ]
+    removeModal()
+  })
+  
+  #dictionary
+  #-----------------------------------------------------------------------------------------------------
+  output$tbl_dictionary = DT::renderDT(
+    metadataTableHandler(ctrl_metadata$dictionary),
+    options = list(lengthChange = FALSE)
+  )
+  #dictionary form
+  showDictionaryModal <- function(new = TRUE, handler = "", source = ""){
+    title_prefix <- ifelse(new, "Add", "Modify")
+    form_action <- tolower(title_prefix)
+    showModal(modalDialog(title = sprintf("%s dictionary source", title_prefix),
+                          selectInput(ns("dictionary_form_handler"), "Handler:",choices=geoflow::list_dictionary_handlers()$id, selected = handler),
+                          textInput(ns("dictionary_form_source"), "Source", value = source), 
+                          actionButton(ns(sprintf("dictionary_%s_go", form_action)), title_prefix),
+                          easyClose = TRUE, footer = NULL ))
+  }
+  #dictionary/add
+  observeEvent(input$add_dictionary,{
+    showDictionaryModal(new = TRUE)
+  })
+  observeEvent(input$dictionary_add_go, {
+    new_dictionary <- addDictionarySource(handler = input$dictionary_form_handler, source = input$dictionary_form_source)
+    ctrl_metadata$dictionary <- rbind(ctrl_metadata$dictionary, new_dictionary)
+    removeModal()
+  })
+  #dictionary/modify
+  observeEvent(input$modify_dictionary,{
+    if(length(input$tbl_dictionary_rows_selected)>=1 ){
+      dictionary_sel <- ctrl_metadata$dictionary[input$tbl_dictionary_rows_selected,]
+      showDictionaryModal(new = FALSE, handler = dictionary_sel$handler, dictionary_sel$source)
+    }else{
+      modalDialog(
+        title = "Warning",
+        paste("Please select the row that you want to edit!" ),easyClose = TRUE
+      )
+    }
+  })
+  observeEvent(input$dictionary_modify_go, {
+    mod_dictionary <- addDictionarySource(handler = input$dictionary_form_handler, source = input$dictionary_form_source)
+    ctrl_metadata$dictionary[input$tbl_dictionary_rows_selected,"handler"] <- mod_dictionary$handler
+    ctrl_metadata$dictionary[input$tbl_dictionary_rows_selected,"source"] <- mod_dictionary$source
+    removeModal()
+  })
+  #dictionary/delete
+  observeEvent(input$delete_dictionary,{
+    showModal(
+      if(length(input$tbl_dictionary_rows_selected)>=1 ){
+        modalDialog(
+          title = "Warning",
+          paste("Are you sure to delete",length(input$tbl_dictionary_rows_selected),"dictionary source(s)?" ),
+          footer = tagList(
+            modalButton("Cancel"),
+            actionButton(ns("dictionary_delete_go"), "Yes")
+          ), easyClose = TRUE)
+      }else{
+        modalDialog(
+          title = "Warning",
+          paste("Please select dictionary source(s) that you want to delete!" ),easyClose = TRUE
+        )
+      }
+    )
+  })
+  observeEvent(input$dictionary_delete_go, {
+    ctrl_metadata$dictionary=ctrl_metadata$dictionary[-input$tbl_dictionary_rows_selected, ]
+    removeModal()
+  })
+  
+  #SOFTWARE
+  #=====================================================================================
+  #software summary table
+  #----------------------------------------------------------------------------------------------------
+  output$tbl_software = DT::renderDT({
+      DT::datatable(
+        {
+          in_software <- cbind(
+            ' ' = if(length(ctrl_software$list)>0) '<img src=\"https://raw.githubusercontent.com/DataTables/DataTables/master/examples/resources/details_open.png\"/>' else character(0),
+            'json' = sapply(ctrl_software$list, function(x){ as.character(jsonlite::toJSON(x, auto_unbox = TRUE)) }),
+            data.frame(
+              id = if(length(ctrl_software$list)>0) sapply(ctrl_software$list, function(x){x$id}) else character(0),
+              type = if(length(ctrl_software$list)>0) sapply(ctrl_software$list, function(x){x$type}) else character(0),
+              software_type = if(length(ctrl_software$list)>0) sapply(ctrl_software$list, function(x){x$software_type}) else character(0)
+            )
+          )
+          in_software$def = if(length(ctrl_software$list)>0) geoflow::list_software()[sapply(in_software$software_type, function(x){which(x ==geoflow::list_software()$software_type)}),]$definition else character(0)
+          colnames(in_software)[colnames(in_software) %in% c("id","type","software_type","def")] <- c("Identifier", "Type (input/output)", "Software Type", "Definition")
+          in_software
+        },
+        selection='single', escape=FALSE,rownames=FALSE,
+        options=list(
+          paging = FALSE,
+          searching = FALSE,
+          preDrawCallback = JS('function() {
+                                Shiny.unbindAll(this.api().table().node()); }'
+          ),
+          drawCallback = JS('function() {
+                             Shiny.bindAll(this.api().table().node()); }'
+          ),
+          columnDefs = list(
+            list(orderable = FALSE, className = 'details-control', targets = 0),
+            list(visible = FALSE, targets = 1)
+          )
+        ),
+        callback = JS("
+                table.column(1).nodes().to$().css({cursor: 'pointer'});
+                var format = function(d) {
+                  var json = JSON.parse(d[1]);
+                  var html = '<div style=\"background-color:#eee; padding: .5em;\" class=\"row\">';
+                  if(json.parameters){
+                    var params = Object.keys(json.parameters);
+                    html += '<div class=\"col-md-6\">';
+                    html += '<h4><b>Parameters</b></h4><hr style=\"margin-top:0px;margin-bottom:4px;border:1px solid #000;\">';
+                    html += '<ul>';
+                    for(var i=0;i<params.length;i++){
+                      var param = params[i]
+                      html += '<li><b>'+param+'</b>: '+json.parameters[param] + '</li>';
+                    }
+                     html += '</ul>';
+                    html += '</div>';
+                  }
+                  if(json.properties){
+                    var props = Object.keys(json.properties);
+                    html += '<div class=\"col-md-6\">';
+                    html += '<h4><b>Properties</b></h4><hr style=\"margin-top:0px;margin-bottom:4px;border:1px solid #000;\">';
+                    html += '<ul>';
+                    for(var i=0;i<props.length;i++){
+                      var prop = props[i]
+                      html += '<li><b>'+prop+'</b>: '+json.properties[prop] + '</li>';
+                    }
+                     html += '</ul>';
+                    html += '</div>';
+                  }
+                  html += '</div>';
+                  return html;
+                };
+                table.on('click', 'td.details-control', function() {
+                var td = $(this), row = table.row(td.closest('tr'));
+                if (row.child.isShown()) {
+                row.child.hide();
+                td.html('<img src=\"https://raw.githubusercontent.com/DataTables/DataTables/master/examples/resources/details_open.png\"/>');
+                } else {
+                row.child(format(row.data())).show();
+                td.html('<img src=\"https://raw.githubusercontent.com/DataTables/DataTables/master/examples/resources/details_close.png\"/>');
+                }
+                });"
+        )
+      )
+    },
+    options = list(lengthChange = FALSE)
+  )
+  #software form
+  showSoftwareModal <- function(new = TRUE, software = NULL){
+    title_prefix <- ifelse(new, "Add", "Modify")
+    form_action <- tolower(title_prefix)
+    showModal(modalDialog(title = sprintf("%s software", title_prefix),
+                          textInput(ns("software_form_id"), "Id:", value = software$id),
+                          selectInput(ns("software_form_type"), "Type:",choices=c("input", "output"), selected = software$type),
+                          selectInput(ns("software_form_software_type"), "Type:",choices=geoflow::list_software()$software_type, selected = software$software_type),
+                          uiOutput(ns("software_form_details")),
+                          actionButton(ns(sprintf("software_%s_go", form_action)), title_prefix),
+                          easyClose = TRUE, footer = NULL ))
+  }
+  #software
+  getSoftwareFromModal <- function(){
+    software <- list(
+      id = input$software_form_id,
+      type = input$software_form_type,
+      software_type = input$software_form_software_type,
+      parameters = list(),
+      properties = list()
+    )
+    params <- geoflow::list_software_parameters(software$software_type, raw = TRUE)
+    paramNames <- names(params)
+    if(length(paramNames)>0){
+      software$parameters <- lapply(paramNames, function(paramName){
+        input[[sprintf("software_form_parameters_%s", paramName)]]
+      })
+      names(software$parameters) <- paramNames
+    }
+    props <- geoflow::list_software_properties(software$software_type, raw = TRUE)
+    propNames <- names(props)
+    if(length(propNames)>0){
+      software$properties <- lapply(propNames, function(propName){
+        input[[sprintf("software_form_properties_%s", propName)]]
+      })
+      names(software$properties) <- propNames
+    }
+    return(software)
+  }
+  #software/add
+  observeEvent(input$add_software,{
+    showSoftwareModal(new = TRUE)
+  })
+  #observer software_type selection in modal
+  observeEvent(input$software_form_software_type, {
+    output$software_form_details <- renderUI({
+      
+      software <- NULL
+      if(!is.null(input$tbl_software_rows_selected)){
+        print(sprintf("Row selected: %s", input$tbl_software_rows_selected))
+        software <- ctrl_software$list[[input$tbl_software_rows_selected]]
+        print(software)
+      }
+      
+      software_details <- list(
+        parameters = geoflow::list_software_parameters(input$software_form_software_type, raw = TRUE),
+        properties = geoflow::list_software_properties(input$software_form_software_type, raw = TRUE)
+      )
+      items <- list()
+      if(length(software_details$parameters)>0) items <- c(items, "Parameters")
+      if(length(software_details$properties)>0) items <- c(items, "Properties")
+      
+      if(length(items)>0){
+        do.call("tabsetPanel", c(
+          id = "software_form_details_tabs", 
+          type = "pills",
+          lapply(items, function(item){
+            tabPanel(
+              title = item,
+              value = tolower(item),
+              br(),
+              do.call("tagList", lapply(names(software_details[[tolower(item)]]), function(name){
+                software_param <- software_details[[tolower(item)]][[name]]
+                if(!is.null(software_param$choices)){
+                  selectizeInput(
+                    inputId = ns(sprintf("software_form_%s_%s", tolower(item), name)),
+                    label = software_param$def, selected = software[[tolower(item)]][[name]],
+                    choices = software_param$choices
+                  ) 
+                }else{
+                  clazz <- software_param$class
+                  if(length(clazz)==0) clazz = ""
+                  switch(clazz,
+                    "character" = textInput(
+                      inputId = ns(sprintf("software_form_%s_%s", tolower(item), name)),
+                      label = software_param$def, value = software[[tolower(item)]][[name]]
+                    ),
+                    "integer" = numericInput(
+                      inputId = ns(sprintf("software_form_%s_%s", tolower(item), name)),
+                      label = software_param$def, value = software[[tolower(item)]][[name]]
+                    ),
+                    "numeric" = numericInput(
+                      inputId = ns(sprintf("software_form_%s_%s", tolower(item), name)),
+                      label = software_param$def, value = software[[tolower(item)]][[name]]
+                    ),
+                    textInput(
+                      inputId = ns(sprintf("software_form_%s_%s", tolower(item), name)),
+                      label = software_param$def, value = software[[tolower(item)]][[name]]
+                    )
+                  )
+                }
+              }))       
+            )
+          })
+        ))
+      }else{
+        tags$div()
+      }
+    })
+  })
+  observeEvent(input$software_add_go, {
+    ctrl_software$list[[length(ctrl_software$list)+1]] <- getSoftwareFromModal()
+    removeModal()
+  })
+  #entity/modify
+  observeEvent(input$modify_software,{
+    if(length(input$tbl_software_rows_selected)>=1 ){
+      software_sel <- ctrl_software$list[[input$tbl_software_rows_selected]]
+      showSoftwareModal(new = FALSE, software_sel)
+    }else{
+      modalDialog(
+        title = "Warning",
+        paste("Please select the row that you want to edit!" ),
+        easyClose = TRUE
+      )
+    }
+  })
+  observeEvent(input$software_modify_go, {
+    ctrl_software$list[[input$tbl_software_rows_selected]] <- getSoftwareFromModal()
+    removeModal()
+  })
+  #software/delete
+  observeEvent(input$delete_software,{
+    showModal(
+      if(length(input$tbl_software_rows_selected)>=1 ){
+        modalDialog(
+          title = "Warning",
+          paste("Are you sure to delete",length(input$tbl_software_rows_selected),"software?" ),
+          footer = tagList(
+            modalButton("Cancel"),
+            actionButton(ns("software_delete_go"), "Yes")
+          ), easyClose = TRUE)
+      }else{
+        modalDialog(
+          title = "Warning",
+          paste("Please select software that you want to delete!" ),easyClose = TRUE
+        )
+      }
+    )
+  })
+  observeEvent(input$software_delete_go, {
+    ctrl_software$list[[input$tbl_software_rows_selected]] <- NULL
+    ctrl_software$list <- ctrl_software$list[!sapply(ctrl_software$list, is.null)]
+    removeModal()
+  })
+  
+  #ACTIONS
+  #=====================================================================================
+  #actions summary table
+  #----------------------------------------------------------------------------------------------------
+  output$tbl_actions = DT::renderDT({
+    DT::datatable(
+      {
+        in_action <- cbind(
+          ' ' = if(length(ctrl_actions$list)>0) '<img src=\"https://raw.githubusercontent.com/DataTables/DataTables/master/examples/resources/details_open.png\"/>' else character(0),
+          'json' = sapply(ctrl_actions$list, function(x){ as.character(jsonlite::toJSON(x, auto_unbox = TRUE)) }),
+          data.frame(
+            id = if(length(ctrl_actions$list)>0) sapply(ctrl_actions$list, function(x){x$id}) else character(0),
+            run = if(length(ctrl_actions$list)>0) sapply(ctrl_actions$list, function(x){as.logical(x$run)}) else logical(0)
+          )
+        )
+        in_action$type = if(length(ctrl_actions$list)>0) geoflow::list_actions()[sapply(in_action$id, function(x){which(x==geoflow::list_actions()$id)}),]$type else character(0)
+        in_action$def = if(length(ctrl_actions$list)>0) geoflow::list_actions()[sapply(in_action$id, function(x){which(x==geoflow::list_actions()$id)}),]$definition else character(0)
+        colnames(in_action)[colnames(in_action) %in% c("id","run","type","def")] <- c("Identifier", "Run?", "Action Type", "Definition")
+        print(in_action)
+        in_action
+      },
+      selection='single', escape=FALSE,rownames=FALSE,
+      options=list(
+        paging = FALSE,
+        searching = FALSE,
+        preDrawCallback = JS('function() {
+                                Shiny.unbindAll(this.api().table().node()); }'
+        ),
+        drawCallback = JS('function() {
+                             Shiny.bindAll(this.api().table().node()); }'
+        ),
+        columnDefs = list(
+          list(orderable = FALSE, className = 'details-control', targets = 0),
+          list(visible = FALSE, targets = 1)
+        )
+      ),
+      callback = JS("
+                table.column(1).nodes().to$().css({cursor: 'pointer'});
+                var format = function(d) {
+                  var json = JSON.parse(d[1]);
+                  var html = '<div style=\"background-color:#eee; padding: .5em;\" class=\"row\">';
+                  if(json.options){
+                    var options = Object.keys(json.options);
+                    html += '<div class=\"col-md-6\">';
+                    html += '<h4><b>Options</b></h4><hr style=\"margin-top:0px;margin-bottom:4px;border:1px solid #000;\">';
+                    html += '<ul>';
+                    for(var i=0;i<options.length;i++){
+                      var option = options[i]
+                      html += '<li><b>'+option+'</b>: '+json.options[option] + '</li>';
+                    }
+                     html += '</ul>';
+                    html += '</div>';
+                  }
+                  html += '</div>';
+                  return html;
+                };
+                table.on('click', 'td.details-control', function() {
+                var td = $(this), row = table.row(td.closest('tr'));
+                if (row.child.isShown()) {
+                row.child.hide();
+                td.html('<img src=\"https://raw.githubusercontent.com/DataTables/DataTables/master/examples/resources/details_open.png\"/>');
+                } else {
+                row.child(format(row.data())).show();
+                td.html('<img src=\"https://raw.githubusercontent.com/DataTables/DataTables/master/examples/resources/details_close.png\"/>');
+                }
+                });"
+      )
+    )
+  },
+  options = list(lengthChange = FALSE)
+  )
+  #action form
+  showActionModal <- function(new = TRUE, action = NULL){
+    title_prefix <- ifelse(new, "Add", "Modify")
+    form_action <- tolower(title_prefix)
+    showModal(modalDialog(title = sprintf("%s action", title_prefix),
+                          selectInput(ns("action_form_id"), "Type:",choices=geoflow::list_actions()$id, selected = action$id),
+                          selectInput(ns("action_form_run"), "Run:",choices=c(TRUE,FALSE), selected = action$run),
+                          uiOutput(ns("action_form_details")),
+                          actionButton(ns(sprintf("action_%s_go", form_action)), title_prefix),
+                          easyClose = TRUE, footer = NULL ))
+  }
+  #action
+  getActionFromModal <- function(){
+    action <- list(
+      id = input$action_form_id,
+      run = input$action_form_run,
+      options = list()
+    )
+    act_options <- geoflow::list_action_options(action$id, raw = TRUE)
+    act_optionNames <- names(act_options)
+    if(length(act_optionNames)>0){
+      action$options <- lapply(act_optionNames, function(optionName){
+        input[[sprintf("action_form_options_%s", optionName)]]
+      })
+      names(action$options) <- act_optionNames
+    }
+    return(action)
+  }
+  #action/add
+  observeEvent(input$add_action,{
+    showActionModal(new = TRUE)
+  })
+  #observer action id selection in modal
+  observeEvent(input$action_form_id, {
+    output$action_form_details <- renderUI({
+      
+      action <- NULL
+      if(!is.null(input$tbl_actions_rows_selected)){
+        print(sprintf("Row selected: %s", input$tbl_actions_rows_selected))
+        action <- ctrl_actions$list[[input$tbl_actions_rows_selected]]
+        print(action)
+      }
+      
+      act_options = geoflow::list_action_options(input$action_form_id, raw = TRUE)
+      print(act_options)
+      if(length(act_options)>0){
+        tags$div(
+            br(),
+            do.call("tagList", lapply(names(act_options), function(name){
+              act_option = act_options[[name]]
+              multiple <- ifelse(!is.null(act_option$multiple),act_option$multiple, FALSE)
+              if(!is.null(act_option$choices)){
+                selectizeInput(
+                  inputId = ns(sprintf("action_form_options_%s", name)),
+                  label = act_option$def, selected = ifelse(!is.null(action$options[[name]]), action$options[[name]], act_option$default),
+                  choices = act_option$choices, multiple = multiple,
+                  options = list(create = TRUE)
+                ) 
+              }else{
+                clazz <- act_option$class
+                if(length(clazz)==0) clazz = ""
+                
+                print(act_option)
+                print(clazz)
+                switch(clazz,
+                       "character" = textInput(
+                         inputId = ns(sprintf("action_form_options_%s", name)),
+                         label = act_option$def, value = ifelse(!is.null(action$options[[name]]), action$options[[name]], act_option$default)
+                       ),
+                       "integer" = numericInput(
+                         inputId = ns(sprintf("action_form_options_%s", name)),
+                         label = act_option$def, value = ifelse(!is.null(action$options[[name]]), action$options[[name]], act_option$default)
+                       ),
+                       "numeric" = numericInput(
+                         inputId = ns(sprintf("action_form_options_%s", name)),
+                         label = act_option$def, value = ifelse(!is.null(action$options[[name]]), action$options[[name]], ifelse(act_option$default!=Inf, act_option$default, 1))
+                       ),
+                       "logical" = selectizeInput(
+                         inputId = ns(sprintf("action_form_options_%s", name)),
+                         label = act_option$def, selected = ifelse(!is.null(action$options[[name]]), action$options[[name]], act_option$default),
+                         choices = if(!is.null(act_option$default)){as.character(c(act_option$default,!act_option$default))}else {c("FALSE","TRUE")},
+                         multiple = multiple,
+                         options = list(create = TRUE)
+                       ),
+                       textInput(
+                         inputId = ns(sprintf("action_form_options_%s", name)),
+                         label = act_option$def, value = as.character(ifelse(!is.null(action$options[[name]]), action$options[[name]], act_option$default))
+                       )
+                )
+              }
+            }))       
+          )
+      }else{
+        tags$div()
+      }
+    })
+  })
+  observeEvent(input$action_add_go, {
+    ctrl_actions$list[[length(ctrl_actions$list)+1]] <- getActionFromModal()
+    removeModal()
+  })
+  #action/modify
+  observeEvent(input$modify_action,{
+    if(length(input$tbl_actions_rows_selected)>=1 ){
+      action_sel <- ctrl_actions$list[[input$tbl_actions_rows_selected]]
+      showActionModal(new = FALSE, action_sel)
+    }else{
+      modalDialog(
+        title = "Warning",
+        paste("Please select the row that you want to edit!" ),
+        easyClose = TRUE
+      )
+    }
+  })
+  observeEvent(input$action_modify_go, {
+    ctrl_actions$list[[input$tbl_actions_rows_selected]] <- getActionFromModal()
+    removeModal()
+  })
+  #action/delete
+  observeEvent(input$delete_action,{
+    showModal(
+      if(length(input$tbl_action_rows_selected)>=1 ){
+        modalDialog(
+          title = "Warning",
+          paste("Are you sure to delete",length(input$tbl_action_rows_selected),"action(s)?" ),
+          footer = tagList(
+            modalButton("Cancel"),
+            actionButton(ns("action_delete_go"), "Yes")
+          ), easyClose = TRUE)
+      }else{
+        modalDialog(
+          title = "Warning",
+          paste("Please select action that you want to delete!" ),easyClose = TRUE
+        )
+      }
+    )
+  })
+  observeEvent(input$action_delete_go, {
+    ctrl_actions$list[[input$tbl_actions_rows_selected]] <- NULL
+    ctrl_actions$list <- ctrl_actions$list[!sapply(ctrl_actions$list, is.null)]
+    removeModal()
+  })
+  
+  
+  #OPTIONS
+  #=====================================================================================
+
+  
+  #CONFIGURATION LOAD
+  #=====================================================================================
+  #on config load
+  observeEvent(input$load_configuration,{
+    if(!is.null(input$jsonfile)){
+      config <- loadConfigurationFile()
+      print(names(config))
+      output$jsonfile_msg <- renderUI({
+        if(is(config, "try-error")){
+          tags$span("Please provide a valid JSON file!", style = "color:red;font-weight:bold;float:left;margin-top: 60px;margin-left: 5px;")
+        }else{
+          loadConfigurationUI(config)
+          tags$span("Valid JSON", style = "color:green;font-weight:bold;float:left;margin-top: 60px;margin-left: 5px;")
+        }
+      })
+    }else{
+      output$jsonfile_msg <- renderUI({
+        tags$span("No file specified!", style = "color:red;font-weight:bold;float:left;margin-top: 35px;margin-left: 5px;")
+      })
+    }
+  })
+  
+  #save configuration
+  getConfiguration <- function(){
+    out_json <- list(
+      id = ctrl_profile$id,
+      mode = ctrl_profile$mode,
+      profile = reactiveValuesToList(ctrl_profile),
+      metadata = reactiveValuesToList(ctrl_metadata),
+      software = ctrl_software$list,
+      actions = ctrl_actions$list
+    )
+    out_json <- rapply(out_json, function(x){
+      if(x[1] %in% c("TRUE","FALSE")) x <- as.logical(x); 
+      return(x)
+    }, classes = "character", deflt = NA_integer_, how = "replace")
+    return(out_json)
+  }
+  
+  #saveConfiguration
+  observeEvent(input$saveConfiguration,{
+    dir.create("out/configs", recursive = TRUE)
+    config_json <- getConfiguration()
+    jsonlite::write_json(config_json, 
+                         file.path("out/configs", paste0(config_json$profile$id, ".json")), 
+                         auto_unbox = TRUE, pretty = TRUE)
+  })
+  
+  #downloadConfiguration
+  output$downloadConfiguration <- downloadHandler(
+    filename = function(){ paste0("geoflow_config_", ctrl_profile$id, ".json")  },
+    content = function(con){
+      disable("downloadConfiguration")
+      config_json <- getConfiguration()
+      jsonlite::write_json(config_json, con, auto_unbox = TRUE, pretty = TRUE)
+      enable("downloadConfiguration")
+    }
+  )
+  
+}
