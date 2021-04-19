@@ -9,6 +9,14 @@ config_list_server<- function(input, output, session){
     list.files(GEOFLOW_DATA_DIR, pattern = ".json", full.names = TRUE)
   }
   
+  config_react <- reactivePoll(10, session,
+                               checkFunc = function(){
+                                 length(getConfigurationFiles())
+                               },
+                               valueFunc = function(){
+                                 getConfigurationFiles()
+                               })
+  
   #getConfigurations
   getConfigurations <- function(uuids = NULL){
     outlist <- getConfigurationFiles()
@@ -74,10 +82,9 @@ config_list_server<- function(input, output, session){
     })
   }
   
-  observe({
+  observeEvent(config_react(),{
     
-    
-    config_files <- getConfigurationFiles()
+    config_files <- config_react()
     uuids <- NULL
     if(length(config_files)>0) for(i in 1:length(config_files)){
       one_uuid = uuid::UUIDgenerate() 
