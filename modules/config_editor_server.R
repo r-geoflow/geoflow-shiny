@@ -45,15 +45,21 @@ config_editor_server<- function(input, output, session){
   loadConfigurationUI <- function(config){
     
     #load profile
-    ctrl_profile$id = config$id
-    if(!is.null(config$profile$id)) ctrl_profile$id = config$profile$id
-    ctrl_profile$mode = config$mode
-    if(!is.null(config$profile$mode)) ctrl_profile$mode = config$profile$mode
-    ctrl_profile$name = config$profile$name
-    ctrl_profile$project = config$profile$project
-    ctrl_profile$organization = config$profile$organization
-    ctrl_profile$logos = unlist(config$profile$logos)
+    cfg_id = if(!is.null(config$profile$id)) config$profile$id else config$id
+    updateTextInput(session, "profile_id", value = cfg_id)
+    cfg_mode = if(!is.null(config$profile$mode)) config$profile$mode else config$mode
+    updateSelectizeInput(session, "profile_mode", selected = cfg_mode)
+    updateTextInput(session, "profile_name", value = config$profile$name)
+    updateTextInput(session, "profile_project", value = config$profile$project)
+    updateTextInput(session, "profile_organization", value = config$profile$organization)
+    updateSelectizeInput(session, "profile_logos", selected = unlist(config$profile$logos), choices = unlist(config$profile$logos))
     
+    cfg_options = if(!is.null(config$profile$options)) config$profile$options else config$options
+    if(!is.null(cfg_options)){
+      if(!is.null(cfg_options$line_separator)) updateTextInput(session, "profile_options_line_separator", value = cfg_options$line_separator)
+      if(!is.null(cfg_options$skipFileDownload)) updateSelectizeInput(session, "profile_options_skipFileDownload", selected = as.character(cfg_options$skipFileDownload))
+    }
+      
     #load metadata
     #contacts
     config_contacts <- config$metadata$contacts
@@ -79,12 +85,15 @@ config_editor_server<- function(input, output, session){
   #------------------------------------------------------------------------------------
   #profile controller
   ctrl_profile <- reactiveValues(
-    id = "",
+    id = NULL,
     mode = "entity",
-    name = "",
-    project = "",
-    organization = "",
-    logos = list()
+    name = NULL,
+    project = NULL,
+    organization = NULL,
+    logos = list(),
+    options = list(
+      line_separator = geoflow::get_line_separator()
+    )
   )
   #metadata controller
   ctrl_metadata <- reactiveValues(
@@ -94,15 +103,11 @@ config_editor_server<- function(input, output, session){
   )
   #software controller
   ctrl_software <- reactiveValues(
-    list = NULL
+    list = list()
   )
   #actions controller
   ctrl_actions <- reactiveValues(
-    list = NULL
-  )
-  #options controller
-  ctrl_options <- reactiveValues(
-    line_separator = geoflow::get_line_separator()
+    list = list()
   )
   #------------------------------------------------------------------------------------
   
@@ -110,14 +115,63 @@ config_editor_server<- function(input, output, session){
   #=====================================================================================
   output$profile <- renderUI({
     tagList(
-      textInput(inputId = "profile_id", label = "Workflow identifier", value = ctrl_profile$id),
-      selectizeInput(inputId = "profile_mode", label = "Workflow mode", choices = c("raw", "entity"), selected = ctrl_profile$mode),
-      textInput(inputId = "profile_name", label = "Name", value = ctrl_profile$name),
-      textInput(inputId = "profile_project", label = "Project", value = ctrl_profile$project),
-      textInput(inputId = "profile_organization", label = "Organization", value = ctrl_profile$organization),
-      selectizeInput(inputId = "profile_logos", label = "Logos", choices = ctrl_profile$logos, selected = ctrl_profile$logos,
-                     multiple = TRUE, options = list(create = TRUE))
+      box(
+        width = 6,
+        tabsetPanel(
+          id = "profile_execution_main", 
+          type = "tabs",
+          tabPanel(
+            title = "Execution parameters",
+            textInput(inputId = ns("profile_id"), label = "Workflow identifier", value = ctrl_profile$id),
+            selectizeInput(inputId = ns("profile_mode"), label = "Workflow mode", choices = c("raw", "entity"), selected = ctrl_profile$mode)
+          ),
+          tabPanel(
+            title = "Execution options",
+            textInput(inputId = ns("profile_option_line_separator"), label = "Metadata line separator", value = geoflow::get_line_separator()),
+            selectizeInput(inputId = ns("profile_option_skipFileDownload"), label = "Skip file download", choices = c("FALSE", "TRUE"), selected = "FALSE")
+          )
+        )
+      ),
+      box(
+        width = 6,
+        title = "Additional information",
+        textInput(inputId = ns("profile_name"), label = "Name", value = ctrl_profile$name),
+        textInput(inputId = ns("profile_project"), label = "Project", value = ctrl_profile$project),
+        textInput(inputId = ns("profile_organization"), label = "Organization", value = ctrl_profile$organization),
+        selectizeInput(inputId = ns("profile_logos"), label = "Logos", choices = ctrl_profile$logos, selected = ctrl_profile$logos,
+                      multiple = TRUE, options = list(create = TRUE))
+      )
     )
+  })
+  
+  observe({
+    
+    #validation with shinyvalidate (experimental)
+    profile_iv <- shinyvalidate::InputValidator$new()
+    profile_iv$add_rule(ns("profile_id"), sv_required())
+    profile_iv$add_rule(ns("profile_mode"), sv_required())
+    profile_iv$enable()
+    
+    ctrl_profile$id <- input$profile_id
+    ctrl_profile$mode <- input$profile_mode
+    
+    #metadata
+    ctrl_profile$name <- input$profile_name
+    ctrl_profile$project <- input$profile_project
+    ctrl_profile$organization <- input$profile_organization
+    ctrl_profile$logos <- input$profile_logos
+    
+    #options
+    line_separator <- geoflow::get_line_separator()
+    if(length(input$profile_option_line_separator)>0){
+      line_separator <- input$profile_option_line_separator
+      if(!endsWith(line_separator, "\n")) line_separator = paste0(line_separator, "\n")
+    }
+    ctrl_profile$options <- list(
+      line_separator = line_separator,
+      skipFileDownload = input$profile_option_skipFileDownload
+    )
+    
   })
   
   #METADATA
@@ -734,8 +788,6 @@ config_editor_server<- function(input, output, session){
                 clazz <- act_option$class
                 if(length(clazz)==0) clazz = ""
                 
-                print(act_option)
-                print(clazz)
                 switch(clazz,
                        "character" = textInput(
                          inputId = ns(sprintf("action_form_options_%s", name)),
@@ -826,18 +878,17 @@ config_editor_server<- function(input, output, session){
   observeEvent(input$load_configuration,{
     if(!is.null(input$jsonfile)){
       config <- loadConfigurationFile()
-      print(names(config))
       output$jsonfile_msg <- renderUI({
         if(is(config, "try-error")){
-          tags$span("Please provide a valid JSON file!", style = "color:red;font-weight:bold;float:left;margin-top: 60px;margin-left: 5px;")
+          tags$span("Please provide a valid JSON file!", style = "color:red;font-weight:bold;float:left;margin-top: 8px;margin-left: 5px;")
         }else{
           loadConfigurationUI(config)
-          tags$span("Valid JSON", style = "color:green;font-weight:bold;float:left;margin-top: 60px;margin-left: 5px;")
+          tags$span("Valid JSON", style = "color:green;font-weight:bold;float:left;margin-top: 8px;margin-left: 5px;")
         }
       })
     }else{
       output$jsonfile_msg <- renderUI({
-        tags$span("No file specified!", style = "color:red;font-weight:bold;float:left;margin-top: 35px;margin-left: 5px;")
+        tags$span("No file specified!", style = "color:red;font-weight:bold;float:left;margin-top: 8px;margin-left: 5px;")
       })
     }
   })
@@ -845,12 +896,11 @@ config_editor_server<- function(input, output, session){
   #save configuration
   getConfiguration <- function(){
     out_json <- list(
-      id = ctrl_profile$id,
-      mode = ctrl_profile$mode,
       profile = reactiveValuesToList(ctrl_profile),
       metadata = reactiveValuesToList(ctrl_metadata),
       software = ctrl_software$list,
-      actions = ctrl_actions$list
+      actions = ctrl_actions$list,
+      registers = list()
     )
     out_json <- rapply(out_json, function(x){
       if(x[1] %in% c("TRUE","FALSE")) x <- as.logical(x); 
@@ -861,10 +911,10 @@ config_editor_server<- function(input, output, session){
   
   #saveConfiguration
   observeEvent(input$saveConfiguration,{
-    dir.create("out/configs", recursive = TRUE)
+    if(!dir.exists(GEOFLOW_DATA_DIR)) dir.create(GEOFLOW_DATA_DIR, recursive = TRUE)
     config_json <- getConfiguration()
     jsonlite::write_json(config_json, 
-                         file.path("out/configs", paste0(config_json$profile$id, ".json")), 
+                         file.path(GEOFLOW_DATA_DIR, paste0(config_json$profile$id, ".json")), 
                          auto_unbox = TRUE, pretty = TRUE)
   })
   

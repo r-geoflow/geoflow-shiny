@@ -8,12 +8,16 @@ config_editor_ui <- function(id){
     p("The geoflow configuration editor allows users to create a geoflow data flow configuration file in
       an interactive user-friendly manner. The user will be able to load an existing configuration file. Once 
       the configuration file created/edited, the user will be able to execute it workflow interactively."),
-    h4("Load configuration file?"),
+    h4(),
     fluidRow(
-      tags$div(
-        inputId = "json_wrapper", style = "float:left;margin-left:12px;",
+      box(
+        width = 6, title = "Load configuration file?",
         fileInput(inputId = ns("jsonfile"), "Choose Json File", multiple = FALSE, accept = c(".json")),
-        actionButton(inputId = ns("load_configuration"), "Load"), 
+        actionButton(inputId = ns("load_configuration"), "Load", style = "float:left;"),
+        uiOutput(ns("jsonfile_msg"))
+      ),
+      box(
+        width = 6, title = "Save/Export configuration file",
         actionButton(
           ns("saveConfiguration"),
           'Save configuration JSON file',
@@ -23,10 +27,8 @@ config_editor_ui <- function(id){
           ns("downloadConfiguration"),
           'Download configuration JSON file',
           icon = icon("download")
-        ),
-        hr()
-      ),
-      uiOutput(ns("jsonfile_msg"))
+        )
+      )
     ),
     tabsetPanel(
       id = "geoflow_config_blocks", 
@@ -42,8 +44,8 @@ config_editor_ui <- function(id){
       tabPanel(
         value = "metadata",
         title = "Metadata",
-        tags$div(id = "metadata",
-                 br(),
+        br(),
+        box(id = "metadata", width = 12,
                  tabsetPanel(
                    id = "metadata_tabs", 
                    type = "tabs",
@@ -88,19 +90,23 @@ config_editor_ui <- function(id){
         value = "software",
         title = "Software",
         br(),
-        shiny::actionButton(inputId = ns("add_software"), label = "Add a new software", class = "btn-primary"),
-        shiny::actionButton(inputId = ns("modify_software"), label = "Modify a software", class = "btn-warning"),
-        shiny::actionButton(inputId = ns("delete_software"), label = "Delete a software", class = "btn-danger"),
-        DT::DTOutput(ns("tbl_software"))
+        box(id = "software", width = 12,
+          shiny::actionButton(inputId = ns("add_software"), label = "Add a new software", class = "btn-primary"),
+          shiny::actionButton(inputId = ns("modify_software"), label = "Modify a software", class = "btn-warning"),
+          shiny::actionButton(inputId = ns("delete_software"), label = "Delete a software", class = "btn-danger"),
+          DT::DTOutput(ns("tbl_software"))
+        )
       ),
       tabPanel(
         value = "actions",
         title = "Actions",
         br(),
-        shiny::actionButton(inputId = ns("add_action"), label = "Add a new action", class = "btn-primary"),
-        shiny::actionButton(inputId = ns("modify_action"), label = "Modify an action", class = "btn-warning"),
-        shiny::actionButton(inputId = ns("delete_action"), label = "Delete an action", class = "btn-danger"),
-        DT::DTOutput(ns("tbl_actions"))
+        box(id = "actions", width = 12,
+          shiny::actionButton(inputId = ns("add_action"), label = "Add a new action", class = "btn-primary"),
+          shiny::actionButton(inputId = ns("modify_action"), label = "Modify an action", class = "btn-warning"),
+          shiny::actionButton(inputId = ns("delete_action"), label = "Delete an action", class = "btn-danger"),
+          DT::DTOutput(ns("tbl_actions"))
+        )
       )
     )
   )

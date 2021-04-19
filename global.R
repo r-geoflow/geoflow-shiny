@@ -6,7 +6,7 @@ options(stringsAsFactors = FALSE)
 #---------------------------------------------------------------------------------------
 list_of_packages <- c(
   "shiny", "shinydashboard", "shinyjs",
-  "geoflow", "jsonlite", "DT"
+  "geoflow", "jsonlite", "DT", "tibble"
 )
 invisible(lapply(list_of_packages, function(x) {
   if(!require(x,character.only = TRUE, quietly = TRUE)){
@@ -15,11 +15,30 @@ invisible(lapply(list_of_packages, function(x) {
   }
 }))
 
+#Github packages
+if(!require(shinyvalidate)){
+  remotes::install_github("rstudio/shinyvalidate")
+  require(shinyvalidate)
+}
+
 #global variables / environment
 #---------------------------------------------------------------------------------------
+GEOFLOW_DATA_DIR <- Sys.getenv("GEOFLOW_DATA_DIR")
+if(GEOFLOW_DATA_DIR=="") GEOFLOW_DATA_DIR <- getwd()
 
 #utilities
 #---------------------------------------------------------------------------------------
+#shinyInput
+shinyInput <- function(FUN, len, indexes = NULL, id, ns, ...) {
+  inputs <- character(len)
+  for (i in seq_len(len)) {
+    idx <- i
+    if(!is.null(indexes)) idx <- indexes[i]
+    inputs[i] <- as.character(FUN(paste0(ns(id), idx), ...))
+  }
+  inputs
+}
+
 #downloadButtonCustom
 downloadButtonCustom <- function (outputId, label = "Download", class = NULL, href = "", icon = icon("download"), ...) {
   aTab <- tags$a(
