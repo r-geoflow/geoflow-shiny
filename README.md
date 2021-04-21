@@ -96,7 +96,7 @@ To modify a metadata source, select the row in the metadata table corresponding 
 
 <img src="https://github.com/eblondel/geoflow-shiny/raw/main/doc/screenshots/geoflow-shiny_metadata_contact_form4.jpg"/>
 
-* Form for modification: 
+* Form for metadata source modification: 
 
 <img src="https://github.com/eblondel/geoflow-shiny/raw/main/doc/screenshots/geoflow-shiny_metadata_contact_form5.jpg"/>
 
@@ -104,12 +104,44 @@ To modify a metadata source, select the row in the metadata table corresponding 
 
 To delete a metadata source, select the row in the metadata table corresponding to the source you want to **delete**, and then click on "Delete <metadata> source". A dialog will open asking for confirming the deletion:
 
-<img src="https://github.com/eblondel/geoflow-shiny/raw/main/doc/screenshots/geoflow-shiny_metadata_contact_form6.jpg"/>
+<img src="https://github.com/eblondel/geoflow-shiny/raw/main/doc/screenshots/geoflow-shiny_metadata_contact_delete.jpg"/>
 
 
 ### Software
 
+Within a workflow, [geoflow](https://github.com/eblondel/geoflow)) allows to plug one or more software. geoflow will interact with these software to either read data from the source (eg. a database where to read data) or to write/publish data (eg. a database where to store a dataset, a web application where to publish data).
+
+The user interface to add, modify or delete a software follows the same logic as for metadata sources.
+
+* Software section overview
+
+<img src="https://github.com/eblondel/geoflow-shiny/raw/main/doc/screenshots/geoflow-shiny_software_empty.jpg"/>
+
+
+#### Add a software
+
 TODO
+
+
+#### Modify a software
+
+To modify a software, select the row in the software table corresponding to the software you want to **modify**, and then click on "Modify software". This will open the entry form to modify the selected software. Once edited, click on "Modify".
+
+* Software selected:
+
+<img src="https://github.com/eblondel/geoflow-shiny/raw/main/doc/screenshots/geoflow-shiny_software_form4.jpg"/>
+
+* Form for software modification: 
+
+<img src="https://github.com/eblondel/geoflow-shiny/raw/main/doc/screenshots/geoflow-shiny_software_form5.jpg"/>
+
+
+#### Delete a software
+
+To delete a software, select the row in the software table corresponding to the software you want to **delete**, and then click on "Delete software". A dialog will open asking for confirming the deletion:
+
+<img src="https://github.com/eblondel/geoflow-shiny/raw/main/doc/screenshots/geoflow-shiny_software_delete.jpg"/>
+
 
 ### Actions
 
@@ -117,7 +149,7 @@ TODO
 
 ## Workflows browser
 
-The workflow browser will list all configuration files that within your geoflow data directory. From there, you will be able to trigger/execute the workflow with [geoflow](https://github.com/eblondel/geoflow).
+The workflow browser will list all configuration files that are available within your geoflow data directory. From there, you will be able to trigger/execute the workflow with [geoflow](https://github.com/eblondel/geoflow).
 
 Overview of the workflow browser:
 
