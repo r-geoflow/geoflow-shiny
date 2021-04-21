@@ -15,7 +15,7 @@ For geoflow sponsoring/funding new developments, enhancements, support requests,
 
 ## Citation
 
-We thank in advance people that use ``geoflow-shiny`` for citing it in their work / publication(s). For this, please use the citation provided at this link [![DOI](https://zenodo.org/badge/DOI//10.5281/zenodo.3138920.svg)](https://doi.org//10.5281/zenodo.3138920)
+We thank in advance people that use ``geoflow-shiny`` for citing it in their work / publication(s). For this, please use the citation provided at this link [![DOI](https://zenodo.org/badge/DOI//10.5281/zenodo.4704563.svg)](https://doi.org//10.5281/zenodo.4704563)
 
 # Installation
 
@@ -120,20 +120,32 @@ The user interface to add, modify or delete a software follows the same logic as
 
 #### Add a software
 
-TODO
+For adding a **software**, click on "Add a new software". This will open a form to add the software. 
+
+Each software comes with **parameters** and eventually additional **properties**. These are specific to each software. The form will change when selecting the type of software.
+
+Once filled, click on "Add", and the software will be added in the table. In the table, click on **(+)** to expand the software and see the parameters and eventual properties.
+
+* Software entry form:
+
+<img src="https://github.com/eblondel/geoflow-shiny/raw/main/doc/screenshots/geoflow-shiny_software_form1.jpg"/>
+
+* Software entry form filled:
+
+<img src="https://github.com/eblondel/geoflow-shiny/raw/main/doc/screenshots/geoflow-shiny_software_form2.jpg"/>
 
 
-#### Modify a software
+#### Modify a software:
 
 To modify a software, select the row in the software table corresponding to the software you want to **modify**, and then click on "Modify software". This will open the entry form to modify the selected software. Once edited, click on "Modify".
 
 * Software selected:
 
-<img src="https://github.com/eblondel/geoflow-shiny/raw/main/doc/screenshots/geoflow-shiny_software_form4.jpg"/>
+<img src="https://github.com/eblondel/geoflow-shiny/raw/main/doc/screenshots/geoflow-shiny_software_form3.jpg"/>
 
 * Form for software modification: 
 
-<img src="https://github.com/eblondel/geoflow-shiny/raw/main/doc/screenshots/geoflow-shiny_software_form5.jpg"/>
+<img src="https://github.com/eblondel/geoflow-shiny/raw/main/doc/screenshots/geoflow-shiny_software_form4.jpg"/>
 
 
 #### Delete a software
