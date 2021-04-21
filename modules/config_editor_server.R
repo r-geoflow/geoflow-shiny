@@ -770,19 +770,21 @@ config_editor_server<- function(input, output, session){
       }
       
       act_options = geoflow::list_action_options(input$action_form_id, raw = TRUE)
+      print("Action options")
       print(act_options)
       if(length(act_options)>0){
         tags$div(
-            br(),
+            h5(tags$b("Action options")),hr(),
             do.call("tagList", lapply(names(act_options), function(name){
               act_option = act_options[[name]]
-              multiple <- ifelse(!is.null(act_option$multiple),act_option$multiple, FALSE)
+              multiple <- if(!is.null(act_option$multiple)) act_option$multiple else FALSE
+              add_choices <- if(!is.null(act_option$add_choices)) act_option$add_choices else FALSE
               if(!is.null(act_option$choices)){
                 selectizeInput(
                   inputId = ns(sprintf("action_form_options_%s", name)),
-                  label = act_option$def, selected = ifelse(!is.null(action$options[[name]]), action$options[[name]], act_option$default),
+                  label = act_option$def, selected = if(!is.null(action$options[[name]])) unlist(action$options[[name]]) else unlist(act_option$default),
                   choices = act_option$choices, multiple = multiple,
-                  options = list(create = TRUE)
+                  options = list(create = add_choices)
                 ) 
               }else{
                 clazz <- act_option$class
@@ -805,8 +807,7 @@ config_editor_server<- function(input, output, session){
                          inputId = ns(sprintf("action_form_options_%s", name)),
                          label = act_option$def, selected = ifelse(!is.null(action$options[[name]]), action$options[[name]], act_option$default),
                          choices = if(!is.null(act_option$default)){as.character(c(act_option$default,!act_option$default))}else {c("FALSE","TRUE")},
-                         multiple = multiple,
-                         options = list(create = TRUE)
+                         multiple = multiple
                        ),
                        textInput(
                          inputId = ns(sprintf("action_form_options_%s", name)),
@@ -845,10 +846,10 @@ config_editor_server<- function(input, output, session){
   #action/delete
   observeEvent(input$delete_action,{
     showModal(
-      if(length(input$tbl_action_rows_selected)>=1 ){
+      if(length(input$tbl_actions_rows_selected)>=1 ){
         modalDialog(
           title = "Warning",
-          paste("Are you sure to delete",length(input$tbl_action_rows_selected),"action(s)?" ),
+          paste("Are you sure to delete",length(input$tbl_actions_rows_selected),"action(s)?" ),
           footer = tagList(
             modalButton("Cancel"),
             actionButton(ns("action_delete_go"), "Yes")
@@ -866,11 +867,6 @@ config_editor_server<- function(input, output, session){
     ctrl_actions$list <- ctrl_actions$list[!sapply(ctrl_actions$list, is.null)]
     removeModal()
   })
-  
-  
-  #OPTIONS
-  #=====================================================================================
-
   
   #CONFIGURATION LOAD
   #=====================================================================================
