@@ -90,15 +90,22 @@ Once filled, click on "Add", and the metadata source will be added in the table.
 
 #### Modify a metadata source
 
-To modify a metadata source, select the source in the metadata table, and then click on "Modify <metadata> source". This will open the entry form to modify the selected source.
+To modify a metadata source, select the row in the metadata table corresponding to the metadata source you want to **modify**, and then click on "Modify <metadata> source". This will open the entry form to modify the selected source. Once edited, click on "Modify".
+
+* Contact metadata source selected:
 
 <img src="https://github.com/eblondel/geoflow-shiny/raw/main/doc/screenshots/geoflow-shiny_metadata_contact_form4.jpg"/>
 
-#### Delete a metadata source
-
-To delete a metadata source, select the source in the metadata table, and then click on "Delete <metadata> source".
+* Form for modification: 
 
 <img src="https://github.com/eblondel/geoflow-shiny/raw/main/doc/screenshots/geoflow-shiny_metadata_contact_form5.jpg"/>
+
+#### Delete a metadata source
+
+To delete a metadata source, select the row in the metadata table corresponding to the source you want to **delete**, and then click on "Delete <metadata> source". A dialog will open asking for confirming the deletion:
+
+<img src="https://github.com/eblondel/geoflow-shiny/raw/main/doc/screenshots/geoflow-shiny_metadata_contact_form6.jpg"/>
+
 
 ### Software
 
@@ -110,8 +117,8 @@ TODO
 
 ## Workflows browser
 
-The workflow browser will list all configuration files that within your geoflow data directory. From there, you will be able to trigger the workflow with [geoflow](https://github.com/eblondel/geoflow).
+The workflow browser will list all configuration files that within your geoflow data directory. From there, you will be able to trigger/execute the workflow with [geoflow](https://github.com/eblondel/geoflow).
 
 Overview of the workflow browser:
 
-<IMAGE: geoflow-shiny_workflows.jpg>
+<img src="https://github.com/eblondel/geoflow-shiny/raw/main/doc/screenshots/geoflow-shiny_workflows.jpg"/>
