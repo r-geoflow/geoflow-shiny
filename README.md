@@ -183,11 +183,51 @@ To delete a software, select the row in the software table corresponding to the 
 
 ### 1.4 Actions
 
-TODO
+Within a workflow, [geoflow](https://github.com/eblondel/geoflow)) allows to plug one or more actions. geoflow will execute these actions, either as sequence (in `raw` mode), or as sequence iterating over entities (in `entity` mode).
+
+The user interface to add, modify or delete an action follows the same logic as for metadata sources and software.
+
+* Actions section overview
+
+<img src="https://github.com/eblondel/geoflow-shiny/raw/main/doc/screenshots/geoflow-shiny_actions_empty.jpg"/>
+
+
+#### Add an action
+
+For adding an **action**, click on "Add a new action". This will open a form to add the action. 
+
+Each action comes with **options**, that are specific. The form will change when selecting the action you want to perfom.
+
+Once filled, click on "Add", and the action will be added in the table. In the table, click on **(+)** to expand the action and see the eventual options chosen for the actions execution.
+
+* Action entry form (example):
+
+<img src="https://github.com/eblondel/geoflow-shiny/raw/main/doc/screenshots/geoflow-shiny_actions_form1.jpg"/>
+
+
+#### Modify an action:
+
+To modify an action, select the row in the actions table corresponding to the action you want to **modify**, and then click on "Modify action". This will open the entry form to modify the selected action. Once edited, click on "Modify".
+
+* Action selected:
+
+<img src="https://github.com/eblondel/geoflow-shiny/raw/main/doc/screenshots/geoflow-shiny_actions_form2.jpg"/>
+
+* Form for action modification: 
+
+<img src="https://github.com/eblondel/geoflow-shiny/raw/main/doc/screenshots/geoflow-shiny_actions_form3.jpg"/>
+
+
+#### Delete an action
+
+To delete an action, select the row in the actions table corresponding to the action you want to **delete**, and then click on "Delete action". A dialog will open asking for confirming the deletion:
+
+<img src="https://github.com/eblondel/geoflow-shiny/raw/main/doc/screenshots/geoflow-shiny_actions_delete.jpg"/>
+
 
 <a name="configuration_browser"/>
 
-## 2. Workflows browser
+## 2. Configuration browser
 
 The workflow browser will list all configuration files that are available within your geoflow data directory. From there, you will be able to trigger/execute the workflow with [geoflow](https://github.com/eblondel/geoflow).
 
