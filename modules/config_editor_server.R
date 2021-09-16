@@ -144,36 +144,6 @@ config_editor_server<- function(input, output, session){
     )
   })
   
-  observe({
-    
-    #validation with shinyvalidate (experimental)
-    profile_iv <- shinyvalidate::InputValidator$new()
-    profile_iv$add_rule(ns("profile_id"), sv_required())
-    profile_iv$add_rule(ns("profile_mode"), sv_required())
-    profile_iv$enable()
-    
-    ctrl_profile$id <- input$profile_id
-    ctrl_profile$mode <- input$profile_mode
-    
-    #metadata
-    ctrl_profile$name <- input$profile_name
-    ctrl_profile$project <- input$profile_project
-    ctrl_profile$organization <- input$profile_organization
-    ctrl_profile$logos <- input$profile_logos
-    
-    #options
-    line_separator <- geoflow::get_line_separator()
-    if(length(input$profile_option_line_separator)>0){
-      line_separator <- input$profile_option_line_separator
-      if(!endsWith(line_separator, "\n")) line_separator = paste0(line_separator, "\n")
-    }
-    ctrl_profile$options <- list(
-      line_separator = line_separator,
-      skipFileDownload = input$profile_option_skipFileDownload
-    )
-    
-  })
-  
   #METADATA
   #=====================================================================================
   #metadata table handler
@@ -889,10 +859,34 @@ config_editor_server<- function(input, output, session){
     }
   })
   
+  #getProfileFromInput
+  getProfileFromInput <- function(){
+    ctrl_profile$id <- input$profile_id
+    ctrl_profile$mode <- input$profile_mode
+    
+    #metadata
+    ctrl_profile$name <- input$profile_name
+    ctrl_profile$project <- input$profile_project
+    ctrl_profile$organization <- input$profile_organization
+    ctrl_profile$logos <- input$profile_logos
+    
+    #options
+    line_separator <- geoflow::get_line_separator()
+    if(length(input$profile_option_line_separator)>0){
+      line_separator <- input$profile_option_line_separator
+      if(!endsWith(line_separator, "\n")) line_separator = paste0(line_separator, "\n")
+    }
+    ctrl_profile$options <- list(
+      line_separator = line_separator,
+      skipFileDownload = input$profile_option_skipFileDownload
+    )
+    return(reactiveValuesToList(ctrl_profile))
+  }
+  
   #save configuration
   getConfiguration <- function(){
     out_json <- list(
-      profile = reactiveValuesToList(ctrl_profile),
+      profile = getProfileFromInput(),
       metadata = reactiveValuesToList(ctrl_metadata),
       software = ctrl_software$list,
       actions = ctrl_actions$list,
