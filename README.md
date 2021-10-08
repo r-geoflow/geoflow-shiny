@@ -1,6 +1,6 @@
 # geoflow-shiny
 
-[geoflow-shiny](https://github.com/eblondel/geoflow-shiny) is a Shiny application to faciliate the management of (meta)data workflows based on the [geoflow](https://github.com/eblondel/geoflow) R package.
+[geoflow-shiny](https://github.com/eblondel/geoflow-shiny) is a Shiny application to faciliate the management and execution of (meta)data workflows based on the [geoflow](https://github.com/eblondel/geoflow) R package.
 
 Question about using `geoflow-shiny`? You can ask it on the geoflow chat room here: [![Gitter](https://img.shields.io/badge/chat%20room-for%20users-brown.svg?style=flat-square)](https://gitter.im/geoflow-users/community)
 
