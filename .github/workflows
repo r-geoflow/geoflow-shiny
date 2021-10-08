@@ -31,3 +31,4 @@ jobs:
           context: .
           push: true
           tags: user/geoflow-shiny:latest
+
