@@ -54,6 +54,14 @@ config_list_server<- function(input, output, session){
     return(out)
   }
   
+  #ShinyMonitor function
+  
+  shinyMonitor = function(step,config, entity,action){
+      shiny::setProgress(value = step, 
+                         message = sprintf("Worflow [%s] running :",config$profile$id),
+                         detail = sprintf("Executing action: '%s' of entity: '%s' ... %s %%",action$id,entity$identifiers[["id"]],step))
+  }
+  
   #function to manage BUtton events
   manageButtonEvents <- function(prefix, uuids){
     outlist <- getConfigurationFiles()
@@ -63,8 +71,15 @@ config_list_server<- function(input, output, session){
       button_id <- paste0(prefix,uuids[i])
       observeEvent(input[[button_id]],{
         shinyjs::disable(button_id)
-        out <- try(geoflow::executeWorkflow(file = file.path(GEOFLOW_DATA_DIR, paste0(outconfig$profile$id, ".json")), 
-                                            dir = GEOFLOW_DATA_DIR))
+        out <- try(shiny::withProgress(value = 0,
+                                       min=0,
+                                       max=100,
+                                       message = "Workflow initialization :",
+                                       detail = "Connecting to softwares ... 0%" , 
+                                       {geoflow::executeWorkflow(file = file.path(GEOFLOW_DATA_DIR, paste0(outconfig$profile$id, ".json")), 
+                                                                 dir = GEOFLOW_DATA_DIR,
+                                                                 monitor = shinyMonitor)}
+                                   ))
         if(!is(out, "try-error")){
           showModal(modalDialog(title = "Success",
                       p(sprintf("Workflow '%s' has been successfully executed!", outconfig$profile$id)),
