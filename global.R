@@ -2,11 +2,25 @@
 #---------------------------------------------------------------------------------------
 options(stringsAsFactors = FALSE)
 
+#config
+#---------------------------------------------------------------------------------------
+if(!require("yaml")){
+  install.packages("yaml", repos = "https://cloud.r-project.org")
+  require(yaml)
+}
+
+config_file = "D:/Documents/DEV/Packages/geoflow-shiny/resources/config.yml"
+#config_file <- "/etc/geoflow-shiny/config.yml"
+if(!nzchar(config_file)) stop("No configuration file at '/etc/geoflow-shiny/config.yml'")
+appConfig <- suppressWarnings(yaml::read_yaml(config_file))
+print(appConfig)
+
 #packages
 #---------------------------------------------------------------------------------------
 list_of_packages <- c(
-  "shiny", "shinydashboard", "shinyjs",
-  "geoflow", "jsonlite", "DT", "tibble"
+  "shiny", "shinymanager", "shinydashboard", "shinyjs",
+  "geoflow", "jsonlite", "DT", "tibble",
+  "ocs4R"
 )
 invisible(lapply(list_of_packages, function(x) {
   if(!require(x,character.only = TRUE, quietly = TRUE)){
@@ -24,35 +38,13 @@ if(!require(shinyvalidate)){
 #global variables / environment
 #---------------------------------------------------------------------------------------
 GEOFLOW_DATA_DIR <- Sys.getenv("GEOFLOW_DATA_DIR")
-if(GEOFLOW_DATA_DIR=="") GEOFLOW_DATA_DIR <- getwd()
+if(GEOFLOW_DATA_DIR=="") GEOFLOW_DATA_DIR <- appConfig$data_dir_local
 
-#utilities
+GEOFLOW_SHINY_ENV <- new.env()
+
+#scripts
 #---------------------------------------------------------------------------------------
-#shinyInput
-shinyInput <- function(FUN, len, indexes = NULL, id, ns, ...) {
-  inputs <- character(len)
-  for (i in seq_len(len)) {
-    idx <- i
-    if(!is.null(indexes)) idx <- indexes[i]
-    inputs[i] <- as.character(FUN(paste0(ns(id), idx), ...))
-  }
-  inputs
-}
-
-#downloadButtonCustom
-downloadButtonCustom <- function (outputId, label = "Download", class = NULL, href = "", icon = icon("download"), ...) {
-  aTab <- tags$a(
-    id = outputId, 
-    class = paste("btn btn-default shiny-download-link", class),
-    href = href,
-    target = "_blank", 
-    download = NA, 
-    icon, 
-    label, 
-    ...
-  )
-}
-
+source("scripts/commons.R")
 
 #local datasets
 #---------------------------------------------------------------------------------------

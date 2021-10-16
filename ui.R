@@ -1,9 +1,17 @@
 # Define UI for application that draws a histogram
 #==========================================================================================
-ui <- dashboardPage(
+ui_base <- dashboardPage(
   dashboardHeader(
     title = tags$div(
-      tags$span("Geoflow UI", style = "font-size:80%;")
+      ifelse(
+        !is.null(appConfig$logo) && !is.null(appConfig$url),
+        tags$a(
+          href = appConfig$url,
+          tags$img(src= appConfig$logo, height='30', width='50')
+        ),
+        ""
+      ),
+      tags$span(appConfig$title, style = "font-size:80%;")
     )
   ),
   dashboardSidebar(
@@ -26,5 +34,13 @@ ui <- dashboardPage(
     ),
     useShinyjs()
   )
-  
 )
+ui <- if(appConfig$auth){
+  secure_app(
+    ui = ui_base,
+    background = appConfig$auth_background,
+    language = appConfig$lang
+  )
+}else{
+  ui_base
+}

@@ -1,7 +1,9 @@
 #config_editor_server
-config_editor_server<- function(input, output, session){
+config_editor_server<- function(input, output, session, user, logged, parent.session){
   
   ns <- session$ns
+  
+  AUTH_API <- try(get("AUTH_API", envir = GEOFLOW_SHINY_ENV), silent = TRUE)
   
   #contact handlers
   #---------------------------------------------------------------------------------------------
@@ -901,11 +903,28 @@ config_editor_server<- function(input, output, session){
   
   #saveConfiguration
   observeEvent(input$saveConfiguration,{
-    if(!dir.exists(GEOFLOW_DATA_DIR)) dir.create(GEOFLOW_DATA_DIR, recursive = TRUE)
     config_json <- getConfiguration()
-    jsonlite::write_json(config_json, 
-                         file.path(GEOFLOW_DATA_DIR, paste0(config_json$profile$id, ".json")), 
-                         auto_unbox = TRUE, pretty = TRUE)
+    filename <- paste0(config_json$profile$id, ".json")
+    if(appConfig$auth){
+      switch(appConfig$auth_type,
+        "ocs" = {
+          if(!paste0(appConfig$data_dir_remote,"/") %in% AUTH_API$listFiles()$name){
+            AUTH_API$makeCollection(appConfig$data_dir_remote)
+          }
+          file <- file.path(tempdir(), filename)
+          jsonlite::write_json(config_json, 
+                               file, 
+                               auto_unbox = TRUE, pretty = TRUE)
+          AUTH_API$uploadFile(relPath = appConfig$data_dir_remote, filename = file)
+          unlink(file)
+        }       
+      )
+    }else{
+      if(!dir.exists(GEOFLOW_DATA_DIR)) dir.create(GEOFLOW_DATA_DIR, recursive = TRUE)
+      jsonlite::write_json(config_json, 
+                           file.path(GEOFLOW_DATA_DIR, filename), 
+                           auto_unbox = TRUE, pretty = TRUE)
+    }
   })
   
   #downloadConfiguration

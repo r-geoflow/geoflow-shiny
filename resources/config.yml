@@ -1,0 +1,10 @@
+title: Geoflow UI
+lang: en
+auth: true
+auth_type: ocs
+auth_url: https://nextcloud.inrae.fr
+auth_timeout: 0
+auth_background: "linear-gradient(rgba(0, 140, 142, 0.9), rgba(255, 255, 255, 0.5))"
+data_dir_local: .
+data_dir_remote: geoflow
+logger: INFO
