@@ -1,6 +1,8 @@
 # geoflow-shiny
 
-[geoflow-shiny](https://github.com/eblondel/geoflow-shiny) is a Shiny application to faciliate the management of (meta)data workflows based on the [geoflow](https://github.com/eblondel/geoflow) R package.
+[geoflow-shiny](https://github.com/eblondel/geoflow-shiny) is a Shiny application to faciliate the management and execution of (meta)data workflows based on the [geoflow](https://github.com/eblondel/geoflow) R package.
+
+Question about using `geoflow-shiny`? You can ask it on the geoflow chat room here: [![Gitter](https://img.shields.io/badge/chat%20room-for%20users-brown.svg?style=flat-square)](https://gitter.im/geoflow-users/community)
 
 ## Sponsors
 
@@ -11,7 +13,7 @@ Many thanks to the following organizations that have supported :
   <a href="https://inee.cnrs.fr/fr/zones-ateliers"><img src="https://inee.cnrs.fr/sites/institut_inee/files/inline-images/logo-za_0_0.jpg" height=150 width=300/></a>
 </div>
 
-For geoflow sponsoring/funding new developments, enhancements, support requests, please contact me by [e-mail](mailto:emmanuel.blondel1@gmail.com)
+For geoflow sponsoring/funding new developments, enhancements, support requests, please contact me by [e-mail](mailto:eblondel.pro@gmail.com)
 
 ## Citation
 
@@ -29,7 +31,7 @@ To run it on your local machine, just run the `app.R` script, this will open the
 
 #Issue reporting
 
-Issues can be reported at https://github.com/eblondel/geoflow-shiny/issues
+Issues can be reported at https://github.com/eblondel/geoflow-shiny/issues Issues should be used to report bugs and/or request enhancements / new features only.
 
 
 # User guide
