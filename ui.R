@@ -16,6 +16,7 @@ ui_base <- dashboardPage(
   ),
   dashboardSidebar(
     sidebarMenu(
+      id = "geoflow-tabs",
       menuItem(
         text = "Configuration",
         tabName = "config",
