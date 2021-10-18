@@ -8,6 +8,7 @@ config_list_server<- function(input, output, session, user, logged, parent.sessi
   
   reactive_job <- reactiveVal(NULL)
   reactive_job_status <- reactiveVal("")
+  reactive_job_progress <- reactiveVal(0)
   
   output$config_list_info <- renderText({
     session$userData$module("configuration-list")
@@ -95,7 +96,7 @@ config_list_server<- function(input, output, session, user, logged, parent.sessi
         filepath <- if(appConfig$auth){
           AUTH_API$downloadFile(relPath = appConfig$data_dir_remote, filename = x, outdir = tempdir())
         }else{
-          file.path(GEOFLOW_DATA_DIR, x)
+          x
         }
         outconfig <- jsonlite::read_json(filepath)
         if(is.null(outconfig$profile$id)) outconfig$profile$id <- outconfig$id
@@ -123,19 +124,21 @@ config_list_server<- function(input, output, session, user, logged, parent.sessi
             on_initWorkflow = function(config, queue){
               queue$producer$fireEval(print("Successful workflow initialization"))
               ipc.queue$producer$fireAssignReactive("reactive_job_status", "In progress")
-              
             },
             on_initWorkflowJob = function(config, queue){
               queue$producer$fireEval(print("Successful workflow job initialization"))
               queue$producer$fireAssignReactive("reactive_job", config$job)
             },
+            on_closeWorkflow = function(config, queue){
+              ipc.progress$close()
+            },
             monitor = function(step, config, entity, action, queue){
+              queue$producer$fireAssignReactive("reactive_job_progress", step)
               ipc.progress$set(
                 value = step, 
                 message = sprintf("Worflow [%s] running :",config$profile$id),
                 detail = sprintf("Executing action: '%s' of entity: '%s' ... %s %%",action$id,entity$identifiers[["id"]],step)
               )
-              if(step == 100) ipc.progress$close()
             }
           )
            
@@ -147,6 +150,15 @@ config_list_server<- function(input, output, session, user, logged, parent.sessi
                                     p(sprintf("See results at: %s", result)),
                                     easyClose = TRUE, footer = NULL))
               shinyjs::enable(button_id)
+          }) %...T!%
+          (function(error){
+            ipc.progress$close()
+            reactive_job_status("Failed")
+            showModal(modalDialog(title = "Error",
+                                  p(sprintf("Workflow '%s' has thrown an error!", outconfig$profile$id)),
+                                  p(as.character(error)),
+                                  easyClose = TRUE, footer = NULL ))
+            shinyjs::enable(button_id)
           })
         
         #Return something other than the future so we don't block the UI
@@ -187,7 +199,11 @@ config_list_server<- function(input, output, session, user, logged, parent.sessi
   #Interactive job status
   output$config_job_status <- renderUI({ 
     tags$span(
-      reactive_job_status(),
+      if(reactive_job_status() == "In progress"){
+        paste(reactive_job_status(), paste0("(", reactive_job_progress(),"%)"))
+      }else{
+        reactive_job_status()
+      },
       class = switch(reactive_job_status(),
          "Started" = "label label-info",
          "In progress" = "label label-info",
@@ -227,7 +243,7 @@ config_list_server<- function(input, output, session, user, logged, parent.sessi
      out_txt
    }
   )
-  output$config_job_interactive_log <- renderUI({ 
+  output$config_job_interactive_log <- renderUI({
     tags$div(
       config_job_interactive_log(),
       style = "max-height:450px;font-size:80%;color:white;background-color:black;overflow-y:auto;white-space: pre-line;padding:2px;"

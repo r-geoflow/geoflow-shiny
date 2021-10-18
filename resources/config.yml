@@ -1,6 +1,6 @@
 title: Geoflow UI
 lang: en
-auth: true
+auth: false
 auth_type: ocs
 auth_url: https://nextcloud.inrae.fr
 auth_timeout: 0
