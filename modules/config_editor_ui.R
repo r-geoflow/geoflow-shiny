@@ -4,7 +4,7 @@ config_editor_ui <- function(id){
   ns <- NS(id)
   
   tabItem(tabName = "config_editor",
-    h3("Configuration editor"),hr(),
+    htmlOutput(ns("config_editor_info")),hr(),
     p("The geoflow configuration editor allows users to create a geoflow data flow configuration file in
       an interactive user-friendly manner. The user will be able to load an existing configuration file. Once 
       the configuration file created/edited, the user will be able to execute it workflow interactively."),

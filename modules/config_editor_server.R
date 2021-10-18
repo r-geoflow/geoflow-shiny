@@ -3,6 +3,13 @@ config_editor_server<- function(input, output, session, user, logged, parent.ses
   
   ns <- session$ns
   
+  output$config_editor_info <- renderText({
+    session$userData$module("configuration-editor")
+    updateModuleUrl("configuration-editor", session)
+    text <- "<h2><b>geoflow</b> configuration editor <small>Create, edit and save a <b>geoflow</b> configuration</small></h2><hr>"
+    text
+  })
+  
   AUTH_API <- try(get("AUTH_API", envir = GEOFLOW_SHINY_ENV), silent = TRUE)
   
   #contact handlers
