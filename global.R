@@ -19,7 +19,8 @@ print(appConfig)
 #---------------------------------------------------------------------------------------
 list_of_packages <- c(
   "shiny", "shinymanager", "shinydashboard", "shinyjs",
-  "geoflow", "jsonlite", "DT", "tibble",
+  "geoflow", "jsonlite", "DT", "tibble", 
+  "fastmap", "magrittr", "promises", "future", "ipc",
   "ocs4R"
 )
 invisible(lapply(list_of_packages, function(x) {
@@ -28,6 +29,7 @@ invisible(lapply(list_of_packages, function(x) {
     require(x,character.only = TRUE, quietly = TRUE)
   }
 }))
+plan(multiprocess)
 
 #Github packages
 if(!require(shinyvalidate)){
@@ -63,3 +65,6 @@ source("server.R")
 
 #onStop
 #---------------------------------------------------------------------------------------
+onStop(function(){
+  
+})

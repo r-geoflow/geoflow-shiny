@@ -3,8 +3,23 @@ config_list_server<- function(input, output, session, user, logged, parent.sessi
   
   ns <- session$ns
   
+  ipc.queue <- ipc::shinyQueue()
+  ipc.queue$consumer$start()
+  
+  reactive_job <- reactiveVal(NULL)
+  reactive_job_status <- reactiveVal("")
+  
+  output$config_list_info <- renderText({
+    session$userData$module("configuration-list")
+    updateModuleUrl("configuration-list", session)
+    text <- "<h2>List of <b>geoflow</b> configurations <small>Access your configuration, and execute them</small></h2><hr>"
+    text
+  })
+  
   AUTH_API <- try(get("AUTH_API", envir = GEOFLOW_SHINY_ENV), silent = TRUE)
   
+  #FUNCTIONS
+  #getConfigurationFiles
   getConfigurationFiles <- function() {
     if(appConfig$auth){
       INFO(sprintf("Listing configuration files in '%s' at '%s'", appConfig$data_dir_remote, appConfig$auth_url))
@@ -24,25 +39,13 @@ config_list_server<- function(input, output, session, user, logged, parent.sessi
     }
   }
   
-  config_react <- reactivePoll(10000, session,
-                               checkFunc = function(){
-                                 length(getConfigurationFiles())
-                               },
-                               valueFunc = function(){
-                                 getConfigurationFiles()
-                               })
-  
   #getConfigurations
   getConfigurations <- function(uuids = NULL){
     outlist <- getConfigurationFiles()
     out <- NULL
     if(length(outlist)==0){
        out <- tibble::tibble(
-         #Identifier = character(0),
          Name = character(0),
-         #Project = character(0),
-         #Organization = character(0),
-         #Mode = character(0),
          Actions = character(0)
        ) 
     }else{
@@ -50,11 +53,7 @@ config_list_server<- function(input, output, session, user, logged, parent.sessi
         x <- outlist[[i]]
         
         out_tib <- tibble::tibble(
-          #Identifier = outconfig$profile$id,
           Name = if(appConfig$auth){ x$name }else{ x },
-          #Project = outconfig$profile$project,
-          #Organization = outconfig$profile$organization,
-          #Mode = outconfig$profile$mode,
           LastModified = if(appConfig$auth){
             switch(appConfig$auth_type,
               "ocs" = {
@@ -65,6 +64,9 @@ config_list_server<- function(input, output, session, user, logged, parent.sessi
             file.info(x)$mtime
           },
           Actions = paste0(
+            actionButton(inputId = ns(paste0('button_edit_', uuids[i])), class="btn btn-primary", style = "margin-right: 2px;",
+                         title = "Edit configuration", label = "", icon = icon("edit"),
+                         onclick = sprintf("Shiny.setInputValue('%s', this.id)",ns("select_button"))),
             actionButton(inputId = ns(paste0('button_execute_', uuids[i])), class="btn btn-primary",
                          title = "Execute configuration", label = "", icon = icon("play"),
                          onclick = sprintf("Shiny.setInputValue('%s', this.id)",ns("select_button")))
@@ -76,13 +78,6 @@ config_list_server<- function(input, output, session, user, logged, parent.sessi
     return(out)
   }
   
-  #ShinyMonitor function
-  shinyMonitor = function(step,config, entity,action){
-      shiny::setProgress(value = step, 
-                         message = sprintf("Worflow [%s] running :",config$profile$id),
-                         detail = sprintf("Executing action: '%s' of entity: '%s' ... %s %%",action$id,entity$identifiers[["id"]],step))
-  }
-  
   #function to manage BUtton events
   manageButtonEvents <- function(prefix, uuids){
     outlist <- getConfigurationFiles()
@@ -91,7 +86,11 @@ config_list_server<- function(input, output, session, user, logged, parent.sessi
       if(appConfig$auth) x <- x$name
       button_id <- paste0(prefix,uuids[i])
       observeEvent(input[[button_id]],{
+        
         shinyjs::disable(button_id)
+        
+        reactive_job("")
+        reactive_job_status("Started")
         
         filepath <- if(appConfig$auth){
           AUTH_API$downloadFile(relPath = appConfig$data_dir_remote, filename = x, outdir = tempdir())
@@ -106,44 +105,66 @@ config_list_server<- function(input, output, session, user, logged, parent.sessi
         }else{
           GEOFLOW_DATA_DIR
         }
-        out <- try(geoflow::executeWorkflow(file = filepath, dir = targetdir))
         
-        out <- try(shiny::withProgress(
-          value = 0,
-          min=0,
-          max=100,
-          message = "Workflow initialization :",
-          detail = "Connecting to softwares ... 0%" , 
-         {geoflow::executeWorkflow(file = filepath, dir = targetdir, monitor = shinyMonitor)}
-        ))
-
-        if(!is(out, "try-error")){
-          showModal(modalDialog(title = "Success",
-                      p(sprintf("Workflow '%s' has been successfully executed!", outconfig$profile$id)),
-                      p(sprintf("See results at: %s", out)),
-                      easyClose = TRUE, footer = NULL ))
-        }else{
-          print(as.character(out))
-          showModal(modalDialog(title = "Error",
-                      p(sprintf("Workflow '%s' has thrown an error!", outconfig$profile$id)),
-                      p(unlist(strsplit(as.character(out)," : "))[2]),
-                      easyClose = TRUE, footer = NULL ))
-        }
-        shinyjs::enable(button_id)
+        #geoflow execution
+        ipc.progress <- ipc::AsyncProgress$new(
+          value = 0, min = 0, max = 100,
+          message = sprintf("Workflow '%s'", outconfig$profile$id),
+          detail = "Initializing workflow ... 0%"
+        )
+        future::future({
+          ipc.queue$producer$fireEval(print("Process started for geoflow job"))
+          ipc.queue$producer$fireAssignReactive("reactive_job_status", "Started")
+           
+          geoflow::executeWorkflow(
+            file = filepath,
+            dir = targetdir,
+            queue = ipc.queue,
+            on_initWorkflow = function(config, queue){
+              queue$producer$fireEval(print("Successful workflow initialization"))
+              ipc.queue$producer$fireAssignReactive("reactive_job_status", "In progress")
+              
+            },
+            on_initWorkflowJob = function(config, queue){
+              queue$producer$fireEval(print("Successful workflow job initialization"))
+              queue$producer$fireAssignReactive("reactive_job", config$job)
+            },
+            monitor = function(step, config, entity, action, queue){
+              ipc.progress$set(
+                value = step, 
+                message = sprintf("Worflow [%s] running :",config$profile$id),
+                detail = sprintf("Executing action: '%s' of entity: '%s' ... %s %%",action$id,entity$identifiers[["id"]],step)
+              )
+              if(step == 100) ipc.progress$close()
+            }
+          )
+           
+        }) %...>% 
+          (function(result){
+            reactive_job_status("Passed")
+            showModal(modalDialog(title = "Success",
+                                    p(sprintf("Workflow '%s' has been successfully executed!", outconfig$profile$id)),
+                                    p(sprintf("See results at: %s", result)),
+                                    easyClose = TRUE, footer = NULL))
+              shinyjs::enable(button_id)
+          })
+        
+        #Return something other than the future so we don't block the UI
+        NULL
       })
     })
   }
   
-  observeEvent(config_react(),{
-    
-    config_files <- config_react()
+  #loadConfigurationFiles
+  loadConfigurationFiles <- function(){
+    config_files <- getConfigurationFiles()
     uuids <- NULL
     if(length(config_files)>0) for(i in 1:length(config_files)){
       one_uuid = uuid::UUIDgenerate() 
       uuids <- c(uuids, one_uuid)
     }
     configs <- getConfigurations(uuids = uuids)
-  
+    
     output$config_list_table <- DT::renderDT(
       configs,
       server = FALSE,
@@ -157,6 +178,60 @@ config_list_server<- function(input, output, session, user, logged, parent.sessi
       )
     )
     manageButtonEvents("button_execute_", uuids)
+  }
+  
+  observeEvent(input$config_list_refresh,{
+    loadConfigurationFiles()
+  })
+  
+  #Interactive job status
+  output$config_job_status <- renderUI({ 
+    tags$span(
+      reactive_job_status(),
+      class = switch(reactive_job_status(),
+         "Started" = "label label-info",
+         "In progress" = "label label-info",
+         "Passed" = "label label-success",
+         "Failed" = "label label-danger",
+         "Aborted" = "label label-secondary",
+         ""
+      )) 
+  })
+  
+  #Interactive job console log
+  config_job_interactive_log <- reactivePoll(500, session,
+   checkFunc = function(){
+     if(!is.null(reactive_job())){
+       logfile <- file.path(reactive_job(), "job-logs.txt")
+       if(file.exists(logfile)){
+         file.info(logfile)$mtime[1]
+       }else{
+         ""
+       }
+     }else{
+       ""
+     }
+   },
+   valueFunc = function(){
+     out_txt <- "No geoflow job started!"
+     if(!is.null(reactive_job())){
+       if(out_txt == ""){
+         out_txt <- "Starting geoflow job..."
+       }else{
+         logfile <- file.path(reactive_job(), "job-logs.txt")
+         if(file.exists(logfile)){
+          out_txt = paste(readLines(logfile),collapse="\n")
+         }
+       }
+     }
+     out_txt
+   }
+  )
+  output$config_job_interactive_log <- renderUI({ 
+    tags$div(
+      config_job_interactive_log(),
+      style = "max-height:450px;font-size:80%;color:white;background-color:black;overflow-y:auto;white-space: pre-line;padding:2px;"
+    )
   })
   
 }
