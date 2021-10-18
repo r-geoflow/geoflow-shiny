@@ -9,14 +9,13 @@ config_list_ui <- function(id){
     fluidRow(
       tags$div(
         inputId = "config_list_actions",
-        class = "col-md-4",
-        actionButton(ns("config_list_refresh"), "Refresh")
+        class = "col-md-4"
       )
     ),
     fluidRow(
       box(
         inputId = "config_list_wrapper", 
-        title = "Workflows", status = "primary", width = 6,
+        title = tags$span("Workflows", tags$small(actionLink(ns("config_list_refresh"), label = NULL, icon = icon("refresh")))), status = "primary", width = 6,
         DT::DTOutput(ns("config_list_table"))
       ),
       box(

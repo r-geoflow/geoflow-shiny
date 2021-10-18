@@ -183,8 +183,8 @@ config_list_server<- function(input, output, session, user, logged, parent.sessi
       escape = FALSE,
       rownames = FALSE,
       options = list(
-        paging = FALSE,
-        searching = FALSE,
+        dom = 'Bfrtip',
+        deferRender = TRUE,
         preDrawCallback = JS('function() { Shiny.unbindAll(this.api().table().node()); }'),
         drawCallback = JS('function() { Shiny.bindAll(this.api().table().node()); } ')
       )
@@ -246,7 +246,7 @@ config_list_server<- function(input, output, session, user, logged, parent.sessi
   output$config_job_interactive_log <- renderUI({
     tags$div(
       config_job_interactive_log(),
-      style = "max-height:450px;font-size:80%;color:white;background-color:black;overflow-y:auto;white-space: pre-line;padding:2px;"
+      style = "max-height:500px;font-size:80%;color:white;background-color:black;overflow-y:auto;white-space: pre-line;padding:2px;"
     )
   })
   
