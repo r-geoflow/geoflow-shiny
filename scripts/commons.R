@@ -28,3 +28,11 @@ downloadButtonCustom <- function (outputId, label = "Download", class = NULL, hr
     ...
   )
 }
+
+#updateModuleUrl
+updateModuleUrl <- function(module, session){
+  updateQueryString(
+    queryString = sprintf("?module=%s", module), 
+    mode = "push", session
+  )
+}
