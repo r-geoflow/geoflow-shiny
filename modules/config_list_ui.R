@@ -16,7 +16,7 @@ config_list_ui <- function(id){
       box(
         inputId = "config_list_wrapper", 
         title = tags$span("Workflows", tags$small(actionLink(ns("config_list_refresh"), label = NULL, icon = icon("refresh")))), status = "primary", width = 6,
-        DT::DTOutput(ns("config_list_table"))
+        tags$div(shinycssloaders::withSpinner(DT::DTOutput(ns("config_list_table"))), style = "font-size:80%;")
       ),
       box(
         inputId = "config_log_wrapper",

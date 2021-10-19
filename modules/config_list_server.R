@@ -6,6 +6,7 @@ config_list_server<- function(input, output, session, user, logged, parent.sessi
   ipc.queue <- ipc::shinyQueue()
   ipc.queue$consumer$start()
   
+  pageLoaded <- reactiveVal(FALSE)
   reactive_job <- reactiveVal(NULL)
   reactive_job_status <- reactiveVal("")
   reactive_job_progress <- reactiveVal(0)
@@ -14,6 +15,7 @@ config_list_server<- function(input, output, session, user, logged, parent.sessi
     session$userData$module("configuration-list")
     updateModuleUrl("configuration-list", session)
     text <- "<h2>List of <b>geoflow</b> configurations <small>Access your configuration, and execute them</small></h2><hr>"
+    pageLoaded(TRUE)
     text
   })
   
@@ -65,7 +67,7 @@ config_list_server<- function(input, output, session, user, logged, parent.sessi
             file.info(x)$mtime
           },
           Actions = paste0(
-            actionButton(inputId = ns(paste0('button_edit_', uuids[i])), class="btn btn-primary", style = "margin-right: 2px;",
+            actionButton(inputId = ns(paste0('button_edit_', uuids[i])), class="btn btn-info", style = "margin-right: 2px;",
                          title = "Edit configuration", label = "", icon = icon("edit"),
                          onclick = sprintf("Shiny.setInputValue('%s', this.id)",ns("select_button"))),
             actionButton(inputId = ns(paste0('button_execute_', uuids[i])), class="btn btn-primary",
@@ -191,6 +193,10 @@ config_list_server<- function(input, output, session, user, logged, parent.sessi
     )
     manageButtonEvents("button_execute_", uuids)
   }
+  
+  observeEvent(pageLoaded(), {
+    loadConfigurationFiles()
+  })
   
   observeEvent(input$config_list_refresh,{
     loadConfigurationFiles()
