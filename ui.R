@@ -39,6 +39,11 @@ ui_base <- dashboardPage(
 ui <- if(appConfig$auth){
   secure_app(
     ui = ui_base,
+    tags_top = tags$div(HTML(appConfig$auth_header)),
+    tags_bottom = tags$div(
+      HTML(appConfig$auth_footer),
+      HTML("<p style='font-size:80%;'>Powered by <a href='https://www.r-project.org/' target='_blank'>R</a> and <a href='https://github.com/eblondel/geoflow' target='_blank'>geoflow</a></p>")
+    ),
     background = appConfig$auth_background,
     language = appConfig$lang
   )
