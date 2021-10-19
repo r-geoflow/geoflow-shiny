@@ -20,10 +20,10 @@ server <- function(input, output, session) {
           user = user, pwd = password,
           logger = appConfig$logger
         ))
-        if (is(AUTH_API, "ocsManager")) {
+        if (is(AUTH_API, "ocsManager") && !is.null(AUTH_API$getWebdavRoot())) {
           credentials_df <- data.frame(user = user, password = password, stringsAsFactors = FALSE)
           assign("AUTH_API", AUTH_API, envir = GEOFLOW_SHINY_ENV)
-        }else if(is(AUTH_API, "try-error")){
+        }else{
           credentials_df <- data.frame(user = character(0), password = character(0), stringsAsFactors = FALSE)
         }
         #enable("auth-go_auth")
