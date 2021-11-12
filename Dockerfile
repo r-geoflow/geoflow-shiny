@@ -39,6 +39,9 @@ RUN R -e "devtools::install_github('eblondel/geoflow')"
 RUN git -C /root/ clone https://github.com/eblondel/geoflow-shiny.git && echo "OK!"
 RUN ln -s /root/geoflow-shiny /srv/geoflow-shiny
 
+#etc dirs (for config)
+RUN mkdir -p /etc/geoflow-shiny/
+
 #geoflow data dir
 RUN mkdir -p /srv/geoflow-data/
 ENV GEOFLOW_DATA_DIR="/srv/geoflow-data"
