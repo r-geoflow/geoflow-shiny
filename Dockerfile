@@ -14,8 +14,6 @@ RUN apt-get update && apt-get install -y \
     libcurl4-openssl-dev \
     libxml2-dev \
     git 
-   
-RUN apt-get update && apt-get upgrade -y
 
 # install dependencies of the app
 
@@ -46,4 +44,4 @@ EXPOSE 3838
 
 RUN apt-get install -y curl
 CMD ["R", "-e shiny::runApp('/srv/shiny/geoflow-shiny',port=3838,host='0.0.0.0')"]
-#CMD ["R", "-e shiny::runApp('/srv/shiny/SdilabGenericPop')"]
+#CMD ["R", "-e shiny::runApp('/srv/shiny/geoflow-shiny')"]
