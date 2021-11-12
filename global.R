@@ -1,3 +1,7 @@
+if(Sys.getenv('GEOFLOW_DATA_DIR') == ""){
+  stop("geoflow-shiny requires the environment variable 'GEOFLOW_DATA_DIR' to be set!")
+}
+
 #options
 #---------------------------------------------------------------------------------------
 options(stringsAsFactors = FALSE)
@@ -9,8 +13,8 @@ if(!require("yaml")){
   require(yaml)
 }
 
-config_file = "D:/Documents/DEV/Packages/geoflow-shiny/resources/config.yml"
-#config_file <- "/etc/geoflow-shiny/config.yml"
+#config_file = "D:/Documents/DEV/Packages/geoflow-shiny/resources/config.yml"
+config_file <- "/etc/geoflow-shiny/config.yml"
 if(!nzchar(config_file)) stop("No configuration file at '/etc/geoflow-shiny/config.yml'")
 appConfig <- suppressWarnings(yaml::read_yaml(config_file))
 print(appConfig)
@@ -24,12 +28,9 @@ list_of_packages <- c(
   "ocs4R"
 )
 invisible(lapply(list_of_packages, function(x) {
-  if(!require(x,character.only = TRUE, quietly = TRUE)){
-    install.packages(x,repos = "https://cran.rstudio.com/")
-    require(x,character.only = TRUE, quietly = TRUE)
-  }
+  require(x,character.only = TRUE, quietly = TRUE)
 }))
-plan(multiprocess)
+future::plan(multiprocess)
 
 #Github packages
 if(!require(shinyvalidate)){

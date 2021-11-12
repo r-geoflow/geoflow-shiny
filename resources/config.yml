@@ -1,12 +1,12 @@
 title: Geoflow UI
 lang: en
-auth: true
+auth: false
 auth_type: ocs
-auth_url: https://nextcloud.inrae.fr
+auth_url: http://localhost:8080
 auth_timeout: 0
 auth_background: "linear-gradient(rgba(0, 140, 142, 0.9), rgba(255, 255, 255, 0.5))"
 auth_header: "<h2>Geoflow</h2>"
-auth_footer: "<p>This Geoflow was set-up for the French Zone Ateliers network / BED project. To access the service, you will need to authenticate with your <a href='https://nextcloud.inrae.fr' target='_blank'>Nextcloud</a> user account.</p>"
+auth_footer: "<p>Geoflow UI</p>"
 data_dir_local: .
 data_dir_remote: geoflow
 logger: INFO
