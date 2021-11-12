@@ -37,11 +37,14 @@ RUN R -e "devtools::install_github('eblondel/d4storagehub4R')"
 RUN R -e "devtools::install_github('eblondel/geoflow')"
 
 RUN git -C /root/ clone https://github.com/eblondel/geoflow-shiny.git && echo "OK!"
-RUN mkdir -p /srv/shiny/
-RUN ln -s /root/geoflow-shiny /srv/shiny/geoflow-shiny
+RUN ln -s /root/geoflow-shiny /srv/geoflow-shiny
+
+#geoflow data dir
+RUN mkdir -p /srv/geoflow-data/
+ENV GEOFLOW_DATA_DIR="/srv/geoflow-data"
  
 EXPOSE 3838
 
 RUN apt-get install -y curl
-CMD ["R", "-e shiny::runApp('/srv/shiny/geoflow-shiny',port=3838,host='0.0.0.0')"]
-#CMD ["R", "-e shiny::runApp('/srv/shiny/geoflow-shiny')"]
+CMD ["R", "-e shiny::runApp('/srv/geoflow-shiny',port=3838,host='0.0.0.0')"]
+#CMD ["R", "-e shiny::runApp('/srv/geoflow-shiny')"]
