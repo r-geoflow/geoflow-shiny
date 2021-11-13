@@ -48,6 +48,7 @@ ENV GEOFLOW_DATA_DIR="/srv/geoflow-data"
  
 EXPOSE 3838
 
+VOLUME ["srv/geoflow-data","/etc/geoflow-shiny"]
 RUN apt-get install -y curl
 CMD ["R", "-e shiny::runApp('/srv/geoflow-shiny',port=3838,host='0.0.0.0')"]
 #CMD ["R", "-e shiny::runApp('/srv/geoflow-shiny')"]
