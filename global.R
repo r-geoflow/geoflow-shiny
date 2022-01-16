@@ -24,7 +24,7 @@ print(appConfig)
 #---------------------------------------------------------------------------------------
 list_of_packages <- c(
   "shiny", "shinymanager", "shinydashboard", "shinyjs",
-  "geoflow", "jsonlite", "DT", "tibble", 
+  "geoflow", "jsonlite", "DT", "tibble", "rhandsontable",
   "fastmap", "magrittr", "promises", "future", "ipc",
   "ocs4R"
 )

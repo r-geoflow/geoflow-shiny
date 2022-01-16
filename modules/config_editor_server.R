@@ -49,6 +49,16 @@ config_editor_server<- function(input, output, session, user, logged, parent.ses
     config <- try(jsonlite::read_json(input$jsonfile$datapath))
     return(config)
   }
+  #loadConfigurationFileFromUrl
+  loadConfigurationFileFromUrl <- function(file){
+    filepath <- if(appConfig$auth){
+      AUTH_API$downloadFile(relPath = appConfig$data_dir_remote, filename = file, outdir = tempdir())
+    }else{
+      file
+    }
+    config <- try(jsonlite::read_json(filepath))
+    return(config)
+  }
   
   #loadConfigurationUI
   loadConfigurationUI <- function(config){
@@ -118,6 +128,17 @@ config_editor_server<- function(input, output, session, user, logged, parent.ses
   ctrl_actions <- reactiveValues(
     list = list()
   )
+  #ctrl_validation
+  ctrl_validation <- reactiveValues(
+    report = data.frame(
+      row = integer(0),
+      col = character(0),
+      type = character(0),
+      message = character(0)
+    ),
+    report_raw = list(),
+    data = NULL
+  )
   #------------------------------------------------------------------------------------
   
   #PROFILE
@@ -155,16 +176,208 @@ config_editor_server<- function(input, output, session, user, logged, parent.ses
   
   #METADATA
   #=====================================================================================
+  output$validation_report_DT = DT::renderDataTable(
+    DT::datatable(
+      ctrl_validation$report,
+      extensions = 'RowGroup',
+      options = list(rowGroup = list(dataSrc = 0)),
+      selection = 'none',
+      rownames= FALSE
+    ) %>% formatStyle('type', target = 'row', backgroundColor = styleEqual(c("WARNING", "ERROR"), c('#fff3cd', '#f8d7da'))),
+    options = list(
+      lengthChange = FALSE
+    )
+  )
+  output$validation_report_HT <- rhandsontable::renderRHandsontable({
+    
+    #check if any warning
+    rows_with_warning <- c()
+    cols_with_warning <- c()
+    report_with_warning <- ctrl_validation$report[ctrl_validation$report$type == "WARNING",]
+    if(nrow(report_with_warning)>0){
+      report_with_warning <- unique(report_with_warning[,c("row", "col")])
+      report_with_warning$row <- sapply(report_with_warning$row, function(x){as.integer(gsub("Row ", "", x))})
+      report_with_warning$col <- sapply(report_with_warning$col, function(x){which(colnames(ctrl_validation$report_data)==x)})
+      row.names(report_with_warning) <- NULL
+      report_with_warning <- as.matrix(report_with_warning)
+      rows_with_warning <- report_with_warning[,1]
+      cols_with_warning <- report_with_warning[,2]
+    }
+    #check if any error
+    rows_with_error <- c()
+    cols_with_error <- c()
+    report_with_error <- ctrl_validation$report[ctrl_validation$report$type == "ERROR",]
+    if(nrow(report_with_error)>0){
+      report_with_error <- unique(report_with_error[,c("row", "col")])
+      report_with_error$row <- sapply(report_with_error$row, function(x){as.integer(gsub("Row ", "", x))})
+      report_with_error$col <- sapply(report_with_error$col, function(x){which(colnames(ctrl_validation$report_data)==x)})
+      row.names(report_with_error) <- NULL
+      report_with_error <- as.matrix(report_with_error)
+      rows_with_error <- report_with_error[,1]
+      cols_with_error <- report_with_error[,2]
+    }
+    #create handsontable
+    out_tbl <- rhandsontable::rhandsontable(
+      ctrl_validation$report_data, 
+      readOnly = TRUE,
+      rows_with_warning = rows_with_warning-1,
+      cols_with_warning = cols_with_warning-1,
+      rows_with_error = rows_with_error-1,
+      cols_with_error = cols_with_error-1
+    ) %>%
+      hot_cols(
+        fixedColumnsLeft = 1,
+        colWidths = 200,
+        manualColumnResize = TRUE,
+        renderer = "
+                function (instance, td, row, col, prop, value, cellProperties) {
+                    Handsontable.renderers.TextRenderer.apply(this, arguments);
+                    if (instance.params) {
+                        //manage cells that are valid
+                        td.style.background = '#d4edda';
+                        
+                        //manage cells with warnings
+                        col_warning_to_highlight = instance.params.cols_with_warning
+                        col_warning_to_highlight = col_warning_to_highlight instanceof Array ? col_warning_to_highlight : [col_warning_to_highlight]
+                        row_warning_to_highlight = instance.params.rows_with_warning
+                        row_warning_to_highlight = row_warning_to_highlight instanceof Array ? row_warning_to_highlight : [row_warning_to_highlight]
+                        for (i = 0; i < col_warning_to_highlight.length; i++) { 
+                            if (col_warning_to_highlight[i] == col && row_warning_to_highlight[i] == row) {
+                                td.style.background = '#fff3cd';
+                            }
+                        }
+                        
+                        //manage cells with errors
+                        col_error_to_highlight = instance.params.cols_with_error
+                        col_error_to_highlight = col_error_to_highlight instanceof Array ? col_error_to_highlight : [col_error_to_highlight]
+                        row_error_to_highlight = instance.params.rows_with_error
+                        row_error_to_highlight = row_error_to_highlight instanceof Array ? row_error_to_highlight : [row_error_to_highlight]
+                        for (i = 0; i < col_error_to_highlight.length; i++) { 
+                            if (col_error_to_highlight[i] == col && row_error_to_highlight[i] == row) {
+                                td.style.background = '#f8d7da';
+                            }
+                        }
+                    }
+                }") 
+    for(i in 1:nrow(ctrl_validation$report_data)){
+      for(j in 1:ncol(ctrl_validation$report_data)){
+        cell_validator <- ctrl_validation$report_raw[sapply(ctrl_validation$report_raw, function(x){x$i == i && x$j == j})][[1]]
+        cell_validation_report <- cell_validator$validate()
+        if(nrow(cell_validation_report)==0){
+          cell_validation_report <- NULL
+        }else{
+          cell_validation_report <- paste0(sapply(1:nrow(cell_validation_report), function(idx){
+            paste0("- ", cell_validation_report[idx, "type"], ": ", cell_validation_report[idx, "message"])
+          }), collapse="\n")
+        }
+        out_tbl <- out_tbl %>% 
+          hot_cell(i, j, comment = cell_validation_report)
+      }
+    }
+
+    out_tbl
+  })
+  #showValidationModal
+  showValidationModal <- function(type, handler, source){
+    #get metadata handler
+    md_handler <- geoflow::loadMetadataHandler(config = NULL, type = type, element = list(handler = handler, source = source))
+    #get source data only (no handling of geoflow objects)
+    md_data <- md_handler(config = NULL, source = source, handle = FALSE)
+    #get metadata validator
+    md_validator <- switch(type,
+      "contacts" = geoflow::geoflow_validator_contacts$new(source = md_data),
+      "entities" = geoflow::geoflow_validator_entities$new(source = md_data)
+    )
+    #validate
+    hasReport <- FALSE
+    md_validation_message <- NULL
+    md_structure_status <- md_validator$validate_structure()
+    if(!md_structure_status){
+      md_validation_message <- tags$span(attr(md_structure_status, "message"))
+    }else{
+      md_content_report <- md_validator$validate_content()
+      if(nrow(md_content_report)==0){
+        md_validation_message <- tags$span("No validation issue detected!")
+      }else{
+        md_content_report$row <- paste("Row", md_content_report$row)
+        ctrl_validation$report <- md_content_report
+        ctrl_validation$report_raw <- md_validator$validate_content(raw = TRUE)
+        ctrl_validation$report_data <- md_data
+        hasReport <- TRUE
+      }
+    }
+    
+    showModal(
+      modalDialog(
+        title = sprintf("Metadata (%s) validation report", type),
+        tags$b("Source: "), tags$b(tags$a(href = source, source)),hr(),
+        if(hasReport){
+          shiny::tabsetPanel(
+            type = "pills",
+            shiny::tabPanel(
+              title = "Smart view", hr(),
+              rhandsontable::rHandsontableOutput(ns("validation_report_HT"))
+            ),
+            shiny::tabPanel(
+              title = "Raw report", hr(),
+              DT::dataTableOutput(ns("validation_report_DT"))
+            )
+          )
+          
+        }else{
+          md_validation_message
+        },
+        easyClose = TRUE, footer = NULL, size = "l"
+      )
+    )
+  }
+  #manage button handlers
+  manageButtonValidateEvents <- function(data, type, uuids){
+    prefix <- paste0("button_validate_", type,"_")
+    if(nrow(data)>0) lapply(1:nrow(data),function(i){
+      x <- data[i,]
+      button_id <- paste0(prefix,uuids[i])
+      observeEvent(input[[button_id]],{
+        showValidationModal(type, x$handler, x$source)
+      })
+    })
+  }
+  
   #metadata table handler
-  metadataTableHandler <- function(data){
-    DT::datatable({
-      colnames(data) <- c("Source", "Handler")
-      data
-      }, 
-      #editable = "cell",
-      #editable = list(target = "cell", disable = list(columns = 0)), 
+  metadataTableHandler <- function(data, type, uuids, validate = TRUE){
+    
+    #DT::datatable({
+      colnames(data) <- c("Handler", "Source")
+      if(validate){
+        data <- do.call("rbind", lapply(1:nrow(data), function(i){
+            out_tib <- tibble::tibble(
+              Handler = data[i, "Handler"],
+              Source = data[i, "Source"],
+              Actions = as(actionButton(inputId = ns(paste0('button_validate_',type,'_', uuids[i])), class="btn btn-info", style = "margin-right: 2px;",
+                             title = "Check metadata", label = "", icon = icon("tasks")),"character")
+            )
+            return(out_tib)
+          }
+        ))
+      }
+      return(data)
+  }
+  
+  #renderMetadataTable
+  renderMetadataTable <- function(data, type, validate){
+    
+    uuids <- NULL
+    if(!is.null(data)) if(nrow(data)>0) for(i in 1:nrow(data)){
+      one_uuid = uuid::UUIDgenerate() 
+      uuids <- c(uuids, one_uuid)
+    }
+    print(uuids)
+    
+    output[[paste0("tbl_", type)]] <- DT::renderDT(
+      metadataTableHandler(data, type, uuids, validate),
       selection='single', escape=FALSE,rownames=FALSE,
       options=list(
+        lengthChange = FALSE,
         paging = FALSE,
         searching = FALSE,
         preDrawCallback = JS(
@@ -188,17 +401,23 @@ config_editor_server<- function(input, output, session, user, logged, parent.ses
                               html += '<br><div style=\"color:red;padding:2px;\" role=\"alert\">Invalid Google spreadsheets link</div>';
                            }
                            return html;
-                        }"))
+                        }")),
+          if(validate) list(width = '50px', targets = c(2)) else NULL
         )
-      ))
+      )
+    )
+    if(validate) manageButtonValidateEvents(data, type, uuids)
   }
+  
+  #render tables
+  observe({
+    renderMetadataTable(ctrl_metadata$contacts, "contacts", TRUE)
+    renderMetadataTable(ctrl_metadata$entities, "entities", TRUE)
+    renderMetadataTable(ctrl_metadata$dictionnary, "dictionnary", FALSE)
+  })
   
   #contacts
   #-----------------------------------------------------------------------------------------------------
-  output$tbl_contacts = DT::renderDT(
-    metadataTableHandler(ctrl_metadata$contacts),
-    options = list(lengthChange = FALSE)
-  )
   #contact form
   showContactModal <- function(new = TRUE, handler = "", source = ""){
     title_prefix <- ifelse(new, "Add", "Modify")
@@ -263,10 +482,6 @@ config_editor_server<- function(input, output, session, user, logged, parent.ses
   
   #entities
   #----------------------------------------------------------------------------------------------------
-  output$tbl_entities = DT::renderDT(
-    metadataTableHandler(ctrl_metadata$entities),
-    options = list(lengthChange = FALSE)
-  )
   #entity form
   showEntityModal <- function(new = TRUE, handler = "", source = ""){
     title_prefix <- ifelse(new, "Add", "Modify")
@@ -331,10 +546,6 @@ config_editor_server<- function(input, output, session, user, logged, parent.ses
   
   #dictionary
   #-----------------------------------------------------------------------------------------------------
-  output$tbl_dictionary = DT::renderDT(
-    metadataTableHandler(ctrl_metadata$dictionary),
-    options = list(lengthChange = FALSE)
-  )
   #dictionary form
   showDictionaryModal <- function(new = TRUE, handler = "", source = ""){
     title_prefix <- ifelse(new, "Add", "Modify")
@@ -849,6 +1060,17 @@ config_editor_server<- function(input, output, session, user, logged, parent.ses
   
   #CONFIGURATION LOAD
   #=====================================================================================
+  #on config url load
+  observe({
+    query <- parseQueryString(session$clientData$url_search)
+    if(length(query)>0){
+      if(!is.null(query[["file"]])) {
+        cat(sprintf("Selecting configuration file '%s'\n", query[["file"]]))
+        config <- loadConfigurationFileFromUrl(query[["file"]])
+        loadConfigurationUI(config)
+      }
+    }
+  })
   #on config load
   observeEvent(input$load_configuration,{
     if(!is.null(input$jsonfile)){
