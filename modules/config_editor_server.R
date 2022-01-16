@@ -371,7 +371,6 @@ config_editor_server<- function(input, output, session, user, logged, parent.ses
       one_uuid = uuid::UUIDgenerate() 
       uuids <- c(uuids, one_uuid)
     }
-    print(uuids)
     
     output[[paste0("tbl_", type)]] <- DT::renderDT(
       metadataTableHandler(data, type, uuids, validate),
