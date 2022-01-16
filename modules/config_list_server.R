@@ -69,10 +69,9 @@ config_list_server<- function(input, output, session, user, logged, parent.sessi
           Actions = paste0(
             actionButton(inputId = ns(paste0('button_edit_', uuids[i])), class="btn btn-info", style = "margin-right: 2px;",
                          title = "Edit configuration", label = "", icon = icon("edit"),
-                         onclick = sprintf("Shiny.setInputValue('%s', this.id)",ns("select_button"))),
+                         onclick = paste0("window.open(window.location.href.split('?')[0] + '?module=configuration-editor&file=", if(appConfig$auth){ x$name }else{ x }, "','_self')")),
             actionButton(inputId = ns(paste0('button_execute_', uuids[i])), class="btn btn-primary",
-                         title = "Execute configuration", label = "", icon = icon("play"),
-                         onclick = sprintf("Shiny.setInputValue('%s', this.id)",ns("select_button")))
+                         title = "Execute configuration", label = "", icon = icon("play"))
           )
         )
         return(out_tib)
@@ -81,8 +80,10 @@ config_list_server<- function(input, output, session, user, logged, parent.sessi
     return(out)
   }
   
-  #function to manage BUtton events
-  manageButtonEvents <- function(prefix, uuids){
+  #functions to manage button events
+  #execute
+  manageButtonExecuteEvents <- function(uuids){
+    prefix <- "button_execute_"
     outlist <- getConfigurationFiles()
     if(length(outlist)>0) lapply(1:length(outlist),function(i){
       x <- outlist[[i]]
@@ -191,7 +192,7 @@ config_list_server<- function(input, output, session, user, logged, parent.sessi
         drawCallback = JS('function() { Shiny.bindAll(this.api().table().node()); } ')
       )
     )
-    manageButtonEvents("button_execute_", uuids)
+    manageButtonExecuteEvents(uuids)
   }
   
   observeEvent(pageLoaded(), {
