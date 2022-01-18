@@ -13,7 +13,7 @@ Many thanks to the following organizations that have supported :
   <a href="https://inee.cnrs.fr/fr/zones-ateliers"><img src="https://inee.cnrs.fr/sites/institut_inee/files/inline-images/logo-za_0_0.jpg" height=150 width=300/></a>
 </div>
 
-The following projects have contributed to strenghten ``geoflow``:
+The following projects have contributed to strenghten ``geoflow-shiny``:
 
 <a href="https://www.blue-cloud.org"><img height=100 width=300 src="https://www.blue-cloud.org/sites/all/themes/arcadia/logo.png"/></a>
 
@@ -95,6 +95,8 @@ The _Profile_ editor is split between:
 
 The _Metadata_ editor is split into three tabs corresponding the type of metadata that are referenced in geoflow (_contacts_, _entities_, _dictionary_). For each of them, you can add one or more sources of metadata, and eventually modify or delete. Whatever type of metadata considered (_contact_, _entity_, _dictionary_), the logic to add, modify, delete a metadata source is the same.
 
+Metadata _contacts_ and _entities_ can also be checked to verify metadata syntax and content.
+
 * Metadata section overview:
 
 <img src="https://github.com/eblondel/geoflow-shiny/raw/main/doc/screenshots/geoflow-shiny_metadata_empty.jpg"/>
@@ -136,6 +138,25 @@ To modify a metadata source, select the row in the metadata table corresponding 
 To delete a metadata source, select the row in the metadata table corresponding to the source you want to **delete**, and then click on "Delete <metadata> source". A dialog will open asking for confirming the deletion:
 
 <img src="https://github.com/eblondel/geoflow-shiny/raw/main/doc/screenshots/geoflow-shiny_metadata_contact_delete.jpg"/>
+
+#### Validate a metadata source
+
+To validate a metadata source, click on the 'Check metadata' button on the metadata source. It will open a dialog to display a validation report:
+
+<img src="https://github.com/eblondel/geoflow-shiny/raw/main/doc/screenshots/geoflow-shiny_metadata_entity_validate.jpg"/>
+
+The metadata validation report includes two validation steps:
+* validate the metadata table *structure*: in case the structure doesn't match the one expected by _geoflow_, a message will be displayed. If the structure is valid, the validator will move to the next step
+* validate the metadata table *syntax* and *content*: in case there is any warning and/or error, a metadata validation report will be displayed.
+
+The metadata table *syntax*/*content* validation report can be displayed in two ways: 
+* *smart view*: a view over the metadata table with color codes to indicate the validation status: 'green' when there is no issue, 'yellow' in case of warnings, 'red' in case of errors. For warnings and errors, a comment is displayed over the table cell to inform about the issue.
+
+<img src="https://github.com/eblondel/geoflow-shiny/raw/main/doc/screenshots/geoflow-shiny_metadata_entity_validation_report_smartview.jpg"/>
+
+* *raw report*: as table listing all warnings and errors by row and column. This report is also displayed in the logs when executing the geoflow workflow considered.
+
+<img src="https://github.com/eblondel/geoflow-shiny/raw/main/doc/screenshots/geoflow-shiny_metadata_entity_validation_report_raw.jpg"/>
 
 <a name="configuration_editor_software"/>
 

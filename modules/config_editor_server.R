@@ -293,11 +293,11 @@ config_editor_server<- function(input, output, session, user, logged, parent.ses
     md_validation_message <- NULL
     md_structure_status <- md_validator$validate_structure()
     if(!md_structure_status){
-      md_validation_message <- tags$span(attr(md_structure_status, "message"))
+      md_validation_message <- tags$span(unlist(strsplit(attr(md_structure_status, "message"),": "))[2], style="color:red;font-weight:bold;")
     }else{
       md_content_report <- md_validator$validate_content()
       if(nrow(md_content_report)==0){
-        md_validation_message <- tags$span("No validation issue detected!")
+        md_validation_message <- tags$span("No validation issue detected!", style = "color:green;font-weight:bold;")
       }else{
         md_content_report$row <- paste("Row", md_content_report$row)
         ctrl_validation$report <- md_content_report
