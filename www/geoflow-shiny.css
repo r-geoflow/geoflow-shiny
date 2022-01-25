@@ -2,3 +2,11 @@
   margin: 50px 0px !important;
   width: 100% !important;
 }
+
+.software-parameter-info {
+  vertical-align: middle;
+  color: #cbcbcb;
+}
+.software-parameter-info:hover{
+  color: orange;
+}

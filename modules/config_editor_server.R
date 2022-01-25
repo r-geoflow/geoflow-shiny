@@ -759,33 +759,54 @@ config_editor_server<- function(input, output, session, user, logged, parent.ses
               title = item,
               value = tolower(item),
               br(),
-              do.call("tagList", lapply(names(software_details[[tolower(item)]]), function(name){
+              do.call("c", lapply(names(software_details[[tolower(item)]]), function(name){
                 software_param <- software_details[[tolower(item)]][[name]]
                 if(!is.null(software_param$choices)){
                   selectizeInput(
                     inputId = ns(sprintf("software_form_%s_%s", tolower(item), name)),
-                    label = software_param$def, selected = software[[tolower(item)]][[name]],
+                    label = paste(software_param$label, tags$span(class = "glyphicon glyphicon-info-sign software-parameter-info", title = software_param$def)),
+                    selected = software[[tolower(item)]][[name]],
                     choices = software_param$choices
-                  ) 
+                  )
                 }else{
                   clazz <- software_param$class
                   if(length(clazz)==0) clazz = ""
                   switch(clazz,
                     "character" = textInput(
                       inputId = ns(sprintf("software_form_%s_%s", tolower(item), name)),
-                      label = software_param$def, value = software[[tolower(item)]][[name]]
+                      label = c(software_param$label, list(tags$span(class = "glyphicon glyphicon-info-sign software-parameter-info", title = software_param$def))),
+                      value = if(!is.null(software[[tolower(item)]][[name]])){
+                        software[[tolower(item)]][[name]]
+                      }else{
+                        if(!is.null(software_param$default)){software_param$default}else{NULL}
+                      }
                     ),
                     "integer" = numericInput(
                       inputId = ns(sprintf("software_form_%s_%s", tolower(item), name)),
-                      label = software_param$def, value = software[[tolower(item)]][[name]]
+                      label = c(software_param$label, list(tags$span(class = "glyphicon glyphicon-info-sign software-parameter-info", title = software_param$def))),
+                      value = if(!is.null(software[[tolower(item)]][[name]])){
+                        software[[tolower(item)]][[name]]
+                      }else{
+                        if(!is.null(software_param$default)){software_param$default}else{NULL}
+                      }
                     ),
                     "numeric" = numericInput(
                       inputId = ns(sprintf("software_form_%s_%s", tolower(item), name)),
-                      label = software_param$def, value = software[[tolower(item)]][[name]]
+                      label = c(software_param$label, list(tags$span(class = "glyphicon glyphicon-info-sign software-parameter-info", title = software_param$def))),
+                      value = if(!is.null(software[[tolower(item)]][[name]])){
+                        software[[tolower(item)]][[name]]
+                      }else{
+                        if(!is.null(software_param$default)){software_param$default}else{NULL}
+                      }
                     ),
                     textInput(
                       inputId = ns(sprintf("software_form_%s_%s", tolower(item), name)),
-                      label = software_param$def, value = software[[tolower(item)]][[name]]
+                      label = c(software_param$label, list(tags$span(class = "glyphicon glyphicon-info-sign software-parameter-info", title = software_param$def))),
+                      value = if(!is.null(software[[tolower(item)]][[name]])){
+                        software[[tolower(item)]][[name]]
+                      }else{
+                        if(!is.null(software_param$default)){software_param$default}else{NULL}
+                      }
                     )
                   )
                 }
