@@ -759,7 +759,7 @@ config_editor_server<- function(input, output, session, user, logged, parent.ses
               title = item,
               value = tolower(item),
               br(),
-              do.call("c", lapply(names(software_details[[tolower(item)]]), function(name){
+              do.call("tagList", lapply(names(software_details[[tolower(item)]]), function(name){
                 software_param <- software_details[[tolower(item)]][[name]]
                 if(!is.null(software_param$choices)){
                   selectizeInput(
