@@ -208,6 +208,7 @@ config_editor_server<- function(input, output, session, user, logged, parent.ses
     cols_with_error <- c()
     report_with_error <- ctrl_validation$report[ctrl_validation$report$type == "ERROR",]
     if(nrow(report_with_error)>0){
+      print(report_with_error)
       report_with_error <- unique(report_with_error[,c("row", "col")])
       report_with_error$row <- sapply(report_with_error$row, function(x){as.integer(gsub("Row ", "", x))})
       report_with_error$col <- sapply(report_with_error$col, function(x){which(colnames(ctrl_validation$report_data)==x)})
@@ -215,6 +216,7 @@ config_editor_server<- function(input, output, session, user, logged, parent.ses
       report_with_error <- as.matrix(report_with_error)
       rows_with_error <- report_with_error[,1]
       cols_with_error <- report_with_error[,2]
+      print(report_with_error)
     }
     #create handsontable
     out_tbl <- rhandsontable::rhandsontable(
@@ -234,29 +236,53 @@ config_editor_server<- function(input, output, session, user, logged, parent.ses
                     Handsontable.renderers.TextRenderer.apply(this, arguments);
                     if (instance.params) {
                         //manage cells that are valid
-                        td.style.background = '#d4edda';
+                        var cell_valid = true;
                         
                         //manage cells with warnings
-                        col_warning_to_highlight = instance.params.cols_with_warning
-                        col_warning_to_highlight = col_warning_to_highlight instanceof Array ? col_warning_to_highlight : [col_warning_to_highlight]
+                        console.log('Warnings');
+                        console.log('Warning rows');
                         row_warning_to_highlight = instance.params.rows_with_warning
                         row_warning_to_highlight = row_warning_to_highlight instanceof Array ? row_warning_to_highlight : [row_warning_to_highlight]
-                        for (i = 0; i < col_warning_to_highlight.length; i++) { 
-                            if (col_warning_to_highlight[i] == col && row_warning_to_highlight[i] == row) {
-                                td.style.background = '#fff3cd';
+                        console.log(row_warning_to_highlight);
+                        console.log('Warning cols');
+                        col_warning_to_highlight = instance.params.cols_with_warning
+                        col_warning_to_highlight = col_warning_to_highlight instanceof Array ? col_warning_to_highlight : [col_warning_to_highlight]
+                        console.log(col_warning_to_highlight);
+                        for (var i=0; i < row_warning_to_highlight.length; i++) {
+                            for(var j=0; j < col_warning_to_highlight.length; j++){
+                              var warning_row = row_warning_to_highlight.length == 1? row_warning_to_highlight[i].row : row_warning_to_highlight[i];
+                              var warning_col = col_warning_to_highlight.length == 1? col_warning_to_highlight[i].col: col_warning_to_highlight[i];
+                              if (warning_row == row && warning_col == col) {
+                                  $(td).addClass('cell_with_warning');
+                                  cell_valid = false;
+                                  break; break;
+                              }
                             }
                         }
                         
                         //manage cells with errors
-                        col_error_to_highlight = instance.params.cols_with_error
-                        col_error_to_highlight = col_error_to_highlight instanceof Array ? col_error_to_highlight : [col_error_to_highlight]
+                        console.log('Errors');
+                        console.log('Error rows');
                         row_error_to_highlight = instance.params.rows_with_error
                         row_error_to_highlight = row_error_to_highlight instanceof Array ? row_error_to_highlight : [row_error_to_highlight]
-                        for (i = 0; i < col_error_to_highlight.length; i++) { 
-                            if (col_error_to_highlight[i] == col && row_error_to_highlight[i] == row) {
-                                td.style.background = '#f8d7da';
+                        console.log(row_error_to_highlight);
+                        console.log('Error cols');
+                        col_error_to_highlight = instance.params.cols_with_error
+                        col_error_to_highlight = col_error_to_highlight instanceof Array ? col_error_to_highlight : [col_error_to_highlight]
+                        console.log(col_error_to_highlight);
+                        for (var i = 0; i < row_error_to_highlight.length; i++) {
+                            for(var j = 0; j < col_error_to_highlight.length; j++){
+                              var error_row = row_error_to_highlight.length == 1? row_error_to_highlight[i].row : row_error_to_highlight[i];
+                              var error_col = col_error_to_highlight.length == 1? col_error_to_highlight[i].col: col_error_to_highlight[i];
+                              if (error_row == row && error_col == col) {
+                                  $(td).addClass('cell_with_error');
+                                  cell_valid = false;
+                                  break; break;
+                              }
                             }
                         }
+                        
+                        if(cell_valid) $(td).addClass('cell_valid');
                     }
                 }") 
     for(i in 1:nrow(ctrl_validation$report_data)){

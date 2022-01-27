@@ -10,3 +10,13 @@
 .software-parameter-info:hover{
   color: orange;
 }
+
+.handsontable .cell_valid {
+  background: #d4edda;
+}
+.handsontable .cell_with_warning {
+  background: #fff3cd;
+}
+.handsontable .cell_with_error {
+  background: #f8d7da;
+}
