@@ -30,7 +30,7 @@ We thank in advance people that use ``geoflow-shiny`` for citing it in their wor
 
 [geoflow-shiny](https://github.com/eblondel/geoflow-shiny) can be downloaded from Github. 
 
-By default all files managed by the app, including configurations newly created and results of geoflow jobs will be stored in the R working directory where the app is launched. It is highly recommended to set a environment variable **GEOFLOW_DATA_DIR** that gives the path of the directory used by geoflow-shiny.
+By default all files managed by the app, including configurations newly created and results of geoflow jobs will be stored in the R working directory where the app is launched. This working directory can be modified in the ``geoflow-shiny`` data directory.
 
 To run it on your local machine, just run the `app.R` script, this will open the Shiny application in your browser.
 

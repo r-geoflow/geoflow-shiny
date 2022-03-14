@@ -1,7 +1,3 @@
-if(Sys.getenv('GEOFLOW_DATA_DIR') == ""){
-  stop("geoflow-shiny requires the environment variable 'GEOFLOW_DATA_DIR' to be set!")
-}
-
 #options
 #---------------------------------------------------------------------------------------
 options(stringsAsFactors = FALSE)
@@ -13,6 +9,7 @@ if(!require("yaml")){
   require(yaml)
 }
 
+#config_file = "D:/Documents/DEV/Packages/geoflow-shiny_config_inrae.yml"
 #config_file = "D:/Documents/DEV/Packages/geoflow-shiny/resources/config.yml"
 config_file <- "/etc/geoflow-shiny/config.yml"
 if(!file.exists(config_file)) stop(sprintf("No configuration file at '%s'", config_file))
@@ -41,9 +38,7 @@ if(!require(shinyvalidate)){
 
 #global variables / environment
 #---------------------------------------------------------------------------------------
-GEOFLOW_DATA_DIR <- Sys.getenv("GEOFLOW_DATA_DIR")
-if(GEOFLOW_DATA_DIR=="") GEOFLOW_DATA_DIR <- appConfig$data_dir_local
-
+GEOFLOW_DATA_DIR <- appConfig$data_dir_local
 GEOFLOW_SHINY_ENV <- new.env()
 
 #scripts
