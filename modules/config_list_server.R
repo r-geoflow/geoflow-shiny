@@ -29,7 +29,17 @@ config_list_server<- function(input, output, session, user, logged, parent.sessi
       switch(appConfig$auth_type,
         "ocs" = {
           outfiles <- list()
-          if(paste0(appConfig$data_dir_remote,"/") %in% AUTH_API$listFiles()$name){
+          data_dir_remote_exists <- TRUE
+          folders <- unlist(strsplit(appConfig$data_dir_remote,"/"))
+          folders <- folders[folders!=""]
+          path <- "/"
+          for(folder in folders){
+            folder_path <- paste0(folder, "/")
+            data_dir_remote_exists <- folder_path %in% AUTH_API$listFiles(relPath = path)$name
+            if(!data_dir_remote_exists) break
+            path <- paste0(path, folder_path)
+          }
+          if(data_dir_remote_exists){
             files <- AUTH_API$listFiles(relPath = appConfig$data_dir_remote)
             files <- files[files$contentType == "application/json",]
             if(nrow(files)>0) outfiles <- lapply(1:nrow(files), function(i){files[i,]})
