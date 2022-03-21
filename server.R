@@ -23,6 +23,10 @@ server <- function(input, output, session) {
         if (is(AUTH_API, "ocsManager") && !is.null(AUTH_API$getWebdavRoot())) {
           credentials_df <- data.frame(user = user, password = password, stringsAsFactors = FALSE)
           assign("AUTH_API", AUTH_API, envir = GEOFLOW_SHINY_ENV)
+          if(!is.null(appConfig$data_dir_remote_user_root)) if(appConfig$data_dir_remote_user_root){
+            INFO(sprintf("Using user '%s' root directory", user))
+            appConfig$data_dir_remote <<- paste0(user, "/", appConfig$data_dir_remote)
+          }
         }else{
           credentials_df <- data.frame(user = character(0), password = character(0), stringsAsFactors = FALSE)
         }
