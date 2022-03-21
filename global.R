@@ -20,7 +20,7 @@ print(appConfig)
 #packages
 #---------------------------------------------------------------------------------------
 list_of_packages <- c(
-  "shiny", "shinymanager", "shinydashboard", "shinyjs",
+  "shiny", "shinymanager", "shinydashboard", "shinyjs", "shinycssloaders", "shinyvalidate",
   "geoflow", "jsonlite", "DT", "tibble", "rhandsontable",
   "fastmap", "magrittr", "promises", "future", "ipc",
   "ocs4R"
@@ -29,12 +29,6 @@ invisible(lapply(list_of_packages, function(x) {
   require(x,character.only = TRUE, quietly = TRUE)
 }))
 future::plan(multiprocess)
-
-#Github packages
-if(!require(shinyvalidate)){
-  remotes::install_github("rstudio/shinyvalidate")
-  require(shinyvalidate)
-}
 
 #global variables / environment
 #---------------------------------------------------------------------------------------
