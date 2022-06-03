@@ -63,30 +63,19 @@ server <- function(input, output, session) {
   }else{
     #anonymous usage
     INFO("Set-up geoflow-shiny in anonymous mode")
-    shiny::callModule(config_editor_server, "config_editor")
-    shiny::callModule(config_list_server, "config_list")
+    shiny::callModule(config_editor_server, "config_editor", parent.session = session)
+    shiny::callModule(config_list_server, "config_list", parent.session = session)
+
   }
-  
+
   #module page management
   session$userData$module <- reactiveVal(NULL)
+  
   observe({
-    currentModule <- NA
-    #look if there is a module in URL, if yes use it
-    query <- parseQueryString(session$clientData$url_search)
-    if (!is.null(query$module)) {
-      currentModule <- query$module
-      cat(sprintf("Current module from URL %s\n", currentModule))
-    }else{
-      if (!is.null(session$userData$module())) {
-        currentModule <- session$userData$module()
-        cat(sprintf("Current module from userData %s\n", currentModule))
-      }
-    }
-    
-    if (!is.na(currentModule)) {
-      isolate({updateTabItems(session, "geoflow-tabs", gsub("-", "_", currentModule))})
-    } 
+    #Update moduleUrl
+    moduleUrl <- gsub('_', '-', input$`geoflow-tabs`)
+    session$userData$module(moduleUrl)
+    updateModuleUrl(moduleUrl, session)
   })
   
-   
 }

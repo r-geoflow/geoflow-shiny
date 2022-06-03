@@ -2,16 +2,15 @@
 #---------------------------------------------------------------------------------------
 options(stringsAsFactors = FALSE)
 
-#config
+#scripts
 #---------------------------------------------------------------------------------------
-if(!require("yaml")){
-  install.packages("yaml", repos = "https://cloud.r-project.org")
-  require(yaml)
-}
+source("assets/package_utils.R")
+source("assets/commons.R")
 
-#config_file = "D:/Documents/DEV/Packages/geoflow-shiny_config_inrae.yml"
-#config_file = "D:/Documents/DEV/Packages/geoflow-shiny/resources/config.yml"
-config_file <- "/etc/geoflow-shiny/config.yml"
+
+config_file = "D:/Documents/DEV/Packages/geoflow-shiny_config_inrae.yml"
+#config_file <- "/etc/geoflow-shiny/config.yml"
+
 if(!file.exists(config_file)) stop(sprintf("No configuration file at '%s'", config_file))
 print(sprintf("Reading configuration file '%s'", config_file))
 appConfig <- suppressWarnings(yaml::read_yaml(config_file))
@@ -19,28 +18,13 @@ print(appConfig)
 
 #packages
 #---------------------------------------------------------------------------------------
-list_of_packages <- c(
-  "shiny", "shinymanager", "shinydashboard", "shinyjs", "shinycssloaders", "shinyvalidate",
-  "geoflow", "jsonlite", "DT", "tibble", "rhandsontable",
-  "fastmap", "magrittr", "promises", "future", "ipc",
-  "ocs4R"
-)
-invisible(lapply(list_of_packages, function(x) {
-  require(x,character.only = TRUE, quietly = TRUE)
-}))
-future::plan(multiprocess)
+loadAppPackages()
 
-#global variables / environment
+#global settings
 #---------------------------------------------------------------------------------------
+future::plan(multiprocess)
 GEOFLOW_DATA_DIR <- appConfig$data_dir_local
 GEOFLOW_SHINY_ENV <- new.env()
-
-#scripts
-#---------------------------------------------------------------------------------------
-source("scripts/commons.R")
-
-#local datasets
-#---------------------------------------------------------------------------------------
 
 #modules
 #---------------------------------------------------------------------------------------

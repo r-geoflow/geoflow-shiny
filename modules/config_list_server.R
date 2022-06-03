@@ -76,10 +76,11 @@ config_list_server<- function(input, output, session, user, logged, parent.sessi
           } else {
             file.info(x)$mtime
           },
+          
+          #onclick = paste0("window.open(window.location.href.split('?')[0] + '?module=configuration-editor&file=", if(appConfig$auth){ x$name }else{ x }, "','_self')")
           Actions = paste0(
             actionButton(inputId = ns(paste0('button_edit_', uuids[i])), class="btn btn-info", style = "margin-right: 2px;",
-                         title = "Edit configuration", label = "", icon = icon("edit"),
-                         onclick = paste0("window.open(window.location.href.split('?')[0] + '?module=configuration-editor&file=", if(appConfig$auth){ x$name }else{ x }, "','_self')")),
+                         title = "Edit configuration", label = "", icon = icon("edit")),
             actionButton(inputId = ns(paste0('button_execute_', uuids[i])), class="btn btn-primary",
                          title = "Execute configuration", label = "", icon = icon("play"))
           )
@@ -91,6 +92,29 @@ config_list_server<- function(input, output, session, user, logged, parent.sessi
   }
   
   #functions to manage button events
+  #edit
+  manageButtonEditEvents <- function(uuids){
+    prefix <- "button_edit_"
+    outlist <- getConfigurationFiles()
+    if(length(outlist)>0) lapply(1:length(outlist),function(i){
+      x <- outlist[[i]]
+      if(appConfig$auth) x <- x$name
+      button_id <- paste0(prefix,uuids[i])
+      observeEvent(input[[button_id]],{
+        
+        shinyjs::disable(button_id)
+        
+        filepath <- if(appConfig$auth){
+          AUTH_API$downloadFile(relPath = appConfig$data_dir_remote, filename = x, outdir = tempdir())
+        }else{
+          x
+        }
+        print(filepath)
+        updateTabItems(session = parent.session, "config", "config_editor")
+        
+      })
+    })
+  }
   #execute
   manageButtonExecuteEvents <- function(uuids){
     prefix <- "button_execute_"
@@ -202,6 +226,7 @@ config_list_server<- function(input, output, session, user, logged, parent.sessi
         drawCallback = JS('function() { Shiny.bindAll(this.api().table().node()); } ')
       )
     )
+    manageButtonEditEvents(uuids)
     manageButtonExecuteEvents(uuids)
   }
   
