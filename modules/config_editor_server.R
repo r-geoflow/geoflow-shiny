@@ -1,11 +1,13 @@
 #config_editor_server
-config_editor_server<- function(input, output, session, user, logged, parent.session){
+config_editor_server<- function(id, user, logged, parent.session){
+
+ moduleServer(id, function(input, output, session){
   
   ns <- session$ns
   
   output$config_editor_info <- renderText({
     session$userData$module("configuration-editor")
-    updateModuleUrl("configuration-editor", session)
+    updateModuleUrl(session, "configuration-editor")
     text <- "<h2><b>geoflow</b> configuration editor <small>Create, edit and save a <b>geoflow</b> configuration</small></h2><hr>"
     text
   })
@@ -1110,9 +1112,11 @@ config_editor_server<- function(input, output, session, user, logged, parent.ses
   observe({
     query <- parseQueryString(session$clientData$url_search)
     if(length(query)>0){
-      if(!is.null(query[["file"]])) {
-        cat(sprintf("Selecting configuration file '%s'\n", query[["file"]]))
-        config <- loadConfigurationFileFromUrl(query[["file"]])
+      filename <- query[["file"]]
+      if(!is.null(filename)) {
+        cat(sprintf("Selecting configuration file '%s'\n", filename))
+        config <- loadConfigurationFileFromUrl(filename)
+        print(config)
         loadConfigurationUI(config)
       }
     }
@@ -1212,5 +1216,7 @@ config_editor_server<- function(input, output, session, user, logged, parent.ses
       enable("downloadConfiguration")
     }
   )
+  
+ })
   
 }

@@ -1,5 +1,7 @@
 #config_list_server
-config_list_server<- function(input, output, session, user, logged, parent.session){
+config_list_server<- function(id, user, logged, parent.session){
+  
+ moduleServer(id, function(input, output, session){
   
   ns <- session$ns
   
@@ -13,7 +15,7 @@ config_list_server<- function(input, output, session, user, logged, parent.sessi
   
   output$config_list_info <- renderText({
     session$userData$module("configuration-list")
-    updateModuleUrl("configuration-list", session)
+    updateModuleUrl(session, "configuration-list")
     text <- "<h2>List of <b>geoflow</b> configurations <small>Access your configuration, and execute them</small></h2><hr>"
     pageLoaded(TRUE)
     text
@@ -101,20 +103,14 @@ config_list_server<- function(input, output, session, user, logged, parent.sessi
       if(appConfig$auth) x <- x$name
       button_id <- paste0(prefix,uuids[i])
       observeEvent(input[[button_id]],{
-        
         shinyjs::disable(button_id)
-        
-        filepath <- if(appConfig$auth){
-          AUTH_API$downloadFile(relPath = appConfig$data_dir_remote, filename = x, outdir = tempdir())
-        }else{
-          x
-        }
-        print(filepath)
-        updateTabItems(session = parent.session, "config", "config_editor")
-        
+        updateModuleUrl(session, "configuration-list", file = x)
+        updateTabItems(session = parent.session, "geoflow-tabs", "config_editor")
+        shinyjs::enable(button_id)
       })
     })
   }
+  
   #execute
   manageButtonExecuteEvents <- function(uuids){
     prefix <- "button_execute_"
@@ -291,5 +287,7 @@ config_list_server<- function(input, output, session, user, logged, parent.sessi
       style = "max-height:500px;font-size:80%;color:white;background-color:black;overflow-y:auto;white-space: pre-line;padding:2px;"
     )
   })
+  
+ })
   
 }

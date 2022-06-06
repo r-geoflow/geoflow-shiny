@@ -15,7 +15,7 @@ config_list_ui <- function(id){
     fluidRow(
       box(
         inputId = "config_list_wrapper", 
-        title = tags$span("Workflows", tags$small(actionLink(ns("config_list_refresh"), label = NULL, icon = icon("refresh")))), status = "primary", width = 6,
+        title = tags$span("Workflows", tags$small(actionLink(ns("config_list_refresh"), label = NULL, icon = icon("fas fa-sync")))), status = "primary", width = 6,
         tags$div(shinycssloaders::withSpinner(DT::DTOutput(ns("config_list_table"))), style = "font-size:80%;")
       ),
       box(

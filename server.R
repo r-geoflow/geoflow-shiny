@@ -55,16 +55,16 @@ server <- function(input, output, session) {
       AUTH_API <- try(get("AUTH_API", envir = GEOFLOW_SHINY_ENV), silent = TRUE)
       logged <- reactive({if(is(AUTH_API, "try-error")){FALSE}else{TRUE}})
       if(!is.null(user())){
-        shiny::callModule(config_editor_server, "config_editor", user, logged, parent.session = session)
-        shiny::callModule(config_list_server, "config_list", user, logged, parent.session = session)
+        config_editor_server("config_editor", user, logged, parent.session = session)
+        config_list_server("config_list", user, logged, parent.session = session)
       }
     })
     
   }else{
     #anonymous usage
     INFO("Set-up geoflow-shiny in anonymous mode")
-    shiny::callModule(config_editor_server, "config_editor", parent.session = session)
-    shiny::callModule(config_list_server, "config_list", parent.session = session)
+    config_editor_server("config_editor", parent.session = session)
+    config_list_server("config_list", parent.session = session)
 
   }
 
@@ -75,7 +75,7 @@ server <- function(input, output, session) {
     #Update moduleUrl
     moduleUrl <- gsub('_', '-', input$`geoflow-tabs`)
     session$userData$module(moduleUrl)
-    updateModuleUrl(moduleUrl, session)
+    updateModuleUrl(session, moduleUrl)
   })
   
 }

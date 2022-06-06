@@ -22,7 +22,7 @@ loadAppPackages()
 
 #global settings
 #---------------------------------------------------------------------------------------
-future::plan(multiprocess)
+future::plan(multisession)
 GEOFLOW_DATA_DIR <- appConfig$data_dir_local
 GEOFLOW_SHINY_ENV <- new.env()
 
