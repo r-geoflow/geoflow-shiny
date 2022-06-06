@@ -32,7 +32,6 @@ downloadButtonCustom <- function (outputId, label = "Download", class = NULL, hr
 #updateModuleUrl
 updateModuleUrl <- function(session, module, ...){
   params <- list(...)
-  print(params)
   if(length(params)>0){
     updateQueryString(
       queryString = paste0(sprintf("?module=%s", module), "&", paste0(sapply(names(params), function(x){paste0(x,"=",params[[x]])}), collapse="&")), 
