@@ -2,61 +2,39 @@
 #==========================================================================================
 server <- function(input, output, session) {
   
-  print(appConfig$auth)
-  if(appConfig$auth){
-    INFO("Set-up geoflow-shiny in auth mode")
-    INFO(sprintf("Authentication type: %s", appConfig$auth_type))
-    INFO(sprintf("Authentication provider: %s", appConfig$auth_url))
-    #auth usage
-    
-    #auth providers
-    #-------------------------------------------------------------------------------------------
-    #check_credentials_ocs
-    check_credentials_ocs <- function(){
-      function(user, password){
-        disable("auth-go_auth")
-        AUTH_API <- try(ocs4R::ocsManager$new(
-          url = appConfig$auth_url,
-          user = user, pwd = password,
-          logger = appConfig$logger
-        ))
-        if (is(AUTH_API, "ocsManager") && !is.null(AUTH_API$getWebdavRoot())) {
-          credentials_df <- data.frame(user = user, password = password, stringsAsFactors = FALSE)
-          assign("AUTH_API", AUTH_API, envir = GEOFLOW_SHINY_ENV)
-          if(!is.null(appConfig$data_dir_remote_user_root)) if(appConfig$data_dir_remote_user_root){
-            INFO(sprintf("Using user '%s' root directory", user))
-            appConfig$data_dir_remote <<- paste0(user, "/", appConfig$data_dir_remote)
-          }
-        }else{
-          credentials_df <- data.frame(user = character(0), password = character(0), stringsAsFactors = FALSE)
-        }
-        #enable("auth-go_auth")
-        outsec = shinymanager:::check_credentials_df(user, password, credentials_df = credentials_df)
-        return(outsec)
-      }
-    }
+  if(appConfig$auth){  
+  
+    credentials <- authLoginServer(
+      id = "login",
+      config = appConfig,
+      log_out = reactive(logout_init())
+    )
 
-    #calling secured shiny server
-    result_auth <- shinymanager::secure_server(
-      check_credentials = switch(appConfig$auth_type,
-        "ocs" = check_credentials_ocs(),
-        {
-          errMsg <- sprintf("No authentication provider for '%s'", appConfig$auth_type)
-          ERROR(errMsg)
-          stop(errMsg)
-        }
-      ),
-      session = session,
-      timeout = appConfig$auth_timeout
+    # call the logout module with reactive trigger to hide/show
+    logout_init <- shinyauthr::logoutServer(
+      id = "logout",
+      active = reactive(credentials()$user_auth)
     )
     
     observe({
-      user <- reactive({reactiveValuesToList(result_auth)$user})
-      AUTH_API <- try(get("AUTH_API", envir = GEOFLOW_SHINY_ENV), silent = TRUE)
-      logged <- reactive({if(is(AUTH_API, "try-error")){FALSE}else{TRUE}})
-      if(!is.null(user())){
-        config_editor_server("config_editor", user, logged, parent.session = session)
-        config_list_server("config_list", user, logged, parent.session = session)
+      if (credentials()$user_auth) {
+        
+        auth_endpoint <- reactive({ credentials()$auth_endpoint })
+        logged <- reactive({ credentials()$user_auth })
+        user <- reactive({ credentials()$user_info$user })
+        
+        AUTH_API <- try(get("AUTH_API", envir = GEOFLOW_SHINY_ENV), silent = TRUE)
+        if(!is.null(user())){
+          config_editor_server("config_editor", auth_endpoint, user, logged, parent.session = session)
+          config_list_server("config_list", auth_endpoint, user, logged, parent.session = session)
+        }
+        
+        shinyjs::removeClass(selector = "body", class = "sidebar-collapse")
+        shinyjs::show(selector = "header")
+        
+      } else {
+        shinyjs::addClass(selector = "body", class = "sidebar-collapse")
+        shinyjs::hide(selector = "header")
       }
     })
     
@@ -67,6 +45,46 @@ server <- function(input, output, session) {
     config_list_server("config_list", parent.session = session)
 
   }
+  
+  output$side_ui <- renderUI({
+    if(appConfig$auth){
+      req(credentials()$user_auth)
+      sidebarMenu(
+        id = "geoflow-tabs",
+        menuItem(
+          text = "Configuration",
+          tabName = "config",
+          menuSubItem(text = "Configuration editor", tabName = "config_editor"),
+          menuSubItem(text = "List of configurations", tabName = "config_list")
+        )
+      )
+    }else{
+      sidebarMenu(
+        id = "geoflow-tabs",
+        menuItem(
+          text = "Configuration",
+          tabName = "config",
+          menuSubItem(text = "Configuration editor", tabName = "config_editor"),
+          menuSubItem(text = "List of configurations", tabName = "config_list")
+        )
+      )
+    }
+  })
+  
+  output$main_ui <- renderUI({
+    if(appConfig$auth){
+      req(credentials()$user_auth)
+      tabItems(
+        config_editor_ui("config_editor"),
+        config_list_ui("config_list")
+      )
+    }else{
+      tabItems(
+        config_editor_ui("config_editor"),
+        config_list_ui("config_list")
+      )
+    }
+  })
 
   #module page management
   session$userData$module <- reactiveVal(NULL)

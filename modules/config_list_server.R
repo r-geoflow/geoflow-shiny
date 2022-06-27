@@ -1,5 +1,5 @@
 #config_list_server
-config_list_server<- function(id, user, logged, parent.session){
+config_list_server<- function(id, auth_endpoint, user, logged, parent.session){
   
  moduleServer(id, function(input, output, session){
   
@@ -27,8 +27,8 @@ config_list_server<- function(id, user, logged, parent.session){
   #getConfigurationFiles
   getConfigurationFiles <- function() {
     if(appConfig$auth){
-      INFO(sprintf("Listing configuration files in '%s' at '%s'", appConfig$data_dir_remote, appConfig$auth_url))
-      switch(appConfig$auth_type,
+      INFO(sprintf("Listing configuration files in '%s' at '%s'", appConfig$data_dir_remote, auth_endpoint()$auth_url))
+      switch(auth_endpoint()$auth_type,
         "ocs" = {
           outfiles <- list()
           data_dir_remote_exists <- TRUE
@@ -70,7 +70,7 @@ config_list_server<- function(id, user, logged, parent.session){
         out_tib <- tibble::tibble(
           Name = if(appConfig$auth){ x$name }else{ x },
           LastModified = if(appConfig$auth){
-            switch(appConfig$auth_type,
+            switch(auth_endpoint()$auth_type,
               "ocs" = {
                 as.POSIXct(x$lastModified)  
               }      

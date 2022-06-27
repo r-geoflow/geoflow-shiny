@@ -4,6 +4,7 @@ options(stringsAsFactors = FALSE)
 
 #scripts
 #---------------------------------------------------------------------------------------
+source("assets/ui_utils.R")
 source("assets/package_utils.R")
 source("assets/commons.R")
 
@@ -28,6 +29,8 @@ GEOFLOW_SHINY_ENV <- new.env()
 
 #modules
 #---------------------------------------------------------------------------------------
+source("modules/auth_server.R")
+source("modules/auth_ui.R")
 source("modules/config_editor_server.R")
 source("modules/config_editor_ui.R")
 source("modules/config_list_server.R")

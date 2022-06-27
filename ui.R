@@ -1,6 +1,7 @@
 # Define UI for application that draws a histogram
 #==========================================================================================
-ui_base <- dashboardPage(
+ui <- shiny::tagList(
+ dashboardPage(
   dashboardHeader(
     title = tags$div(
       ifelse(
@@ -12,41 +13,34 @@ ui_base <- dashboardPage(
         ""
       ),
       tags$span(appConfig$title, style = "font-size:80%;")
+    ),
+    tags$li(
+      class = "dropdown",
+      style = "padding: 8px;",
+      shinyauthr::logoutUI("logout", icon = icon("sign-out", lib = "font-awesome"))
     )
   ),
   dashboardSidebar(
-    sidebarMenu(
-      id = "geoflow-tabs",
-      menuItem(
-        text = "Configuration",
-        tabName = "config",
-        menuSubItem(text = "Configuration editor", tabName = "config_editor"),
-        menuSubItem(text = "List of configurations", tabName = "config_list")
-      )
-    )
+    collapsed = TRUE,
+    withSpinner(uiOutput("side_ui"))
   ),
   dashboardBody(
     tags$head(
       tags$link(rel = "stylesheet", type = "text/css", href = "geoflow-shiny.css")
     ),
-    tabItems(
-      config_editor_ui("config_editor"),
-      config_list_ui("config_list")
+    if(appConfig$auth) authLoginUI(
+      id = "login",
+      config = appConfig,
+      title = appConfig$auth_title,
+      cookie_expiry = if(!is.null(appConfig$auth_cookie_expiry)){appConfig$auth_cookie_expiry}else{7}, 
+      additional_ui = tags$div(
+        HTML(appConfig$auth_footer),
+        HTML("<p style='font-size:80%;'>Powered by <a href='https://www.r-project.org/' target='_blank'>R</a> and <a href='https://github.com/eblondel/geoflow' target='_blank'>geoflow</a></p>")
+      )
     ),
+    withSpinner(uiOutput("main_ui")),
     useShinyjs()
   )
+ ),
+ tags$footer(footer(getAppId(), getAppVersion(), getAppDate()), align = "center")
 )
-ui <- if(appConfig$auth){
-  secure_app(
-    ui = ui_base,
-    tags_top = tags$div(HTML(appConfig$auth_header)),
-    tags_bottom = tags$div(
-      HTML(appConfig$auth_footer),
-      HTML("<p style='font-size:80%;'>Powered by <a href='https://www.r-project.org/' target='_blank'>R</a> and <a href='https://github.com/eblondel/geoflow' target='_blank'>geoflow</a></p>")
-    ),
-    background = appConfig$auth_background,
-    language = appConfig$lang
-  )
-}else{
-  ui_base
-}

@@ -1,12 +1,12 @@
 {
   "id": "geoflow-shiny",
   "version": "0.2",
-  "date": "2022-06-03",
+  "date": "2022-06-27",
   "dependencies": [
     {"package": "dplyr", "version": "1.0.8", "repos": "https://cran.r-project.org"},
     {"package": "yaml", "version": "2.2.1", "repos": "https://cran.r-project.org"},
     {"package": "shiny", "version": "1.7.1", "repos": "https://cran.r-project.org"},
-    {"package": "shinymanager", "version": "1.0.400", "repos": "https://cran.r-project.org"},
+    {"package": "shinyauthr", "version": "1.0.0.9000", "repos": "https://cran.r-project.org"},
     {"package": "shinydashboard", "version": "0.7.2", "repos": "https://cran.r-project.org"},
     {"package": "shinyjs", "version": "2.0.0", "repos": "https://cran.r-project.org"},
     {"package": "shinycssloaders", "version": "1.0.0", "repos": "https://cran.r-project.org"},
