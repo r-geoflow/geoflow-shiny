@@ -13,3 +13,5 @@ invisible(lapply(package$dependencies, function(pkg){
   pkg_args <- pkg[names(pkg)!="from"]
   do.call(pkg_installer, pkg_args)
 }))
+
+
