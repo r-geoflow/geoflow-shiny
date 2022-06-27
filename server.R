@@ -55,7 +55,8 @@ server <- function(input, output, session) {
           text = "Configuration",
           tabName = "config",
           menuSubItem(text = "Configuration editor", tabName = "config_editor"),
-          menuSubItem(text = "List of configurations", tabName = "config_list")
+          menuSubItem(text = "List of configurations", tabName = "config_list"),
+          startExpanded = TRUE
         )
       )
     }else{
