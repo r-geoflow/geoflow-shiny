@@ -9,12 +9,14 @@ source("assets/package_utils.R")
 source("assets/commons.R")
 
 
-config_file = "D:/Documents/DEV/Packages/geoflow-shiny_config_inrae.yml"
+#config_file = "D:/Documents/DEV/Packages/geoflow-shiny_config_inrae.yml"
 #config_file <- "/etc/geoflow-shiny/config.yml"
+config_file <- "resources/config.yml"
 
 if(!file.exists(config_file)) stop(sprintf("No configuration file at '%s'", config_file))
 print(sprintf("Reading configuration file '%s'", config_file))
 appConfig <- suppressWarnings(yaml::read_yaml(config_file))
+if(is.na(appConfig$data_dir_local)) appConfig$data_dir_local <- "."
 print(appConfig)
 
 #packages
