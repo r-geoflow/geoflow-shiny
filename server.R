@@ -25,7 +25,9 @@ server <- function(input, output, session) {
         
         AUTH_API <- try(get("AUTH_API", envir = GEOFLOW_SHINY_ENV), silent = TRUE)
         if(!is.null(user())){
+          INFO("Load configuration editor module")
           config_editor_server("config_editor", auth_endpoint, user, logged, parent.session = session)
+          INFO("Load configuration list module")
           config_list_server("config_list", auth_endpoint, user, logged, parent.session = session)
         }
         
@@ -41,7 +43,9 @@ server <- function(input, output, session) {
   }else{
     #anonymous usage
     INFO("Set-up geoflow-shiny in anonymous mode")
+    INFO("Load configuration editor module")
     config_editor_server("config_editor", parent.session = session)
+    INFO("Load configuration list module")
     config_list_server("config_list", parent.session = session)
 
   }
