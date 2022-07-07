@@ -47,6 +47,8 @@ server <- function(input, output, session) {
     config_editor_server("config_editor", parent.session = session)
     INFO("Load configuration list module")
     config_list_server("config_list", parent.session = session)
+    shinyjs::removeClass(selector = "body", class = "sidebar-collapse")
+    shinyjs::show(selector = "header")
 
   }
   
