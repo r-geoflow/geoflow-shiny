@@ -1,7 +1,7 @@
 {
   "id": "geoflow-shiny",
   "version": "0.2",
-  "date": "2022-06-27",
+  "date": "2022-10-04",
   "dependencies": [
     {"package": "dplyr", "version": "1.0.8", "repos": "https://cran.r-project.org"},
     {"package": "yaml", "version": "2.2.1", "repos": "https://cran.r-project.org"},
