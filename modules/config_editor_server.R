@@ -100,10 +100,15 @@ config_editor_server<- function(id, auth_endpoint, user, logged, parent.session)
     
     #load actions
     ctrl_actions$list <- config$actions
+    
   }
   
   #controllers
   #------------------------------------------------------------------------------------
+  #ctrl_config
+  ctrl_config_file <- reactiveVal(NULL)
+  ctrl_config <- reactiveVal(NULL)
+  
   #profile controller
   ctrl_profile <- reactiveValues(
     id = NULL,
@@ -175,6 +180,15 @@ config_editor_server<- function(id, auth_endpoint, user, logged, parent.session)
       )
     )
   })
+  
+  #CONFIG VALIDATION/TEST
+  #=====================================================================================  
+  loadConfiguration <- function(){
+    geoflow_config <- try(geoflow::initWorkflow(ctrl_config_file()))
+    if(!is(geoflow_config, "try-error")){
+      ctrl_config(geoflow_config)
+    }
+  }
   
   #METADATA
   #=====================================================================================
@@ -307,10 +321,12 @@ config_editor_server<- function(id, auth_endpoint, user, logged, parent.session)
   })
   #showValidationModal
   showValidationModal <- function(type, handler, source){
+    #load configuration
+    loadConfiguration()
     #get metadata handler
-    md_handler <- geoflow::loadMetadataHandler(config = NULL, type = type, element = list(handler = handler, source = source))
+    md_handler <- geoflow::loadMetadataHandler(config = ctrl_config(), type = type, element = list(handler = handler, source = source))
     #get source data only (no handling of geoflow objects)
-    md_data <- md_handler(config = NULL, source = source, handle = FALSE)
+    md_data <- md_handler(config = ctrl_config(), source = source, handle = FALSE)
     #get metadata validator
     md_validator <- switch(type,
       "contacts" = geoflow::geoflow_validator_contacts$new(source = md_data),
@@ -1116,7 +1132,7 @@ config_editor_server<- function(id, auth_endpoint, user, logged, parent.session)
       if(!is.null(filename)) {
         cat(sprintf("Selecting configuration file '%s'\n", filename))
         config <- loadConfigurationFileFromUrl(filename)
-        print(config)
+        ctrl_config_file(filename)
         loadConfigurationUI(config)
       }
     }
@@ -1129,6 +1145,7 @@ config_editor_server<- function(id, auth_endpoint, user, logged, parent.session)
         if(is(config, "try-error")){
           tags$span("Please provide a valid JSON file!", style = "color:red;font-weight:bold;float:left;margin-top: 8px;margin-left: 5px;")
         }else{
+          ctrl_config_file(input$jsonfile$datapath)
           loadConfigurationUI(config)
           tags$span("Valid JSON", style = "color:green;font-weight:bold;float:left;margin-top: 8px;margin-left: 5px;")
         }
