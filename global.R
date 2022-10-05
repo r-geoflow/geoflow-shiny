@@ -6,6 +6,7 @@ options(stringsAsFactors = FALSE)
 #---------------------------------------------------------------------------------------
 source("assets/ui_utils.R")
 source("assets/package_utils.R")
+source("assets/auth_utils.R")
 source("assets/commons.R")
 
 
@@ -46,5 +47,5 @@ source("server.R")
 #onStop
 #---------------------------------------------------------------------------------------
 onStop(function(){
-  
+  resetAuthEnvironmentVariables()
 })

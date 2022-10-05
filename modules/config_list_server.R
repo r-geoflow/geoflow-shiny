@@ -100,6 +100,7 @@ config_list_server<- function(id, auth_info, parent.session){
     outlist <- getConfigurationFiles()
     if(length(outlist)>0) lapply(1:length(outlist),function(i){
       x <- outlist[[i]]
+      print(x)
       if(appConfig$auth) x <- x$name
       button_id <- paste0(prefix,uuids[i])
       observeEvent(input[[button_id]],{
@@ -146,6 +147,7 @@ config_list_server<- function(id, auth_info, parent.session){
           message = sprintf("Workflow '%s'", outconfig$profile$id),
           detail = "Initializing workflow ... 0%"
         )
+        
         future::future({
           ipc.queue$producer$fireEval(print("Process started for geoflow job"))
           ipc.queue$producer$fireAssignReactive("reactive_job_status", "Started")

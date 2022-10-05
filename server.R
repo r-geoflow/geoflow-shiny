@@ -33,6 +33,8 @@ server <- function(input, output, session) {
           config_list_server("config_list", auth_info, parent.session = session)
         }
         
+        initAuthEnvironmentVariables(auth_info()) #TODO assess security issue
+        
         shinyjs::removeClass(selector = "body", class = "sidebar-collapse")
         shinyjs::show(selector = "header")
         

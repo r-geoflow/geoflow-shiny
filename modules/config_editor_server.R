@@ -49,6 +49,7 @@ config_editor_server<- function(id, auth_info, parent.session){
   #loadConfigurationFile
   loadConfigurationFile <- function(){
     config <- try(jsonlite::read_json(input$jsonfile$datapath))
+    attr(config, "filepath") <- input$jsonfile$datapath
     return(config)
   }
   #loadConfigurationFileFromUrl
@@ -59,6 +60,7 @@ config_editor_server<- function(id, auth_info, parent.session){
       file
     }
     config <- try(jsonlite::read_json(filepath))
+    attr(config, "filepath") <- filepath
     return(config)
   }
   
@@ -1132,7 +1134,7 @@ config_editor_server<- function(id, auth_info, parent.session){
       if(!is.null(filename)) {
         cat(sprintf("Selecting configuration file '%s'\n", filename))
         config <- loadConfigurationFileFromUrl(filename)
-        ctrl_config_file(filename)
+        ctrl_config_file(attr(config, "filepath"))
         loadConfigurationUI(config)
       }
     }
@@ -1145,7 +1147,7 @@ config_editor_server<- function(id, auth_info, parent.session){
         if(is(config, "try-error")){
           tags$span("Please provide a valid JSON file!", style = "color:red;font-weight:bold;float:left;margin-top: 8px;margin-left: 5px;")
         }else{
-          ctrl_config_file(input$jsonfile$datapath)
+          ctrl_config_file(attr(config, "filepath"))
           loadConfigurationUI(config)
           tags$span("Valid JSON", style = "color:green;font-weight:bold;float:left;margin-top: 8px;margin-left: 5px;")
         }
