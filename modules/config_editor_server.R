@@ -1,5 +1,5 @@
 #config_editor_server
-config_editor_server<- function(id, auth_endpoint, user, logged, parent.session){
+config_editor_server<- function(id, auth_endpoint, auth_info, logged, parent.session){
 
  moduleServer(id, function(input, output, session){
   

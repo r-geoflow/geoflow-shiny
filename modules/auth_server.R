@@ -3,6 +3,9 @@ authLoginServer <- function (id, config, log_out = shiny::reactiveVal(), reload_
   
   shiny::moduleServer(id, function(input, output, session) {
     
+    keyring_backend_name <- if(!is.null(config$auth_keyring_backend)) config$auth_keyring_backend else 'env'
+    keyring_backend <- keyring:::known_backends[[keyring_backend_name]]$new()
+    
     credentials <- shiny::reactiveValues(
       auth_endpoint = NULL,
       user_auth = FALSE, 
@@ -40,11 +43,14 @@ authLoginServer <- function (id, config, log_out = shiny::reactiveVal(), reload_
                    INFO(sprintf("Using user '%s' root directory", input$auth_username))
                    appConfig$data_dir_remote <<- paste0(input$auth_username, "/", appConfig$data_dir_remote)
                  }
+                 keyring_service <- paste0("geoflow-shiny@", auth_endpoint$auth_url)
+                 keyring_backend$set_with_value(keyring_service, username = input$auth_username, password = input$auth_password)
+                 
                  credentials$user_auth <- TRUE
-                 credentials$user_info <- data.frame(user = input$auth_username, password = input$auth_password, stringsAsFactors = FALSE)
+                 credentials$auth_info <- list(backend = keyring_backend, service = keyring_service, user = input$auth_username, stringsAsFactors = FALSE)
                }else{
                  credentials$user_auth <- FALSE
-                 credentials$user_info <- data.frame(user = character(0), password = character(0), stringsAsFactors = FALSE)
+                 credentials$auth_info <- list(backend = character(0), service = character(0), user = character(0), stringsAsFactors = FALSE)
                }
              },{
                errMsg <- sprintf("No authentication provider for '%s'", auth_endpoint$auth_type)
