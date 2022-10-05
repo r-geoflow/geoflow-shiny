@@ -19,16 +19,18 @@ server <- function(input, output, session) {
     observe({
       if (credentials()$user_auth) {
         
-        auth_endpoint <- reactive({ credentials()$auth_endpoint })
-        logged <- reactive({ credentials()$user_auth })
-        auth_info <- reactive({ credentials()$auth_info })
+        auth_info <- reactive({
+          info = credentials()$auth_info
+          info$logged <- credentials()$user_auth
+          info
+        })
         
         AUTH_API <- try(get("AUTH_API", envir = GEOFLOW_SHINY_ENV), silent = TRUE)
         if(!is.null(auth_info())){
           INFO("Load configuration editor module")
-          config_editor_server("config_editor", auth_endpoint, auth_info, logged, parent.session = session)
+          config_editor_server("config_editor", auth_info, parent.session = session)
           INFO("Load configuration list module")
-          config_list_server("config_list", auth_endpoint, auth_info, logged, parent.session = session)
+          config_list_server("config_list", auth_info, parent.session = session)
         }
         
         shinyjs::removeClass(selector = "body", class = "sidebar-collapse")

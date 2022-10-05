@@ -1,5 +1,5 @@
 #config_editor_server
-config_editor_server<- function(id, auth_endpoint, auth_info, logged, parent.session){
+config_editor_server<- function(id, auth_info, parent.session){
 
  moduleServer(id, function(input, output, session){
   
@@ -1202,7 +1202,7 @@ config_editor_server<- function(id, auth_endpoint, auth_info, logged, parent.ses
     config_json <- getConfiguration()
     filename <- paste0(config_json$profile$id, ".json")
     if(appConfig$auth){
-      switch(auth_endpoint()$auth_type,
+      switch(auth_info()$endpoint$auth_type,
         "ocs" = {
           if(!paste0(appConfig$data_dir_remote,"/") %in% AUTH_API$listFiles()$name){
             AUTH_API$makeCollection(appConfig$data_dir_remote)

@@ -7,7 +7,6 @@ authLoginServer <- function (id, config, log_out = shiny::reactiveVal(), reload_
     keyring_backend <- keyring:::known_backends[[keyring_backend_name]]$new()
     
     credentials <- shiny::reactiveValues(
-      auth_endpoint = NULL,
       user_auth = FALSE, 
       user_info = NULL
     )
@@ -26,7 +25,6 @@ authLoginServer <- function (id, config, log_out = shiny::reactiveVal(), reload_
     shiny::observeEvent(input$auth_button_login,{
       
       auth_endpoint <- config$auth_endpoints[sapply(config$auth_endpoints, function(x){x$auth_url == input$auth_provider})][[1]]
-      credentials$auth_endpoint <- auth_endpoint
       
       switch(auth_endpoint$auth_type,
              #OCS auth
@@ -47,10 +45,22 @@ authLoginServer <- function (id, config, log_out = shiny::reactiveVal(), reload_
                  keyring_backend$set_with_value(keyring_service, username = input$auth_username, password = input$auth_password)
                  
                  credentials$user_auth <- TRUE
-                 credentials$auth_info <- list(backend = keyring_backend, service = keyring_service, user = input$auth_username, stringsAsFactors = FALSE)
+                 credentials$auth_info <- list(
+                   endpoint = auth_endpoint, 
+                   backend = keyring_backend, 
+                   service = keyring_service, 
+                   user = input$auth_username, 
+                   stringsAsFactors = FALSE
+                 )
                }else{
                  credentials$user_auth <- FALSE
-                 credentials$auth_info <- list(backend = character(0), service = character(0), user = character(0), stringsAsFactors = FALSE)
+                 credentials$auth_info <- list(
+                   endpoint = character(0),
+                   backend = character(0), 
+                   service = character(0), 
+                   user = character(0), 
+                   stringsAsFactors = FALSE
+                 )
                }
              },{
                errMsg <- sprintf("No authentication provider for '%s'", auth_endpoint$auth_type)
