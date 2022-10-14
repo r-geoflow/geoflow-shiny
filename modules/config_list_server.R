@@ -165,13 +165,13 @@ config_list_server<- function(id, auth_info, parent.session){
             file = filepath,
             dir = targetdir,
             queue = ipc.queue,
+            on_initWorkflowJob = function(config, queue){
+              queue$producer$fireEval(print("Successful job directory creation"))
+              queue$producer$fireAssignReactive("reactive_job", config$job)
+            },
             on_initWorkflow = function(config, queue){
               queue$producer$fireEval(print("Successful workflow initialization"))
               ipc.queue$producer$fireAssignReactive("reactive_job_status", "In progress")
-            },
-            on_initWorkflowJob = function(config, queue){
-              queue$producer$fireEval(print("Successful workflow job initialization"))
-              queue$producer$fireAssignReactive("reactive_job", config$job)
             },
             on_closeWorkflow = function(config, queue){
               ipc.progress$close()
