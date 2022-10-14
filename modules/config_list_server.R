@@ -293,10 +293,44 @@ config_list_server<- function(id, auth_info, parent.session){
    }
   )
   output$config_job_interactive_log <- renderUI({
-    tags$div(
-      config_job_interactive_log(),
-      style = "max-height:500px;font-size:80%;color:white;background-color:black;overflow-y:auto;white-space: pre-line;padding:2px;"
-    )
+    sep <- paste0(paste0(rep("=",100),collapse=""),"\n")
+    parts <- unlist(strsplit(config_job_interactive_log(), sep))
+    if(length(parts)==1){
+      tags$div(
+        config_job_interactive_log(),
+        style = "max-height:500px;font-size:80%;color:white;background-color:black;overflow-y:auto;white-space: pre-line;padding:2px;"
+      )
+    }else{
+      nb_parts <- length(parts)/2
+      if((length(parts) %% 2) != 0) parts <- c(parts, "")
+      nb_parts <- length(parts)/2
+      do.call("accordion", c(id="job-steps", lapply(1:nb_parts, function(i){
+        shinydashboardPlus::accordionItem(
+          title = parts[(i*2)-1],
+          status = {
+            if(i==1){
+              "black"
+            }else{
+              if(i<nb_parts){
+                "success" 
+              }else{
+                switch(reactive_job_status(),
+                  "In progress" = "primary",
+                  "Passed" = "success",
+                  "Failed" = "danger"
+                )
+              }
+            }
+          },
+          collapsed = if(i<nb_parts) TRUE else FALSE,
+          tags$div(
+            parts[i*2],
+            style = "max-height:500px;font-size:80%;color:white;background-color:black;overflow-y:auto;white-space: pre-line;padding:2px;"
+          )
+        )
+      })))
+    }
+    
   })
   
  })

@@ -9,6 +9,7 @@
     {"package": "shiny", "version": "1.7.1", "repos": "https://cran.r-project.org"},
     {"package": "shinyauthr", "version": "1.0.0", "repos": "https://cran.r-project.org"},
     {"package": "shinydashboard", "version": "0.7.2", "repos": "https://cran.r-project.org"},
+    {"package": "shinydashboardPlus", "version": "2.0.3", "repos": "https://cran.r-project.org"},
     {"package": "shinyjs", "version": "2.0.0", "repos": "https://cran.r-project.org"},
     {"package": "shinycssloaders", "version": "1.0.0", "repos": "https://cran.r-project.org"},
     {"package": "jsonlite", "version": "1.8.0", "repos": "https://cran.r-project.org"},
