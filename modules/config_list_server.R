@@ -141,6 +141,11 @@ config_list_server<- function(id, auth_info, parent.session){
           GEOFLOW_DATA_DIR
         }
         
+        #create global objects so they can be shared to process and re-expressed as env variables
+        GEOFLOW_SHINY_AUTH_URL <- Sys.getenv("GEOFLOW_SHINY_AUTH_URL")
+        GEOFLOW_SHINY_AUTH_USER <- Sys.getenv("GEOFLOW_SHINY_AUTH_USER")
+        GEOFLOW_SHINY_AUTH_PWD <- Sys.getenv("GEOFLOW_SHINY_AUTH_PWD")
+        
         #geoflow execution
         ipc.progress <- ipc::AsyncProgress$new(
           value = 0, min = 0, max = 100,
@@ -152,6 +157,10 @@ config_list_server<- function(id, auth_info, parent.session){
           ipc.queue$producer$fireEval(print("Process started for geoflow job"))
           ipc.queue$producer$fireAssignReactive("reactive_job_status", "Started")
            
+          Sys.setenv(GEOFLOW_SHINY_AUTH_URL = GEOFLOW_SHINY_AUTH_URL)
+          Sys.setenv(GEOFLOW_SHINY_AUTH_USER = GEOFLOW_SHINY_AUTH_USER)
+          Sys.setenv(GEOFLOW_SHINY_AUTH_PWD = GEOFLOW_SHINY_AUTH_PWD)
+          
           geoflow::executeWorkflow(
             file = filepath,
             dir = targetdir,
@@ -185,6 +194,9 @@ config_list_server<- function(id, auth_info, parent.session){
                                     p(sprintf("See results at: %s", result)),
                                     easyClose = TRUE, footer = NULL))
               shinyjs::enable(button_id)
+              rm(GEOFLOW_SHINY_AUTH_URL)
+              rm(GEOFLOW_SHINY_AUTH_USER)
+              rm(GEOFLOW_SHINY_AUTH_PWD)
           }) %...T!%
           (function(error){
             ipc.progress$close()
@@ -194,6 +206,9 @@ config_list_server<- function(id, auth_info, parent.session){
                                   p(as.character(error)),
                                   easyClose = TRUE, footer = NULL ))
             shinyjs::enable(button_id)
+            rm(GEOFLOW_SHINY_AUTH_URL)
+            rm(GEOFLOW_SHINY_AUTH_USER)
+            rm(GEOFLOW_SHINY_AUTH_PWD)
           })
         
         #Return something other than the future so we don't block the UI

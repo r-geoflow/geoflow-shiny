@@ -27,13 +27,12 @@ server <- function(input, output, session) {
         
         AUTH_API <- try(get("AUTH_API", envir = GEOFLOW_SHINY_ENV), silent = TRUE)
         if(!is.null(auth_info())){
+          initAuthEnvironmentVariables(auth_info())
           INFO("Load configuration editor module")
           config_editor_server("config_editor", auth_info, parent.session = session)
           INFO("Load configuration list module")
           config_list_server("config_list", auth_info, parent.session = session)
         }
-        
-        initAuthEnvironmentVariables(auth_info()) #TODO assess security issue
         
         shinyjs::removeClass(selector = "body", class = "sidebar-collapse")
         shinyjs::show(selector = "header")
