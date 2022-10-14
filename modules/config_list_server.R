@@ -194,9 +194,6 @@ config_list_server<- function(id, auth_info, parent.session){
                                     p(sprintf("See results at: %s", result)),
                                     easyClose = TRUE, footer = NULL))
               shinyjs::enable(button_id)
-              rm(GEOFLOW_SHINY_AUTH_URL)
-              rm(GEOFLOW_SHINY_AUTH_USER)
-              rm(GEOFLOW_SHINY_AUTH_PWD)
           }) %...T!%
           (function(error){
             ipc.progress$close()
@@ -206,9 +203,6 @@ config_list_server<- function(id, auth_info, parent.session){
                                   p(as.character(error)),
                                   easyClose = TRUE, footer = NULL ))
             shinyjs::enable(button_id)
-            rm(GEOFLOW_SHINY_AUTH_URL)
-            rm(GEOFLOW_SHINY_AUTH_USER)
-            rm(GEOFLOW_SHINY_AUTH_PWD)
           })
         
         #Return something other than the future so we don't block the UI
