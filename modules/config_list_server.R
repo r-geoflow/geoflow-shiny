@@ -264,7 +264,7 @@ config_list_server<- function(id, auth_info, parent.session){
   })
   
   #Interactive job console log
-  config_job_interactive_log <- reactivePoll(500, session,
+  config_job_interactive_log <- reactivePoll(100, session,
    checkFunc = function(){
      if(!is.null(reactive_job())){
        logfile <- file.path(reactive_job(), "job-logs.txt")
@@ -306,18 +306,35 @@ config_list_server<- function(id, auth_info, parent.session){
       nb_parts <- length(parts)/2
       do.call("accordion", c(id="job-steps", lapply(1:nb_parts, function(i){
         shinydashboardPlus::accordionItem(
-          title = parts[(i*2)-1],
+          title = {
+            the_title <- parts[(i*2)-1]
+            if(i==1){
+             tags$span(fa("r-project", fill = "steelblue"), the_title, style = "font-weight:bold;")
+            }else{
+              if(i<nb_parts){
+                tags$span(fa("far fa-circle-check"), the_title, style = "font-weight:bold;")
+              }else{
+                switch(reactive_job_status(),
+                 "Started" = tags$span(fa("gears"), the_title, style = "font-weight:bold;"),
+                 "In progress" = tags$span(fa("gears"), the_title, style = "font-weight:bold;"),
+                 "Passed" = tags$span(fa("far fa-circle-check"), the_title, style = "font-weight:bold;"),
+                 "Failed" = tags$span(fa("far fa-circle-xmark"), the_title, style = "font-weight:bold;")
+                )
+              }
+            }
+          },
           status = {
             if(i==1){
               "black"
             }else{
               if(i<nb_parts){
-                "success" 
+                "success"
               }else{
                 switch(reactive_job_status(),
-                  "In progress" = "primary",
-                  "Passed" = "success",
-                  "Failed" = "danger"
+                "Started" = "info",
+                "In progress" = "info",
+                "Passed" = "success",
+                "Failed" = "danger"
                 )
               }
             }
