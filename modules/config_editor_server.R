@@ -1206,6 +1206,7 @@ config_editor_server<- function(id, auth_info, parent.session){
     if(appConfig$auth){
       switch(auth_info()$endpoint$auth_type,
         "ocs" = {
+          #use of ocs4R::ocsManager
           if(!paste0(appConfig$data_dir_remote,"/") %in% AUTH_API$listFiles()$name){
             AUTH_API$makeCollection(appConfig$data_dir_remote)
           }
@@ -1215,13 +1216,33 @@ config_editor_server<- function(id, auth_info, parent.session){
                                auto_unbox = TRUE, pretty = TRUE)
           AUTH_API$uploadFile(relPath = appConfig$data_dir_remote, filename = file)
           unlink(file)
-        }       
+        },
+        "d4science" = {
+          #use of d4storagehub4R::StoragehubManager
+          folderPath <- dir(appConfig$data_dir_remote)
+          if(length(folderPath)==0) folderPath <- NULL
+          folderName <- basename(appConfig$data_dir_remote)
+          if(is.null(folderPath)){
+            if(!folderName %in% AUTH_API$listWSItems()$name){
+              AUTH_API$createFolder(name = folderName)
+            }
+          }else{
+            AUTH_API$createFolder(folderPath = folderPath, name = folderName)
+          }
+          
+          file <- file.path(tempdir(), filename)
+          jsonlite::write_json(config_json, 
+                               file, 
+                               auto_unbox = TRUE, pretty = TRUE)
+          AUTH_API$uploadFile(folderPath = appConfig$data_dir_remote, file = file) 
+        }
       )
     }else{
       if(!dir.exists(GEOFLOW_DATA_DIR)) dir.create(GEOFLOW_DATA_DIR, recursive = TRUE)
       jsonlite::write_json(config_json, 
                            file.path(GEOFLOW_DATA_DIR, filename), 
                            auto_unbox = TRUE, pretty = TRUE)
+      unlink(file)
     }
   })
   

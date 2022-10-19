@@ -44,7 +44,19 @@ config_list_server<- function(id, auth_info, parent.session){
           if(data_dir_remote_exists){
             files <- AUTH_API$listFiles(relPath = appConfig$data_dir_remote)
             files <- files[files$contentType == "application/json",]
-            if(nrow(files)>0) outfiles <- lapply(1:nrow(files), function(i){files[i,]})
+            if(nrow(files)>0){
+              files <- files[endsWith(files$name, ".json"),]
+              outfiles <- lapply(1:nrow(files), function(i){files[i,]})
+            }
+          }
+          outfiles
+        },
+        "d4science" = {
+          outfiles <- list()
+          files <- AUTH_API$listWSItemsByPath(appConfig$data_dir_remote)
+          if(length(files)>0) if(nrow(files)>0){
+            files <- files[endsWith(files$name, ".json"),]
+            outfiles <- lapply(1:nrow(files), function(i){files[i,]})
           }
           outfiles
         },
@@ -73,7 +85,10 @@ config_list_server<- function(id, auth_info, parent.session){
             switch(auth_info()$endpoint$auth_type,
               "ocs" = {
                 as.POSIXct(x$lastModified)  
-              }      
+              },
+              "d4science" = {
+                as.POSIXct(x$lastModificationTime/1000, origin = "1970-01-01")
+              }
             )
           } else {
             file.info(x)$mtime
@@ -128,7 +143,10 @@ config_list_server<- function(id, auth_info, parent.session){
         reactive_job_status("Started")
         
         filepath <- if(appConfig$auth){
-          AUTH_API$downloadFile(relPath = appConfig$data_dir_remote, filename = x, outdir = tempdir())
+          switch(auth_info()$endpoint$auth_type,
+            "ocs" = AUTH_API$downloadFile(relPath = appConfig$data_dir_remote, filename = x, outdir = tempdir()),
+            "d4science" = AUTH_API$downloadItemByPath(path = file.path(appConfig$data_dir_remote, x), wd = tempdir())
+          )
         }else{
           x
         }

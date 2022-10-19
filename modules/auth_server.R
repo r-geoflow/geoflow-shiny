@@ -49,8 +49,8 @@ authLoginServer <- function (id, config, log_out = shiny::reactiveVal(), reload_
                    endpoint = auth_endpoint, 
                    backend = keyring_backend, 
                    service = keyring_service, 
-                   user = input$auth_username, 
-                   stringsAsFactors = FALSE
+                   user = input$auth_username,
+                   token = NA
                  )
                }else{
                  credentials$user_auth <- FALSE
@@ -59,7 +59,7 @@ authLoginServer <- function (id, config, log_out = shiny::reactiveVal(), reload_
                    backend = character(0), 
                    service = character(0), 
                    user = character(0), 
-                   stringsAsFactors = FALSE
+                   token = character(0)
                  )
                }
              },{

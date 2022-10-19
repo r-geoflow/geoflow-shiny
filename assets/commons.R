@@ -1,8 +1,25 @@
 #logger
-logger = function(type, text){cat(sprintf("[SRN-SHINY][%s] - %s \n", type, text))}
+logger = function(type, text){cat(sprintf("[geoflow-shiny][%s] - %s \n", type, text))}
 INFO = function(text){logger("INFO", text)}
 WARN = function(text){logger("WARN", text)}
 ERROR = function(text){logger("ERROR", text)}
+
+#read_config
+read_config <- function(config_file){
+  print(sprintf("Reading configuration file '%s'", config_file))
+  appConfig <- suppressWarnings(yaml::read_yaml(config_file))
+  if(is.na(appConfig$data_dir_local)) appConfig$data_dir_local <- "."
+  if(is.null(appConfig$auth_ui) && appConfig$auth) appConfig$auth_ui <- TRUE #default auth requires an auth UI (eg. OCS)
+  #JWT specific resolver
+  jwt <- Sys.getenv("SHINYPROXY_OIDC_ACCESS_TOKEN")
+  if(nzchar(jwt)){
+    appConfig$auth = TRUE
+    appConfig$auth_ui = FALSE
+    appConfig$auth_jwt <- jwt
+  }
+  print(appConfig)
+  return(appConfig)
+}
 
 #shinyInput
 shinyInput <- function(FUN, len, indexes = NULL, id, ns, ...) {
