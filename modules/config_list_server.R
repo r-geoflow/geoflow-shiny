@@ -120,7 +120,7 @@ config_list_server<- function(id, auth_info, parent.session){
       button_id <- paste0(prefix,uuids[i])
       observeEvent(input[[button_id]],{
         shinyjs::disable(button_id)
-        updateModuleUrl(session, "configuration-list", file = x)
+        updateModuleUrl(session, "configuration-editor", file = x)
         updateTabItems(session = parent.session, "geoflow-tabs", "config_editor")
         shinyjs::enable(button_id)
       })
