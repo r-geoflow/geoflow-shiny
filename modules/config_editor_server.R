@@ -61,6 +61,7 @@ config_editor_server<- function(id, auth_info, parent.session){
     }
     config <- try(jsonlite::read_json(filepath))
     attr(config, "filepath") <- filepath
+    print(filepath)
     return(config)
   }
   
@@ -186,7 +187,7 @@ config_editor_server<- function(id, auth_info, parent.session){
   #CONFIG VALIDATION/TEST
   #=====================================================================================  
   loadConfiguration <- function(){
-    geoflow_config <- try(geoflow::initWorkflow(ctrl_config_file()))
+    geoflow_config <- try(geoflow::initWorkflow(ctrl_config_file(), handleMetadata = FALSE))
     if(!is(geoflow_config, "try-error")){
       ctrl_config(geoflow_config)
     }
