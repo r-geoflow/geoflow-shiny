@@ -70,18 +70,17 @@ config_editor_server<- function(id, auth_info, parent.session){
     
     #load profile
     cfg_id = if(!is.null(config$profile$id)) config$profile$id else config$id
-    updateTextInput(session, "profile_id", value = cfg_id)
+    ctrl_profile$id <- cfg_id
     cfg_mode = if(!is.null(config$profile$mode)) config$profile$mode else config$mode
-    updateSelectizeInput(session, "profile_mode", selected = cfg_mode)
-    updateTextInput(session, "profile_name", value = config$profile$name)
-    updateTextInput(session, "profile_project", value = config$profile$project)
-    updateTextInput(session, "profile_organization", value = config$profile$organization)
-    updateSelectizeInput(session, "profile_logos", selected = unlist(config$profile$logos), choices = unlist(config$profile$logos))
-    
+    ctrl_profile$mode <- cfg_mode
+    ctrl_profile$name <- config$profile$name
+    ctrl_profile$project <- config$profile$project
+    ctrl_profile$organization <- config$profile$organization
+    ctrl_profile$logos <- unlist(config$profile$logos)
     cfg_options = if(!is.null(config$profile$options)) config$profile$options else config$options
     if(!is.null(cfg_options)){
-      if(!is.null(cfg_options$line_separator)) updateTextInput(session, "profile_options_line_separator", value = cfg_options$line_separator)
-      if(!is.null(cfg_options$skipFileDownload)) updateSelectizeInput(session, "profile_options_skipFileDownload", selected = as.character(cfg_options$skipFileDownload))
+      if(!is.null(cfg_options$line_separator)) ctrl_profile$options$line_separator <- cfg_options$line_separator
+      if(!is.null(cfg_options$skipFileDownload)) ctrl_profile$options$skipFileDownload <- as.character(cfg_options$skipFileDownload)
     }
       
     #load metadata
@@ -121,7 +120,8 @@ config_editor_server<- function(id, auth_info, parent.session){
     organization = NULL,
     logos = list(),
     options = list(
-      line_separator = geoflow::get_line_separator()
+      line_separator = geoflow::get_line_separator(),
+      skipFileDownload = as.character(FALSE)
     )
   )
   #metadata controller
@@ -151,6 +151,88 @@ config_editor_server<- function(id, auth_info, parent.session){
   )
   #------------------------------------------------------------------------------------
   
+  output$geoflow_config_tabpanel <- renderUI({
+    tabsetPanel(
+      id = "geoflow_config_blocks", 
+      type = "pills",
+      tabPanel(
+        value = "profile",
+        title = "Profile",
+        tags$div(id = "profile",
+                 br(),
+                 uiOutput(ns("profile"))
+        )
+      ),
+      tabPanel(
+        value = "metadata",
+        title = "Metadata",
+        br(),
+        box(id = "metadata", width = 12,
+            tabsetPanel(
+              id = "metadata_tabs", 
+              type = "tabs",
+              tabPanel(
+                value = "contacts",
+                title = "Contacts",
+                shiny::tagList(
+                  br(),
+                  shiny::actionButton(inputId = ns("add_contact"), label = "Add a new contact source", class = "btn-primary"),
+                  shiny::actionButton(inputId = ns("modify_contact"), label = "Modify a new contact source", class = "btn-warning"),
+                  shiny::actionButton(inputId = ns("delete_contact"), label = "Delete a contact source", class = "btn-danger"),
+                  DT::DTOutput(ns("tbl_contacts"))
+                )
+              ),
+              tabPanel(
+                value = "entities",
+                title = "Entities",
+                shiny::tagList(
+                  br(),
+                  shiny::actionButton(inputId = ns("add_entity"), label = "Add a new entity source", class = "btn-primary"),
+                  shiny::actionButton(inputId = ns("modify_entity"), label = "Modify an entity source", class = "btn-warning"),
+                  shiny::actionButton(inputId = ns("delete_entity"), label = "Delete an entity source", class = "btn-danger"),
+                  DT::DTOutput(ns("tbl_entities"))
+                )
+              ),
+              tabPanel(
+                value = "dictionary",
+                title = "Dictionary",
+                shiny::tagList(
+                  br(),
+                  shiny::actionButton(inputId = ns("add_dictionary"), label = "Add a new dictionary source", class = "btn-primary"),
+                  shiny::actionButton(inputId = ns("modify_dictionary"), label = "Modify an dictionary source", class = "btn-warning"),
+                  shiny::actionButton(inputId = ns("delete_dictionary"), label = "Delete an dictionary source", class = "btn-danger"),
+                  DT::DTOutput(ns("tbl_dictionary"))
+                )
+              )
+              
+            )
+        )
+      ),
+      tabPanel(
+        value = "software",
+        title = "Software",
+        br(),
+        box(id = "software", width = 12,
+            shiny::actionButton(inputId = ns("add_software"), label = "Add a new software", class = "btn-primary"),
+            shiny::actionButton(inputId = ns("modify_software"), label = "Modify a software", class = "btn-warning"),
+            shiny::actionButton(inputId = ns("delete_software"), label = "Delete a software", class = "btn-danger"),
+            DT::DTOutput(ns("tbl_software"))
+        )
+      ),
+      tabPanel(
+        value = "actions",
+        title = "Actions",
+        br(),
+        box(id = "actions", width = 12,
+            shiny::actionButton(inputId = ns("add_action"), label = "Add a new action", class = "btn-primary"),
+            shiny::actionButton(inputId = ns("modify_action"), label = "Modify an action", class = "btn-warning"),
+            shiny::actionButton(inputId = ns("delete_action"), label = "Delete an action", class = "btn-danger"),
+            DT::DTOutput(ns("tbl_actions"))
+        )
+      )
+    )
+  })
+  
   #PROFILE
   #=====================================================================================
   output$profile <- renderUI({
@@ -167,8 +249,8 @@ config_editor_server<- function(id, auth_info, parent.session){
           ),
           tabPanel(
             title = "Execution options",
-            textInput(inputId = ns("profile_option_line_separator"), label = "Metadata line separator", value = geoflow::get_line_separator()),
-            selectizeInput(inputId = ns("profile_option_skipFileDownload"), label = "Skip file download", choices = c("FALSE", "TRUE"), selected = "FALSE")
+            textInput(inputId = ns("profile_option_line_separator"), label = "Metadata line separator", value = ctrl_profile$options$line_separator),
+            selectizeInput(inputId = ns("profile_option_skipFileDownload"), label = "Skip file download", choices = c("FALSE", "TRUE"), selected = ctrl_profile$options$skipFileDownload)
           )
         )
       ),
