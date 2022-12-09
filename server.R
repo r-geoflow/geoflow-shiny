@@ -1,6 +1,10 @@
 # Define server logic required
 #==========================================================================================
 server <- function(input, output, session) {
+  
+  onStop(function(){
+    resetAuthSessionVariables(session)
+  })
 
   if(appConfig$auth){  
   
@@ -28,7 +32,7 @@ server <- function(input, output, session) {
           auth_info(info)
           
           if(!is.null(auth_info())){
-            initAuthEnvironmentVariables(auth_info())
+            initAuthSessionVariables(session, auth_info())
             INFO("Load configuration editor module")
             config_editor_server("config_editor", auth_info, parent.session = session)
             INFO("Load configuration list module")
@@ -65,7 +69,7 @@ server <- function(input, output, session) {
             ))
             if(!is.null(auth_info())){
               INFO("Set-up geoflow-shiny in auth mode (no UI, token based)")
-              initAuthEnvironmentVariables(auth_info())
+              initAuthSessionVariables(session, auth_info())
               INFO("Load configuration editor module")
               config_editor_server("config_editor", auth_info, parent.session = session)
               INFO("Load configuration list module")

@@ -159,11 +159,6 @@ config_list_server<- function(id, auth_info, parent.session){
           GEOFLOW_DATA_DIR
         }
         
-        #create global objects so they can be shared to process and re-expressed as env variables
-        GEOFLOW_SHINY_AUTH_URL <- Sys.getenv("GEOFLOW_SHINY_AUTH_URL")
-        GEOFLOW_SHINY_AUTH_USER <- Sys.getenv("GEOFLOW_SHINY_AUTH_USER")
-        GEOFLOW_SHINY_AUTH_PWD <- Sys.getenv("GEOFLOW_SHINY_AUTH_PWD")
-        
         #geoflow execution
         ipc.progress <- ipc::AsyncProgress$new(
           value = 0, min = 0, max = 100,
@@ -174,10 +169,6 @@ config_list_server<- function(id, auth_info, parent.session){
         future::future({
           ipc.queue$producer$fireEval(print("Process started for geoflow job"))
           ipc.queue$producer$fireAssignReactive("reactive_job_status", "Started")
-           
-          Sys.setenv(GEOFLOW_SHINY_AUTH_URL = GEOFLOW_SHINY_AUTH_URL)
-          Sys.setenv(GEOFLOW_SHINY_AUTH_USER = GEOFLOW_SHINY_AUTH_USER)
-          Sys.setenv(GEOFLOW_SHINY_AUTH_PWD = GEOFLOW_SHINY_AUTH_PWD)
           
           geoflow::executeWorkflow(
             file = filepath,
@@ -201,9 +192,9 @@ config_list_server<- function(id, auth_info, parent.session){
                 message = sprintf("Worflow [%s] running :",config$profile$id),
                 detail = sprintf("Executing action: '%s' of entity: '%s' ... %s %%",action$id,entity$identifiers[["id"]],step)
               )
-            }
+            },
+            session = parent.session
           )
-           
         }) %...>% 
           (function(result){
             reactive_job_status("Passed")

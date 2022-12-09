@@ -269,7 +269,7 @@ config_editor_server<- function(id, auth_info, parent.session){
   #CONFIG VALIDATION/TEST
   #=====================================================================================  
   loadConfiguration <- function(){
-    geoflow_config <- try(geoflow::initWorkflow(ctrl_config_file(), handleMetadata = FALSE))
+    geoflow_config <- try(geoflow::initWorkflow(ctrl_config_file(), handleMetadata = FALSE, session = parent.session))
     if(!is(geoflow_config, "try-error")){
       ctrl_config(geoflow_config)
     }

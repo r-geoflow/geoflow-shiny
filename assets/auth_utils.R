@@ -1,19 +1,20 @@
-#initAuthEnvironmentVariables
-initAuthEnvironmentVariables <- function(auth_info){
-  Sys.setenv("GEOFLOW_SHINY_AUTH_URL" = auth_info$endpoint$auth_url)
-  Sys.setenv("GEOFLOW_SHINY_AUTH_USER" = auth_info$user)
+#initAuthSessionVariables
+initAuthSessionVariables <- function(session, auth_info){
+  
+  session$userData$GEOFLOW_SHINY_AUTH_URL = auth_info$endpoint$auth_url
+  session$userData$GEOFLOW_SHINY_AUTH_USER = auth_info$user
   if(!is.na(auth_info$backend) && !is.na(auth_info$service)){
-    Sys.setenv("GEOFLOW_SHINY_AUTH_PWD" = auth_info$backend$get(service = auth_info$service, username = auth_info$user))
+    session$userData$GEOFLOW_SHINY_AUTH_PWD = auth_info$backend$get(service = auth_info$service, username = auth_info$user)
   }
-  if(!is.na(auth_info$token)) Sys.setenv("GEOFLOW_SHINY_AUTH_TOKEN" = auth_info$token)
+  if(!is.na(auth_info$token)) session$userData$GEOFLOW_SHINY_AUTH_TOKEN = auth_info$token
 }
 
-#resetAuthEnvironmentVariables
-resetAuthEnvironmentVariables <- function(){
-  Sys.setenv("GEOFLOW_SHINY_AUTH_URL" = "")
-  Sys.setenv("GEOFLOW_SHINY_AUTH_USER" = "")
-  Sys.setenv("GEOFLOW_SHINY_AUTH_PWD" = "")
-  Sys.setenv("GEOFLOW_SHINY_AUTH_TOKEN" = "")
+#resetAuthSessionVariables
+resetAuthSessionVariables <- function(session){
+  session$userData$GEOFLOW_SHINY_AUTH_URL = NULL
+  session$userData$GEOFLOW_SHINY_AUTH_USER = NULL
+  session$userData$GEOFLOW_SHINY_AUTH_PWD = NULL
+  session$userData$GEOFLOW_SHINY_AUTH_TOKEN = NULL
 }
 
 #decodeJWT

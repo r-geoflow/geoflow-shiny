@@ -42,9 +42,3 @@ source("modules/config_list_ui.R")
 #---------------------------------------------------------------------------------------
 source("ui.R")
 source("server.R")
-
-#onStop
-#---------------------------------------------------------------------------------------
-onStop(function(){
-  resetAuthEnvironmentVariables()
-})
