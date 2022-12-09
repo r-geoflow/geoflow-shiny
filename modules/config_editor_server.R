@@ -850,9 +850,12 @@ config_editor_server<- function(id, auth_info, parent.session){
     propNames <- names(props)
     if(length(propNames)>0){
       software$properties <- lapply(propNames, function(propName){
-        input[[sprintf("software_form_properties_%s", propName)]]
+        prop <- input[[sprintf("software_form_properties_%s", propName)]]
+        if(prop == "") prop <- NULL
+        return(prop)
       })
       names(software$properties) <- propNames
+      software$properties <- software$properties[!sapply(software$properties, is.null)]
     }
     return(software)
   }
