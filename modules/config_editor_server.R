@@ -1202,7 +1202,11 @@ config_editor_server<- function(id, auth_info, parent.session){
   
   #saveConfiguration
   observeEvent(input$saveConfiguration,{
+    shinyjs::disable("saveConfiguration")
+    progress <- Progress$new(session, min=0, max=100)
+    on.exit(progress$close())
     config_json <- getConfiguration()
+    progress$set(value = 25, message = "Preparing geoflow configuration file...")
     filename <- paste0(config_json$profile$id, ".json")
     if(appConfig$auth){
       switch(auth_info()$endpoint$auth_type,
@@ -1245,6 +1249,10 @@ config_editor_server<- function(id, auth_info, parent.session){
                            auto_unbox = TRUE, pretty = TRUE)
       unlink(file)
     }
+    progress$set(value = 99, message = "geoflow configuration file successfully saved!")
+    Sys.sleep(1)
+    progress$set(value = 100)
+    shinyjs::enable("saveConfiguration")
   })
   
   #downloadConfiguration
