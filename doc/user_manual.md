@@ -3,20 +3,21 @@ User Manual
 
 **Table of contents**
 
-[1. Installation](#1-installation)<br/>    [1.1. Local
+[**1. Installation**](#1-installation)<br/>    [1.1. Local
 installation](#installation_local)<br/>    [1.2. Docker
-installation](#installation_docker)<br/> [2.
-Configuration](#2-configuration)<br/>    [2.1. Configuration
+installation](#installation_docker)<br/> [**2.
+Configuration**](#2-configuration)<br/>    [2.1. Configuration
 file](#configuration_file)<br/>    [2.2. Use in anonymous
 mode](#config_mode_anonymous)<br/>    [2.3. Use in authenticated
-mode](#config_mode_auth)<br/> [3. Modules](#3-modules)<br/>    [3.1.
+mode](#config_mode_auth)<br/> [**3. Modules**](#3-modules)<br/>    [3.1.
 Configuration editor](#module_editor)<br/>       [3.1.1.
 Profile](#module_editor_profile)<br/>       [3.1.2.
 Metadata](#module_editor_metadata)<br/>       [3.1.3.
 Software](#module_editor_software)<br/>       [3.1.4.
 Actions](#module_editor_actions)<br/>    [3.2. Configuration
-browser](#module_browser)<br/> [4. Advanced features](#advanced)<br/>
-   [4.1. User cloud interaction](#advanced_cloud)<br/>
+browser](#module_browser)<br/> [**4. Advanced
+features**](#advanced)<br/>    [4.1. User cloud
+interaction](#advanced_cloud)<br/>
 
 In its first stage,
 [geoflow-shiny](https://github.com/r-geoflow/geoflow-shiny) offers a

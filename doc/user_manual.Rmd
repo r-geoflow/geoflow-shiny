@@ -11,21 +11,21 @@ knitr::opts_chunk$set(echo = TRUE)
 
 **Table of contents**
 
-[1. Installation](#installation)<br/>
+[**1. Installation**](#installation)<br/>
 &nbsp;&nbsp;&nbsp;[1.1. Local installation](#installation_local)<br/>
 &nbsp;&nbsp;&nbsp;[1.2. Docker installation](#installation_docker)<br/>
-[2. Configuration](#configuration)<br/>
+[**2. Configuration**](#configuration)<br/>
 &nbsp;&nbsp;&nbsp;[2.1. Configuration file](#configuration_file)<br/>
 &nbsp;&nbsp;&nbsp;[2.2. Use in anonymous mode](#config_mode_anonymous)<br/>
 &nbsp;&nbsp;&nbsp;[2.3. Use in authenticated mode](#config_mode_auth)<br/>
-[3. Modules](#modules)<br/>
+[**3. Modules**](#modules)<br/>
 &nbsp;&nbsp;&nbsp;[3.1. Configuration editor](#module_editor)<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[3.1.1. Profile](#module_editor_profile)<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[3.1.2. Metadata](#module_editor_metadata)<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[3.1.3. Software](#module_editor_software)<br/>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[3.1.4. Actions](#module_editor_actions)<br/>
 &nbsp;&nbsp;&nbsp;[3.2. Configuration browser](#module_browser)<br/>
-[4. Advanced features](#advanced)<br/>
+[**4. Advanced features**](#advanced)<br/>
 &nbsp;&nbsp;&nbsp;[4.1. User cloud interaction](#advanced_cloud)<br/>
 
 In its first stage, [geoflow-shiny](https://github.com/r-geoflow/geoflow-shiny) offers a user interface with 2 modules:
