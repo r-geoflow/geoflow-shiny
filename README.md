@@ -29,6 +29,6 @@ We thank in advance people that use ``geoflow-shiny`` for citing it in their wor
 
 Issues can be reported at https://github.com/r-geoflow/geoflow-shiny/issues Issues should be used to report bugs and/or request enhancements / new features only.
 
-#Documentation (yes, yes, there is one!)
+# Documentation (yes, yes, there is one!)
 
 A user manual can be found [here](https://github.com/r-geoflow/geoflow-shiny/tree/main/doc/user_manual.md)
