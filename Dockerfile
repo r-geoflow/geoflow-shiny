@@ -1,4 +1,4 @@
-FROM rocker/r-ver:4.0.5
+FROM rocker/r-ver:4.2.0
 
 MAINTAINER Emmanuel Blondel "eblondel.pro@gmail.com"
 
@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y \
     libcurl4-openssl-dev \
     libxml2-dev \
     libv8-dev \
-	libsodium-dev \
+    libsodium-dev \
     libsecret-1-dev \
     git
     
