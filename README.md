@@ -9,8 +9,10 @@ Question about using `geoflow-shiny`? You can ask create a "Discussion" [here](h
 Many thanks to the following organizations that have supported :
 
 <div style="float:left;">
-  <a href="http://www.cnrs.fr"><img src="http://www.cnrs.fr/themes/custom/cnrs/logo.svg" height=200 width=200/></a>
-  <a href="https://inee.cnrs.fr/fr/zones-ateliers"><img src="https://inee.cnrs.fr/sites/institut_inee/files/inline-images/logo-za_0_0.jpg" height=150 width=300/></a>
+  <a href="https://www.inrae.fr"><img height=100 width=100 src="https://www.inrae.fr/themes/custom/inrae_socle/logo.svg"></a>
+  <a href="http://www.cnrs.fr"><img src="http://www.cnrs.fr/themes/custom/cnrs/logo.svg" height=100 width=100/></a>
+  <a href="https://inee.cnrs.fr/fr/zones-ateliers"><img src="https://inee.cnrs.fr/sites/institut_inee/files/inline-images/logo-za_0_0.jpg" height=100 width=200/></a>
+  <a href="https://letg.cnrs.fr"><img height=100 width=50 src="https://letg.cnrs.fr/plugins/letg/images/letg.png"></a>
 </div>
 
 The following projects have contributed to strenghten ``geoflow-shiny``:
