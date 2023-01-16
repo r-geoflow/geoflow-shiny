@@ -32,6 +32,8 @@ RUN git -C /root/ clone https://github.com/eblondel/geoflow-shiny.git && echo "O
 RUN ln -s /root/geoflow-shiny /srv/geoflow-shiny
 # install R app package dependencies
 RUN R -e "source('./srv/geoflow-shiny/install.R')"
+# remotes sysreqs
+RUN R -e "remotes::install_github('r-hub/sysreqs')"
 
 #etc dirs (for config)
 RUN mkdir -p /etc/geoflow-shiny/
