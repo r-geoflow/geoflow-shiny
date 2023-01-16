@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
     texlive-fonts-extra \
     texlive-formats-extra \
     libssl-dev \
-    libcurl4-openssl-dev \
+    libcurl4 \
     libxml2-dev \
     libv8-dev \
     libsodium-dev \
