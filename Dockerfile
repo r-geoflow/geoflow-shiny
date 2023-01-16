@@ -14,21 +14,30 @@ RUN apt-get update && apt-get install -y \
     texlive-fonts-extra \
     texlive-formats-extra \
     libssl-dev \
-    libcurl4 \
     libxml2-dev \
     libv8-dev \
     libsodium-dev \
     libsecret-1-dev \
+    librdf0-dev \
     git
     
-#geospatial
+#redland install (for atom4R/zen4R)
+RUN install2.r --error --skipinstalled --ncpus -1 redland
+apt_install \
+    libcurl4-openssl-dev \
+    libgit2-dev \
+    libxslt-dev \
+    librdf0 \
+    redland-utils \
+    rasqal-utils \
+    raptor2-utils
+    
+#geospatial libraries install
 RUN /rocker_scripts/install_geospatial.sh
 
 # install R core package dependencies
 RUN install2.r --error --skipinstalled --ncpus -1 httpuv
 RUN R -e "install.packages(c('remotes','jsonlite','yaml'), repos='https://cran.r-project.org/')"
-# remotes sysreqs
-RUN R -e "remotes::install_github('r-hub/sysreqs')"
 # clone app
 RUN git -C /root/ clone https://github.com/eblondel/geoflow-shiny.git && echo "OK!"
 RUN ln -s /root/geoflow-shiny /srv/geoflow-shiny
