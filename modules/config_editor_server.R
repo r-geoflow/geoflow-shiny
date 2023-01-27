@@ -177,7 +177,7 @@ config_editor_server<- function(id, auth_info, parent.session){
                 shiny::tagList(
                   br(),
                   shiny::actionButton(inputId = ns("add_contact"), label = "Add a new contact source", class = "btn-primary"),
-                  shiny::actionButton(inputId = ns("modify_contact"), label = "Modify a new contact source", class = "btn-warning"),
+                  shiny::actionButton(inputId = ns("modify_contact"), label = "Modify a contact source", class = "btn-warning"),
                   shiny::actionButton(inputId = ns("delete_contact"), label = "Delete a contact source", class = "btn-danger"),
                   DT::DTOutput(ns("tbl_contacts"))
                 )
