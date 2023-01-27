@@ -59,6 +59,17 @@ To pull the image
 
     docker pull eblondel/geoflow-shiny
 
+To start the container
+
+    sudo docker run -p 3838:3838 -v [absolute_path_to]/config.yml:/root/geoflow-shiny/resources/config.yml -d eblondel/geoflow-shiny
+
+with options:
++ `-p`: Map the container rshiny port to your local machine. Here is 3838
++ `-v`: Mount the config.yml file. See [section 2](#2-configuration) for more information about this file
++ `-d`: deamon mode. If you need to interact with the container, replace it by `-it`
+
+And then the application is available using a browser at http://localhost:3838
+
 <a name="configuration"/>
 
 # 2 Configuration
