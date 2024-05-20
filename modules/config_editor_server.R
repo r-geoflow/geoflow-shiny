@@ -80,7 +80,11 @@ config_editor_server<- function(id, auth_info, parent.session){
     cfg_options = if(!is.null(config$profile$options)) config$profile$options else config$options
     if(!is.null(cfg_options)){
       if(!is.null(cfg_options$line_separator)) ctrl_profile$options$line_separator <- cfg_options$line_separator
-      if(!is.null(cfg_options$skipFileDownload)) ctrl_profile$options$skipFileDownload <- as.character(cfg_options$skipFileDownload)
+      if(!is.null(cfg_options$skipDataDownload)) ctrl_profile$options$skipDataDownload <- as.character(cfg_options$skipDataDownload)
+      if(!is.null(cfg_options$skipEnrichWithData)) ctrl_profile$options$skipEnrichWithData <- as.character(cfg_options$skipEnrichWithData)
+      if(!is.null(cfg_options$skipEnrichWithDatatypes)) ctrl_profile$options$skipEnrichWithDatatypes <- as.character(cfg_options$skipEnrichWithDatatypes)
+      if(!is.null(cfg_options$skipDynamicBbox)) ctrl_profile$options$skipDynamicBbox <- as.character(cfg_options$skipDynamicBbox)
+      if(!is.null(cfg_options$enrichDataStrategy)) ctrl_profile$options$enrichDataStrategy <- as.character(cfg_options$enrichDataStrategy)
     }
       
     #load metadata
@@ -121,7 +125,11 @@ config_editor_server<- function(id, auth_info, parent.session){
     logos = list(),
     options = list(
       line_separator = geoflow::get_line_separator(),
-      skipFileDownload = as.character(FALSE)
+      skipDataDownload = as.character(FALSE),
+      skipEnrichWithData = as.character(FALSE),
+      skipEnrichWithDatatypes = as.character(FALSE),
+      skipDynamicBbox = as.character(FALSE),
+      enrichDataStrategy = as.character(FALSE)
     )
   )
   #metadata controller
@@ -250,7 +258,11 @@ config_editor_server<- function(id, auth_info, parent.session){
           tabPanel(
             title = "Execution options",
             textInput(inputId = ns("profile_option_line_separator"), label = "Metadata line separator", value = ctrl_profile$options$line_separator),
-            selectizeInput(inputId = ns("profile_option_skipFileDownload"), label = "Skip file download", choices = c("FALSE", "TRUE"), selected = ctrl_profile$options$skipFileDownload)
+            selectizeInput(inputId = ns("profile_option_skipDataDownload"), label = "Skip data download", choices = c("FALSE", "TRUE"), selected = ctrl_profile$options$skipDataDownload),
+            selectizeInput(inputId = ns("profile_option_skipEnrichWithData"), label = "Skip enrich with data", choices = c("FALSE", "TRUE"), selected = ctrl_profile$options$skipEnrichWithData),
+            selectizeInput(inputId = ns("profile_option_skipEnrichWithDatatypes"), label = "Skip enrich with data types", choices = c("FALSE", "TRUE"), selected = ctrl_profile$options$skipEnrichWithDatatypes),
+            selectizeInput(inputId = ns("profile_option_skipDynamicBbox"), label = "Skip dynamic BBOX", choices = c("FALSE", "TRUE"), selected = ctrl_profile$options$skipDynamicBbox),
+            selectizeInput(inputId = ns("profile_option_enrichDataStrategy"), label = "Enrich data strategy", choices = c("first", "union"), selected = ctrl_profile$options$enrichDataStrategy)
           )
         )
       ),
@@ -1264,7 +1276,12 @@ config_editor_server<- function(id, auth_info, parent.session){
     }
     ctrl_profile$options <- list(
       line_separator = line_separator,
-      skipFileDownload = input$profile_option_skipFileDownload
+      skipDataDownload = input$profile_option_skipDataDownload,
+      skipEnrichWithData = input$profile_option_skipEnrichWithData,
+      skipEnrichWithDatatypes = input$profile_option_skipEnrichWithDatatypes,
+      skipDynamicBbox = input$profile_option_skipDynamicBbox,
+      enrichDataStrategy = input$profile_option_enrichDataStrategy
+      
     )
     return(reactiveValuesToList(ctrl_profile))
   }
