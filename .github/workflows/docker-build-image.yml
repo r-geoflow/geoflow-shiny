@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - 'main'
+    tags:
+      - "v*"
 
 jobs:
   docker:
@@ -11,24 +13,39 @@ jobs:
     steps:
       -
         name: Checkout
-        uses: actions/checkout@v2
-      -
-        name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
-      -
-        name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-      -
-        name: Login to DockerHub
-        uses: docker/login-action@v1
+        uses: actions/checkout@v4
+        
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      -
-        name: Build and push
-        uses: docker/build-push-action@v2
+          images: ghcr.io/r-geoflow/geoflow-shiny
+          flavor: latest=true
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+          labels: |
+            org.opencontainers.image.url=https://github.com/r-geoflow/geoflow-shiny
+            org.opencontainers.image.source=https://github.com/r-geoflow/geoflow-shiny
+            org.opencontainers.image.title=geoflow-shiny
+            org.opencontainers.image.description=A A shiny app to manage geoflow configurations
+            org.opencontainers.image.vendor=Emmanuel Blondel
+            org.opencontainers.image.author=Emmanuel Blondel
+            org.opencontainers.image.authors=Emmanuel Blondel <eblondel.pro@gmail.com>
+      - name: Login to image repository
+        if: github.ref_type == 'tag'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
         with:
           context: .
-          push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/geoflow-shiny:latest
-
+          file: Dockerfile
+          push: ${{ github.ref_type == 'tag' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
