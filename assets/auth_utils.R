@@ -3,7 +3,7 @@ initAuthSessionVariables <- function(session, auth_info){
   
   session$userData$GEOFLOW_SHINY_AUTH_URL = auth_info$endpoint$auth_url
   session$userData$GEOFLOW_SHINY_AUTH_USER = auth_info$user
-  if(!is.na(auth_info$backend) && !is.na(auth_info$service)){
+  if(!is.null(auth_info$backend) && !is.null(auth_info$service)){
     session$userData$GEOFLOW_SHINY_AUTH_PWD = auth_info$backend$get(service = auth_info$service, username = auth_info$user)
   }
   if(!is.na(auth_info$token)) session$userData$GEOFLOW_SHINY_AUTH_TOKEN = auth_info$token
