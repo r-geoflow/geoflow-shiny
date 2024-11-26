@@ -1,4 +1,7 @@
-package <- jsonlite::read_json('./srv/geoflow-shiny/package.json')
+pkgs_file = './srv/geoflow-shiny/package.json'
+on_server = file.exists(pkgs_file)
+if(!on_server) pkgs_file = './package.json'
+package <- jsonlite::read_json(pkgs_file)
 invisible(lapply(package$dependencies, function(pkg){
   from <- 'cran'
   pkg_installer <- remotes::install_version
