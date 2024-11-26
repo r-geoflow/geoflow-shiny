@@ -510,8 +510,7 @@
       "RemoteHost": "api.github.com",
       "RemoteRepo": "geoflow",
       "RemoteUsername": "r-geoflow",
-      "RemoteRef": "HEAD",
-      "RemoteSha": "b895f6d9f8daedbeb897371080a7c9386b1e91c4",
+      "RemoteSha": "6f3797c2ee5e323f196390a1170d4d0fa825c6e9",
       "Requirements": [
         "R",
         "R6",
@@ -537,7 +536,7 @@
         "xml2",
         "zip"
       ],
-      "Hash": "07667fc6e33ed20793c4d945f5ef77c7"
+      "Hash": "154ba1d42862c2aa9c8e72155cb38438"
     },
     "geometa": {
       "Package": "geometa",
@@ -1067,9 +1066,12 @@
     "renv": {
       "Package": "renv",
       "Version": "1.0.11",
-      "OS_type": null,
+      "Source": "Repository",
       "Repository": "CRAN",
-      "Source": "Repository"
+      "Requirements": [
+        "utils"
+      ],
+      "Hash": "47623f66b4e80b3b0587bc5d7b309888"
     },
     "rhandsontable": {
       "Package": "rhandsontable",
@@ -1536,10 +1538,10 @@
     },
     "yaml": {
       "Package": "yaml",
-      "Version": "2.3.6",
+      "Version": "2.3.10",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "9b570515751dcbae610f29885e025b41"
+      "Hash": "51dab85c6c98e50a18d7551e9d49f76c"
     },
     "zip": {
       "Package": "zip",
