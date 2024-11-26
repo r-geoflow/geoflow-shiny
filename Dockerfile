@@ -2,11 +2,11 @@ FROM rocker/shiny:4.4.0
 
 MAINTAINER Emmanuel Blondel "eblondel.pro@gmail.com"
 
-LABEL org.opencontainers.image.title=geoflow-shiny
-LABEL org.opencontainers.image.url=https://github.com/r-geoflow/geoflow-shiny
-LABEL org.opencontainers.image.source=https://github.com/r-geoflow/geoflow-shiny
+LABEL org.opencontainers.image.title="geoflow-shiny"
+LABEL org.opencontainers.image.url="https://github.com/r-geoflow/geoflow-shiny"
+LABEL org.opencontainers.image.source="https://github.com/r-geoflow/geoflow-shiny"
 LABEL org.opencontainers.image.description="A shiny app to configure and run geoflows"
-LABEL org.opencontainers.image.authors=Emmanuel Blondel <eblondel.pro@gmail.com>
+LABEL org.opencontainers.image.authors="Emmanuel Blondel <eblondel.pro@gmail.com>"
 
 # system libraries of general use
 RUN apt-get update && apt-get install -y \
