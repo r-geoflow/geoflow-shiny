@@ -6,6 +6,14 @@ on:
       - 'main'
     tags:
       - "v*"
+  pull_request:
+    branches:
+      - 'main'
+
+env:
+  CACHE_IMAGE: ghcr.io/r-geoflow/geoflow-shiny-cache
+  DOCKER_BUILDKIT: 1
+  RENV_PATHS_ROOT: ~/.cache/R/renv
 
 jobs:
   docker:
@@ -25,14 +33,7 @@ jobs:
             type=ref,event=branch
             type=ref,event=pr
             type=semver,pattern={{version}}
-          labels: |
-            org.opencontainers.image.url=https://github.com/r-geoflow/geoflow-shiny
-            org.opencontainers.image.source=https://github.com/r-geoflow/geoflow-shiny
-            org.opencontainers.image.title=geoflow-shiny
-            org.opencontainers.image.description=A A shiny app to manage geoflow configurations
-            org.opencontainers.image.vendor=Emmanuel Blondel
-            org.opencontainers.image.author=Emmanuel Blondel
-            org.opencontainers.image.authors=Emmanuel Blondel <eblondel.pro@gmail.com>
+            
       - name: Login to image repository
         if: github.ref_type == 'tag'
         uses: docker/login-action@v3
@@ -41,11 +42,37 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_TOKEN }}
 
-      - name: Build and push
-        uses: docker/build-push-action@v5
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
         with:
-          context: .
-          file: Dockerfile
-          push: ${{ github.ref_type == 'tag' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          driver-opts: image=moby/buildkit:master,network=host
+
+      - name: Cache Docker layers
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Build Docker image
+        run: |
+          docker buildx build \
+            --cache-from type=registry,ref=$CACHE_IMAGE:latest \
+            --cache-to type=registry,ref=$CACHE_IMAGE:latest,mode=max \
+            --tag ghcr.io/r-geoflow/geoflow-shiny:latest \
+            --build-arg RENV_PATHS_ROOT=${{ env.RENV_PATHS_ROOT }} \
+            --output type=docker,dest=/tmp/docker-image.tar \
+
+      - name: Load Docker image
+        if: github.ref_type == 'tag'
+        run: |
+          docker load -i /tmp/docker-image.tar
+
+      - name: Conditional push Docker image
+        if: github.ref_type == 'tag'
+        run: |
+          TAG_NAME=$(basename ${GITHUB_REF})
+          docker tag ghcr.io/r-geoflow/geoflow-shiny:latest ghcr.io/r-geoflow/geoflow-shiny:${TAG_NAME}
+          docker push ghcr.io/r-geoflow/geoflow-shiny:latest
+          docker push ghcr.io/r-geoflow/geoflow-shiny:${TAG_NAME}

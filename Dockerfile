@@ -1,6 +1,12 @@
-FROM rocker/r-ver:4.2.0
+FROM rocker/shiny:4.3.0
 
 MAINTAINER Emmanuel Blondel "eblondel.pro@gmail.com"
+
+LABEL org.opencontainers.image.title=geoflow-shiny
+LABEL org.opencontainers.image.url=https://github.com/r-geoflow/geoflow-shiny
+LABEL org.opencontainers.image.source=https://github.com/r-geoflow/geoflow-shiny
+LABEL org.opencontainers.image.description=A shiny app to configure and run geoflows
+LABEL org.opencontainers.image.authors=Emmanuel Blondel <eblondel.pro@gmail.com>
 
 # system libraries of general use
 RUN apt-get update && apt-get install -y \
@@ -37,13 +43,33 @@ RUN /rocker_scripts/install_geospatial.sh
 
 # install R core package dependencies
 RUN install2.r --error --skipinstalled --ncpus -1 httpuv
-RUN R -e "install.packages(c('remotes','jsonlite','yaml'), repos='https://cran.r-project.org/')"
-# clone app
-RUN git -C /root/ clone https://github.com/eblondel/geoflow-shiny.git && echo "OK!"
-RUN ln -s /root/geoflow-shiny /srv/geoflow-shiny
-# install R app package dependencies
-RUN R -e "source('./srv/geoflow-shiny/install.R')"
 
+#working directory
+WORKDIR /srv/geoflow-shiny
+
+# Set environment variables for renv cache, see doc https://docs.docker.com/build/cache/backends/
+ARG RENV_PATHS_ROOT
+
+# Make a directory in the container
+RUN mkdir -p ${RENV_PATHS_ROOT}
+
+#copy renv configuration
+RUN R -e "install.packages(c('renv'), repos='https://cran.r-project.org/')"
+COPY renv.lock renv.lock
+COPY .Rprofile  .Rprofile
+COPY renv/activate.R renv/activate.R
+COPY renv/settings.json renv/settings.json
+
+# Set renv cache location: change default location of cache to project folder
+# see documentation for Multi-stage builds => https://cran.r-project.org/web/packages/renv/vignettes/docker.html
+RUN mkdir renv/.cache
+ENV RENV_PATHS_CACHE=renv/.cache
+
+# Restore the R environment
+RUN R -e "renv::restore()"
+
+#copy app
+COPY . /srv/dcf-shiny
 #etc dirs (for config)
 RUN mkdir -p /etc/geoflow-shiny/
 
