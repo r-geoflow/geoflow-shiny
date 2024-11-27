@@ -1,6 +1,6 @@
 {
   "id": "geoflow-shiny",
-  "version": "0.2.20241127",
+  "version": "0.2.20241127-1",
   "date": "2024-11-27",
   "dependencies": [
     {"package": "dotenv", "version": "1.0.3", "repos": "https://cran.r-project.org"},
