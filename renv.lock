@@ -726,6 +726,17 @@
       ],
       "Hash": "43b9e88c7e2e1518c8e87060f5f5c2ab"
     },
+    "jose": {
+      "Package": "jose",
+      "Version": "1.2.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "jsonlite",
+        "openssl"
+      ],
+      "Hash": "cf5ae308441d505b8c7e4b08e0e510aa"
+    },
     "jquerylib": {
       "Package": "jquerylib",
       "Version": "0.1.4",
