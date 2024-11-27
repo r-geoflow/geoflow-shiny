@@ -423,7 +423,7 @@ config_editor_server<- function(id, auth_info, parent.session){
     #get metadata handler
     md_handler <- geoflow::loadMetadataHandler(config = ctrl_config(), type = type, element = list(handler = handler, source = source))
     #get source data only (no handling of geoflow objects)
-    md_data <- md_handler(config = ctrl_config(), source = source, handle = FALSE)
+    md_data <- md_handler$fun(handler = handler, config = ctrl_config(), source = source, handle = FALSE)
     #get metadata validator
     md_validator <- switch(type,
       "contacts" = geoflow::geoflow_validator_contacts$new(source = md_data),
