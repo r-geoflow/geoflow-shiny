@@ -69,7 +69,7 @@ ENV RENV_PATHS_CACHE=renv/.cache
 RUN R -e "renv::restore()"
 
 #copy app
-COPY . /srv/dcf-shiny
+COPY . /srv/geoflow-shiny
 #etc dirs (for config)
 RUN mkdir -p /etc/geoflow-shiny/
 
