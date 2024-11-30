@@ -92,66 +92,57 @@ server <- function(input, output, session) {
 
   }
   
+  
+  renderSideUI = function(){
+    sidebarMenu(
+      id = "geoflow-tabs",
+      menuItem(
+        text = "Configure",
+        tabName = "config",
+        menuSubItem(text = "Edit configuration", tabName = "config_editor"),
+        startExpanded = TRUE
+      ),
+      menuItem(
+        text = "Execute",
+        tabName = "exec",
+        menuSubItem(text = "Execute workflow", tabName = "config_list"),
+        startExpanded = TRUE
+      )
+    )
+  }
+  
   output$side_ui <- renderUI({
     if(appConfig$auth){
       if(appConfig$auth_ui){
         req(credentials()$user_auth)
-        sidebarMenu(
-          id = "geoflow-tabs",
-          menuItem(
-            text = "Configuration",
-            tabName = "config",
-            menuSubItem(text = "Configuration editor", tabName = "config_editor"),
-            menuSubItem(text = "List of configurations", tabName = "config_list"),
-            startExpanded = TRUE
-          )
-        )
+        renderSideUI()
       }else{
-        sidebarMenu(
-          id = "geoflow-tabs",
-          menuItem(
-            text = "Configuration",
-            tabName = "config",
-            menuSubItem(text = "Configuration editor", tabName = "config_editor"),
-            menuSubItem(text = "List of configurations", tabName = "config_list"),
-            startExpanded = TRUE
-          )
-        )
+        renderSideUI()
       }
       
     }else{
-      sidebarMenu(
-        id = "geoflow-tabs",
-        menuItem(
-          text = "Configuration",
-          tabName = "config",
-          menuSubItem(text = "Configuration editor", tabName = "config_editor"),
-          menuSubItem(text = "List of configurations", tabName = "config_list")
-        )
-      )
+      renderSideUI()
     }
   })
+  
+  renderMainUI = function(){
+    tabItems(
+      config_editor_ui("config_editor"),
+      config_list_ui("config_list")
+    )
+  }
   
   output$main_ui <- renderUI({
     if(appConfig$auth){
       if(appConfig$auth_ui){
         req(credentials()$user_auth)
-        tabItems(
-          config_editor_ui("config_editor"),
-          config_list_ui("config_list")
-        )
+        renderMainUI()
       }else{
-        tabItems(
-          config_editor_ui("config_editor"),
-          config_list_ui("config_list")
-        )
+        renderMainUI()
       }
       
     }else{
-      tabItems(
-        config_editor_ui("config_editor"),
-        config_list_ui("config_list")
-      )
+      renderMainUI()
     }
   })
 
