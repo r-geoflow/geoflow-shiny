@@ -25,6 +25,7 @@
     {"package": "promises", "version": "1.2.0.1", "repos": "https://cran.r-project.org"},
     {"package": "future", "version": "1.30.0", "repos": "https://cran.r-project.org"},
     {"package": "ipc", "version": "0.1.3", "repos": "https://cran.r-project.org"},
+    {"package": "benchmarkme", "version": "1.0.8", "repos": "https://cran.r-project.org"},
     {"package": "ocs4R", "version": "0.2.3", "repos": "https://cran.r-project.org"},
     {"package": "d4storagehub4R", "version": "0.4-2", "repos": "https://cran.r-project.org"},
     {"package": "zen4R", "version": "0.10", "repos": "https://cran.r-project.org"},
