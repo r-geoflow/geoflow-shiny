@@ -591,11 +591,12 @@
       "RemoteHost": "api.github.com",
       "RemoteRepo": "geoflow",
       "RemoteUsername": "r-geoflow",
-      "RemoteSha": "b5847e047f3c5ec8ad404999c4fa688c603adefc",
+      "RemoteSha": "e4b54be805a5a90926071a92f49384944875aed1",
       "Requirements": [
         "R",
         "R6",
         "XML",
+        "benchmarkme",
         "curl",
         "dotenv",
         "geometa",
@@ -617,7 +618,7 @@
         "xml2",
         "zip"
       ],
-      "Hash": "f443cb172573a111b15eff2140d67858"
+      "Hash": "5ce23f8a1cbad7cdc1912a2c7700d7bc"
     },
     "geometa": {
       "Package": "geometa",
