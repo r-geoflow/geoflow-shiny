@@ -584,13 +584,13 @@
     },
     "geoflow": {
       "Package": "geoflow",
-      "Version": "0.9999.20241130",
+      "Version": "0.9999.20241210",
       "Source": "GitHub",
       "RemoteType": "github",
       "RemoteHost": "api.github.com",
       "RemoteRepo": "geoflow",
       "RemoteUsername": "r-geoflow",
-      "RemoteSha": "e4b54be805a5a90926071a92f49384944875aed1",
+      "RemoteSha": "471602db1a2d0deb01506207d6b608b828447605",
       "Requirements": [
         "R",
         "R6",
@@ -617,7 +617,7 @@
         "xml2",
         "zip"
       ],
-      "Hash": "5ce23f8a1cbad7cdc1912a2c7700d7bc"
+      "Hash": "1afc4ef7aab548d92218661370302e20"
     },
     "geometa": {
       "Package": "geometa",
