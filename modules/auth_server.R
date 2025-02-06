@@ -3,9 +3,9 @@ authLoginServer <- function (id, config, log_out = shiny::reactiveVal(), reload_
   
   shiny::moduleServer(id, function(input, output, session) {
     
-    keyring_backend_name <- if(!is.null(config$auth_keyring_backend)) config$auth_keyring_backend else 'env'
-    keyring_backend <- keyring:::known_backends[[keyring_backend_name]]$new()
-    
+    # keyring_backend_name <- if(!is.null(config$auth_keyring_backend)) config$auth_keyring_backend else 'env'
+    # keyring_backend <- keyring:::known_backends[[keyring_backend_name]]$new()
+
     credentials <- shiny::reactiveValues(
       user_auth = FALSE, 
       user_info = NULL
@@ -41,24 +41,26 @@ authLoginServer <- function (id, config, log_out = shiny::reactiveVal(), reload_
                    INFO(sprintf("Using user '%s' root directory", input$auth_username))
                    appConfig$data_dir_remote <<- paste0(input$auth_username, "/", appConfig$data_dir_remote)
                  }
-                 keyring_service <- paste0("geoflow-shiny@", auth_endpoint$auth_url)
-                 keyring_backend$set_with_value(keyring_service, username = input$auth_username, password = input$auth_password)
-                 
+                 # keyring_service <- paste0("geoflow-shiny@", auth_endpoint$auth_url)
+                 # keyring_backend$set_with_value(keyring_service, username = input$auth_username, password = input$auth_password)
+                 # 
                  credentials$user_auth <- TRUE
                  credentials$auth_info <- list(
                    endpoint = auth_endpoint, 
-                   backend = keyring_backend, 
-                   service = keyring_service, 
+                   # backend = keyring_backend, 
+                   # service = keyring_service, 
                    user = input$auth_username,
+                   password = input$auth_password,
                    token = NA
                  )
                }else{
                  credentials$user_auth <- FALSE
                  credentials$auth_info <- list(
                    endpoint = character(0),
-                   backend = character(0), 
-                   service = character(0), 
+                   # backend = character(0), 
+                   # service = character(0), 
                    user = character(0), 
+                   password = character(0),
                    token = character(0)
                  )
                }
