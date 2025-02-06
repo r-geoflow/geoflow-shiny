@@ -977,9 +977,13 @@
     },
     "ocs4R": {
       "Package": "ocs4R",
-      "Version": "0.2-3",
-      "Source": "Repository",
-      "Repository": "CRAN",
+      "Version": "0.3",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteRepo": "ocs4R",
+      "RemoteUsername": "eblondel",
+      "RemoteSha": "db90316cd7b8a00e19e7b91b44e2db91067c36c1",
       "Requirements": [
         "R",
         "R6",
@@ -991,7 +995,7 @@
         "methods",
         "openssl"
       ],
-      "Hash": "9c450ead8306c1d3fc0d1d4b5da426fd"
+      "Hash": "01ecc2fa8981abc8c9136daf6b5d1bf4"
     },
     "openssl": {
       "Package": "openssl",
