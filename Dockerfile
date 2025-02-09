@@ -30,7 +30,7 @@ RUN apt-get update && apt-get install -y \
 #redland install (for atom4R/zen4R)
 RUN install2.r --error --skipinstalled --ncpus -1 redland
 RUN apt-get install -y \
-    libcurl4-openssl-dev \
+    libcurl4 \
     libgit2-dev \
     libxslt-dev \
     librdf0 \
