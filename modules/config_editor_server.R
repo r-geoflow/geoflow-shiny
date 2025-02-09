@@ -418,13 +418,18 @@ config_editor_server<- function(id, auth_info, parent.session){
   })
   #showValidationModal
   showValidationModal <- function(type, handler, source){
+    INFO(sprintf("Validation for '%s' (%s)", source, type))
     #load configuration
+    INFO("Reload configuration")
     loadConfiguration()
     #get metadata handler
+    INFO("Load metadata handler")
     md_handler <- geoflow::loadMetadataHandler(config = ctrl_config(), type = type, element = list(handler = handler, source = source))
     #get source data only (no handling of geoflow objects)
-    md_data <- md_handler$fun(handler = handler, config = ctrl_config(), source = source, handle = FALSE)
+    INFO("Load metadata objects")
+    md_data <- md_handler$fun(handler = md_handler, config = ctrl_config(), source = source, handle = FALSE)
     #get metadata validator
+    INFO("Load metadata validator")
     md_validator <- switch(type,
       "contacts" = geoflow::geoflow_validator_contacts$new(source = md_data),
       "entities" = geoflow::geoflow_validator_entities$new(source = md_data)
@@ -432,10 +437,12 @@ config_editor_server<- function(id, auth_info, parent.session){
     #validate
     hasReport <- FALSE
     md_validation_message <- NULL
+    INFO("Validate data structure")
     md_structure_status <- md_validator$validate_structure()
     if(!md_structure_status){
       md_validation_message <- tags$span(unlist(strsplit(attr(md_structure_status, "message"),": "))[2], style="color:red;font-weight:bold;")
     }else{
+      INFO("Validate data content")
       md_content_report <- md_validator$validate_content()
       if(nrow(md_content_report)==0){
         md_validation_message <- tags$span("No validation issue detected!", style = "color:green;font-weight:bold;")
