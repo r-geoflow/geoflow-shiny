@@ -1,14 +1,12 @@
 FROM rocker/shiny:4.3.0
 
-MAINTAINER Emmanuel Blondel "eblondel.pro@gmail.com"
-
 LABEL org.opencontainers.image.title="geoflow-shiny"
 LABEL org.opencontainers.image.url="https://github.com/r-geoflow/geoflow-shiny"
 LABEL org.opencontainers.image.source="https://github.com/r-geoflow/geoflow-shiny"
 LABEL org.opencontainers.image.description="A shiny app to configure and run geoflows"
 LABEL org.opencontainers.image.authors="Emmanuel Blondel <eblondel.pro@gmail.com>"
 
-# system libraries of general use
+# system libraries for LaTeX reporting & keyring
 RUN apt-get update && apt-get install -y \
     sudo \
     pandoc \
@@ -24,10 +22,42 @@ RUN apt-get update && apt-get install -y \
     libv8-dev \
     libsodium-dev \
     libsecret-1-dev \
-    librdf0-dev \
-    git
+    librdf0 \
+    librdf0-dev
     
-#redland install (for atom4R/zen4R)
+# general system libraries
+# Note: this includes rdf/redland system libraries
+RUN apt-get update && apt-get install -y \
+    cmake \
+    curl \
+    default-jdk \
+    fonts-roboto \
+    ghostscript \
+    hugo \
+    less \
+    libbz2-dev \
+    libglpk-dev \
+    libgmp3-dev \
+    libfribidi-dev \
+    libharfbuzz-dev \
+    libhunspell-dev \
+    libicu-dev \
+    liblzma-dev \
+    libmagick++-dev \
+    libopenmpi-dev \
+    libpcre2-dev \
+    libssl-dev \
+    libv8-dev \
+    libxml2-dev \
+    libxslt1-dev \
+    libzmq3-dev \
+    lsb-release \
+    qpdf \
+    texinfo \
+    software-properties-common \
+    vim \
+    wget
+    
 RUN install2.r --error --skipinstalled --ncpus -1 redland
 RUN apt-get install -y \
     libcurl4 \
