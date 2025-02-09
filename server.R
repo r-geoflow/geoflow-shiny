@@ -207,6 +207,19 @@ server <- function(input, output, session) {
       renderMainUI()
     }
   })
+  
+  output$user_avatar <- renderUI({
+    tags$a(
+      href = "#",
+      class = "nav-link",
+      style = "float:right;",
+      tags$img(
+        src = sprintf("%s/avatar/%s/64", auth_info()$endpoint$auth_url, auth_info()$user),
+        class = "img-circle",
+        style = "height: 32px; width: 32px; margin-top: -10px;"
+      )
+    )
+  })
 
   #module page management
   session$userData$module <- reactiveVal(NULL)

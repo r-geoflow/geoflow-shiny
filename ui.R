@@ -28,8 +28,10 @@ ui <- fluidPage(
             ),
             rightUi = if(appConfig$auth) tags$li(
               class = "dropdown",
-              shinyauthr::logoutUI("logout", icon = icon("right-from-bracket"), style = NULL)
+              shinyauthr::logoutUI("logout", icon = icon("right-from-bracket"), style = NULL),
+              uiOutput("user_avatar", inline = T)
             )
+            
           ),
           sidebar = bs4Dash::dashboardSidebar(
             withSpinner(uiOutput("side_ui"))
