@@ -160,10 +160,10 @@ config_editor_server<- function(id, auth_info, parent.session){
   #------------------------------------------------------------------------------------
   
   output$geoflow_config_tabpanel <- renderUI({
-    tabsetPanel(
+    bs4Dash::tabsetPanel(
       id = "geoflow_config_blocks", 
       type = "pills",
-      tabPanel(
+      shiny::tabPanel(
         value = "profile",
         title = "Profile",
         tags$div(id = "profile",
@@ -171,15 +171,15 @@ config_editor_server<- function(id, auth_info, parent.session){
                  uiOutput(ns("profile"))
         )
       ),
-      tabPanel(
+      shiny::tabPanel(
         value = "metadata",
         title = "Metadata",
         br(),
         box(id = "metadata", width = 12,
-            tabsetPanel(
+            bs4Dash::tabsetPanel(
               id = "metadata_tabs", 
               type = "tabs",
-              tabPanel(
+              shiny::tabPanel(
                 value = "contacts",
                 title = "Contacts",
                 shiny::tagList(
@@ -190,7 +190,7 @@ config_editor_server<- function(id, auth_info, parent.session){
                   DT::DTOutput(ns("tbl_contacts"))
                 )
               ),
-              tabPanel(
+              shiny::tabPanel(
                 value = "entities",
                 title = "Entities",
                 shiny::tagList(
@@ -201,7 +201,7 @@ config_editor_server<- function(id, auth_info, parent.session){
                   DT::DTOutput(ns("tbl_entities"))
                 )
               ),
-              tabPanel(
+              shiny::tabPanel(
                 value = "dictionary",
                 title = "Dictionary",
                 shiny::tagList(
@@ -216,7 +216,7 @@ config_editor_server<- function(id, auth_info, parent.session){
             )
         )
       ),
-      tabPanel(
+      shiny::tabPanel(
         value = "software",
         title = "Software",
         br(),
@@ -227,7 +227,7 @@ config_editor_server<- function(id, auth_info, parent.session){
             DT::DTOutput(ns("tbl_software"))
         )
       ),
-      tabPanel(
+      shiny::tabPanel(
         value = "actions",
         title = "Actions",
         br(),
@@ -247,15 +247,15 @@ config_editor_server<- function(id, auth_info, parent.session){
     tagList(
       box(
         width = 6,
-        tabsetPanel(
+        bs4Dash::tabsetPanel(
           id = "profile_execution_main", 
           type = "tabs",
-          tabPanel(
+          shiny::tabPanel(
             title = "Execution parameters",
             textInput(inputId = ns("profile_id"), label = "Workflow identifier", value = ctrl_profile$id),
             selectizeInput(inputId = ns("profile_mode"), label = "Workflow mode", choices = c("raw", "entity"), selected = ctrl_profile$mode)
           ),
-          tabPanel(
+          shiny::tabPanel(
             title = "Execution options",
             textInput(inputId = ns("profile_option_line_separator"), label = "Metadata line separator", value = ctrl_profile$options$line_separator),
             selectizeInput(inputId = ns("profile_option_skipDataDownload"), label = "Skip data download", choices = c("FALSE", "TRUE"), selected = ctrl_profile$options$skipDataDownload),
@@ -460,7 +460,7 @@ config_editor_server<- function(id, auth_info, parent.session){
         title = sprintf("Metadata (%s) validation report", type),
         tags$b("Source: "), tags$b(tags$a(href = source, source)),hr(),
         if(hasReport){
-          shiny::tabsetPanel(
+          bs4Dash::tabsetPanel(
             type = "pills",
             shiny::tabPanel(
               title = "Smart view", hr(),
@@ -902,11 +902,11 @@ config_editor_server<- function(id, auth_info, parent.session){
       if(length(software_details$properties)>0) items <- c(items, "Properties")
       
       if(length(items)>0){
-        do.call("tabsetPanel", c(
+        do.call("bs4Dash::tabsetPanel", c(
           id = "software_form_details_tabs", 
           type = "pills",
           lapply(items, function(item){
-            tabPanel(
+            shiny::tabPanel(
               title = item,
               value = tolower(item),
               br(),
