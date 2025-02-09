@@ -5,11 +5,6 @@ authLoginUI <- function (id, config, title = "Please log in", cloud_title = "Clo
                          cookie_expiry = 7) 
 {
   
-  auth_endpoint_urls <- sapply(config$auth_endpoints, function(x){x$auth_url})
-  auth_endpoint_urls <- setNames(auth_endpoint_urls, sapply(config$auth_endpoints, function(x){x$auth_name}))
-  selected_endpoint <- NULL
-  if(length(auth_endpoint_urls)==1) selected_endpoint <- auth_endpoint_urls[1]
-  
   ns <- shiny::NS(id)
   shinyjs::hidden(
     shiny::div(
@@ -25,10 +20,25 @@ authLoginUI <- function (id, config, title = "Please log in", cloud_title = "Clo
         shiny::tags$h2(title, class = "text-center", style = "padding-top: 0;"),
         shiny::selectizeInput(
           inputId = ns("auth_provider"), label = cloud_title, 
-          choices = auth_endpoint_urls, selected = selected_endpoint, 
+          choices = NULL,
           width = "100%", options = list(
             placeholder = "Select a cloud platform",
-            onInitialize = I('function() { this.setValue(""); }')
+            onInitialize = I('function() { this.setValue(""); }'),
+            render = I('{
+              option: function(item, escape) {
+                console.log(item);
+                html = escape(item.label);
+                if(item.logo != "") html = "<img src=\'" + item.logo + "\' height=\'30px\'/> " + html;
+                html = "<div>" + html + "</div>";
+                return html;
+              },
+              item: function(item, escape) {
+                html = escape(item.label);
+                if(item.logo != "") html = "<img src=\'" + item.logo + "\' height=\'30px\'/> " + html;
+                html = "<div>" + html + "</div>";
+                return html;
+              }
+            }')
           )
         ),
         shiny::textInput(ns("auth_username"), shiny::tagList(shiny::icon("user"), user_title)),

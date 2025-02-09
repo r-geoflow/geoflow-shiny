@@ -6,6 +6,12 @@ authLoginServer <- function (id, config, log_out = shiny::reactiveVal(), reload_
     # keyring_backend_name <- if(!is.null(config$auth_keyring_backend)) config$auth_keyring_backend else 'env'
     # keyring_backend <- keyring:::known_backends[[keyring_backend_name]]$new()
 
+    
+    auth_endpoint_urls <- do.call("rbind", lapply(config$auth_endpoints, function(ep){
+      data.frame(value = ep$auth_url, label = ep$auth_name, type = ep$auth_type, logo = if(!is.null(ep$logo)) ep$logo else "")
+    }))
+    updateSelectizeInput(session, "auth_provider", choices = auth_endpoint_urls, server = TRUE)
+    
     credentials <- shiny::reactiveValues(
       user_auth = FALSE, 
       user_info = NULL

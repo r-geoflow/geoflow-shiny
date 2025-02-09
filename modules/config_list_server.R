@@ -69,6 +69,7 @@ config_list_server<- function(id, auth_info, parent.session){
   #getConfigurations
   getConfigurations <- function(uuids = NULL){
     outlist <- getConfigurationFiles()
+    print(outlist)
     out <- NULL
     if(length(outlist)==0){
        out <- tibble::tibble(
@@ -113,6 +114,7 @@ config_list_server<- function(id, auth_info, parent.session){
   manageButtonEditEvents <- function(uuids){
     prefix <- "button_edit_"
     outlist <- getConfigurationFiles()
+    print(outlist)
     if(length(outlist)>0) lapply(1:length(outlist),function(i){
       x <- outlist[[i]]
       print(x)
@@ -198,11 +200,7 @@ config_list_server<- function(id, auth_info, parent.session){
         }) %...>% 
           (function(result){
             reactive_job_status("Passed")
-            showModal(modalDialog(title = "Success",
-                                    p(sprintf("Workflow '%s' has been successfully executed!", outconfig$profile$id)),
-                                    p(sprintf("See results at: %s", result)),
-                                    easyClose = TRUE, footer = NULL))
-              shinyjs::enable(button_id)
+            shinyjs::enable(button_id)
           }) %...T!%
           (function(error){
             ipc.progress$close()
@@ -256,21 +254,56 @@ config_list_server<- function(id, auth_info, parent.session){
   
   #Interactive job status
   output$config_job_status <- renderUI({ 
+    div(
     tags$span(
+      switch(reactive_job_status(),
+       "In progress" = icon("gears"),
+       "Passed" = icon("check"),
+       "Failed" = icon("xmark"),
+       "Aborted" = icon("exclamation"),
+        ""
+      ),
       if(reactive_job_status() == "In progress"){
         paste(reactive_job_status(), paste0("(", reactive_job_progress(),"%)"))
       }else{
         reactive_job_status()
       },
       class = switch(reactive_job_status(),
-         "Started" = "label label-info",
-         "In progress" = "label label-info",
-         "Passed" = "label label-success",
-         "Failed" = "label label-danger",
-         "Aborted" = "label label-secondary",
+         "Started" = "badge badge-info",
+         "In progress" = "badge badge-info",
+         "Passed" = "badge badge-success",
+         "Failed" = "badge badge-danger",
+         "Aborted" = "badge badge-secondary",
          ""
-      )) 
+      ), style="margin-left:7.5px;"),
+      style = "float:left;"
+    )
   })
+  
+  output$config_job_download <- renderUI({
+    if(reactive_job_status() %in% c("Passed", "Failed")){
+      div(
+        downloadButtonCustom(
+          ns("downloadJob"),
+          'Download job archive',
+          icon = icon("download")
+        ),
+        style = "float:right;margin-right:7.5px;"
+      )
+    }else{
+      ""
+    }
+  })
+  output$downloadJob <- downloadHandler(
+    filename = function(){ paste0(basename(reactive_job()), ".zip") },
+    content = function(con){
+      disable("downloadJob")
+      setwd(reactive_job())
+      zip::zip(zipfile = con, files = list.files())
+      enable("downloadJob")
+    },
+    contentType = "application/zip"
+  )
   
   #Interactive job console log
   config_job_interactive_log <- reactivePoll(100, session,
@@ -314,7 +347,7 @@ config_list_server<- function(id, auth_info, parent.session){
       if((length(parts) %% 2) != 0) parts <- c(parts, "")
       nb_parts <- length(parts)/2
       do.call("accordion", c(id="job-steps", lapply(1:nb_parts, function(i){
-        shinydashboardPlus::accordionItem(
+        bs4Dash::accordionItem(
           title = {
             the_title <- parts[(i*2)-1]
             if(i==1){
@@ -334,7 +367,7 @@ config_list_server<- function(id, auth_info, parent.session){
           },
           status = {
             if(i==1){
-              "black"
+              "gray-dark"
             }else{
               if(i<nb_parts){
                 "success"

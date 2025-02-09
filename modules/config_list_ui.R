@@ -3,7 +3,7 @@ config_list_ui <- function(id){
   
   ns <- NS(id)
   
-  tabItem(tabName = "config_list",
+  bs4Dash::tabItem(tabName = "config_list",
     htmlOutput(ns("config_list_info")),hr(),
     p(""),
     fluidRow(
@@ -21,7 +21,8 @@ config_list_ui <- function(id){
       box(
         inputId = "config_log_wrapper",
         title = "Console", status = "primary", width = 6,
-        uiOutput(ns("config_job_status")),br(),
+        uiOutput(ns("config_job_status")),
+        uiOutput(ns("config_job_download")),br(),br(),
         uiOutput(ns("config_job_interactive_log"))
       )
     )

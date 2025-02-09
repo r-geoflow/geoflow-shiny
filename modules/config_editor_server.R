@@ -786,7 +786,7 @@ config_editor_server<- function(id, auth_info, parent.session){
                 table.column(1).nodes().to$().css({cursor: 'pointer'});
                 var format = function(d) {
                   var json = JSON.parse(d[1]);
-                  var html = '<div style=\"background-color:#eee; padding: .5em;\" class=\"row\">';
+                  var html = '<div style=\"padding: .5em;\" class=\"row\">';
                   if(json.parameters){
                     var params = Object.keys(json.parameters);
                     html += '<div class=\"col-md-6\">';
@@ -1053,7 +1053,7 @@ config_editor_server<- function(id, auth_info, parent.session){
                   if(json.options){
                     var options = Object.keys(json.options);
                     html += '<div class=\"col-md-6\">';
-                    html += '<h4><b>Options</b></h4><hr style=\"margin-top:0px;margin-bottom:4px;border:1px solid #000;\">';
+                    html += '<h4><b>Options</b></h4><hr style=\"margin-top:0px;margin-bottom:4px;border:1px solid;\">';
                     html += '<ul>';
                     for(var i=0;i<options.length;i++){
                       var option = options[i]

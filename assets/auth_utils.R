@@ -10,7 +10,7 @@ initAuthSessionVariables <- function(session, auth_info){
   }else{
     session$userData$GEOFLOW_SHINY_AUTH_PWD = auth_info$password
   }
-  if(!is.na(auth_info$token)) session$userData$GEOFLOW_SHINY_AUTH_TOKEN = auth_info$token
+  if(!is.null(auth_info$token)) if(!is.na(auth_info$token)) session$userData$GEOFLOW_SHINY_AUTH_TOKEN = auth_info$token
 }
 
 #resetAuthSessionVariables

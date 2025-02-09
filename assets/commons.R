@@ -16,6 +16,10 @@ read_config <- function(config_file){
     appConfig$auth = TRUE
     appConfig$auth_ui = FALSE
     appConfig$auth_jwt <- jwt
+  }else{
+    if(!appConfig$auth){
+      appConfig$auth_ui = FALSE
+    }
   }
   print(appConfig)
   return(appConfig)

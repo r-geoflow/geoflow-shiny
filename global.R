@@ -11,8 +11,8 @@ source("assets/commons.R")
 
 #config
 #---------------------------------------------------------------------------------------
-#config_file = "D:/Documents/DEV/Packages/geoflow-shiny_config_inrae.yml"
-config_file <- "resources/config.yml"
+config_file = "D:/Documents/DEV/Packages/geoflow-shiny_config_inrae.yml"
+#config_file <- "resources/config.yml"
 #test shiny server resource file existence (if mount through docker container)
 shiny_server_config_file <- "/etc/geoflow-shiny/config.yml"
 if(file.exists(shiny_server_config_file)) config_file <- shiny_server_config_file
@@ -37,6 +37,8 @@ GEOFLOW_SHINY_ENV <- new.env()
 #---------------------------------------------------------------------------------------
 source("modules/auth_server.R")
 source("modules/auth_ui.R")
+source("modules/home_server.R")
+source("modules/home_ui.R")
 source("modules/config_editor_server.R")
 source("modules/config_editor_ui.R")
 source("modules/config_list_server.R")

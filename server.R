@@ -2,55 +2,107 @@
 #==========================================================================================
 server <- function(input, output, session) {
   
+  auth_info = reactiveVal(NULL)
+  session_reloaded = reactiveVal(FALSE)
+  
+  # Read the session cookie
+  cookie_observer = observe({
+    req(!session_reloaded())
+    session_cookie <- cookies::get_cookie("user_session")
+    if (!is.null(session_cookie)) {
+      INFO("Found a session cookie - reload dashboard")
+      session_data <- jsonlite::fromJSON(session_cookie)
+      if(any(sapply(appConfig$auth_endpoints, function(x){x$auth_url == session_data$endpoint$auth_url}))){
+        endpoint = appConfig$auth_endpoints[sapply(appConfig$auth_endpoints, function(x){x$auth_url == session_data$endpoint$auth_url})][[1]]
+        switch(endpoint$auth_type,
+               "ocs" = {
+                 #try to reconnect behind the scene
+                 AUTH_API = try(ocs4R::ocsManager$new(
+                   url = endpoint$auth_url,
+                   user = session_data$user,
+                   pwd = session_data$password
+                 ))
+                 if(!is(AUTH_API, "try-error")) if(is(AUTH_API, "ocsManager") && !is.null(AUTH_API$getWebdavRoot())) {
+                   assign("AUTH_API", AUTH_API, envir = GEOFLOW_SHINY_ENV)
+                   shinyjs::show("main-content")
+                   shinyjs::hide("login-wrapper")
+                   auth_info(session_data)
+                 }
+               }       
+        )
+      }
+      cookie_observer$destroy()
+    }
+  })
+  
   onStop(function(){
     resetAuthSessionVariables(session)
   })
 
   if(appConfig$auth){  
-  
-    auth_info <- reactiveVal(NULL)
     
     if(appConfig$auth_ui){
+      
       #auth with UI
       credentials <- authLoginServer(
         id = "login",
         config = appConfig,
         log_out = reactive(logout_init())
       )
+      
+      observe({
+        if (credentials()$user_auth) auth_info(credentials()$auth_info)
+      })
   
       # call the logout module with reactive trigger to hide/show
       logout_init <- shinyauthr::logoutServer(
         id = "logout",
-        active = reactive(credentials()$user_auth)
+        active = reactive(!is.null(auth_info()))
       )
       
       observe({
-        if (credentials()$user_auth) {
+        
+        if (!is.null(auth_info())) {
           
-          info = credentials()$auth_info
-          info$logged <- credentials()$user_auth
-          auth_info(info)
-          
-          if(!is.null(auth_info())){
+          if(!is.null(auth_info()) & !session_reloaded()){
+            print(auth_info())
             initAuthSessionVariables(session, auth_info())
+            INFO("Load home module")
+            home_server("home", auth_info, parent.session = session)
             INFO("Load configuration editor module")
             config_editor_server("config_editor", auth_info, parent.session = session)
             INFO("Load configuration list module")
             config_list_server("config_list", auth_info, parent.session = session)
           }
           
-          shinyjs::removeClass(selector = "body", class = "sidebar-collapse")
-          shinyjs::show(selector = "header")
+          shinyjs::show("main-content")
+          shinyjs::hide("login-wrapper")
+          session_reloaded(TRUE)
+          session_data = list(
+            endpoint = auth_info()$endpoint,
+            user = auth_info()$user,
+            password = auth_info()$password
+          )
+          print(session_data)
+          cookies::set_cookie("user_session", as.character(jsonlite::toJSON(session_data)), expiration = 7)
           
         } else {
-          shinyjs::addClass(selector = "body", class = "sidebar-collapse")
-          shinyjs::hide(selector = "header")
+          shinyjs::hide("main-content")
+          shinyjs::show("login-wrapper")
         }
       })
+      
+      observeEvent(input$`logout-button`, {
+        logout_init()
+        shinyjs::hide("main-content")
+        shinyjs::show("login-wrapper")
+        cookies::remove_cookie("user_session")
+      })
+      
     }else{
       #auth without UI
-      shinyjs::removeClass(selector = "body", class = "sidebar-collapse")
-      shinyjs::show(selector = "header")
+      shinyjs::show("main-content")
+      shinyjs::hide("login-wrapper")
       
       #JWT auth
       observe({
@@ -70,6 +122,8 @@ server <- function(input, output, session) {
             if(!is.null(auth_info())){
               INFO("Set-up geoflow-shiny in auth mode (no UI, token based)")
               initAuthSessionVariables(session, auth_info())
+              INFO("Load home module")
+              home_server("home", auth_info, parent.session = session)
               INFO("Load configuration editor module")
               config_editor_server("config_editor", auth_info, parent.session = session)
               INFO("Load configuration list module")
@@ -83,29 +137,36 @@ server <- function(input, output, session) {
   }else{
     #anonymous usage
     INFO("Set-up geoflow-shiny in anonymous mode")
+    INFO("Load home module")
+    home_server("home", parent.session = session)
     INFO("Load configuration editor module")
     config_editor_server("config_editor", parent.session = session)
     INFO("Load configuration list module")
     config_list_server("config_list", parent.session = session)
-    shinyjs::removeClass(selector = "body", class = "sidebar-collapse")
-    shinyjs::show(selector = "header")
+    shinyjs::show("main-content")
+    shinyjs::hide("login-wrapper")
 
   }
   
   
   renderSideUI = function(){
-    sidebarMenu(
+    bs4Dash::sidebarMenu(
       id = "geoflow-tabs",
-      menuItem(
+      bs4Dash::menuItem(
+        text = "Home",
+        tabName = "home",
+        selected = TRUE
+      ),
+      bs4Dash::menuItem(
         text = "Configure",
         tabName = "config",
-        menuSubItem(text = "Edit configuration", tabName = "config_editor"),
+        bs4Dash::menuSubItem(text = "Edit configuration", tabName = "config_editor"),
         startExpanded = TRUE
       ),
-      menuItem(
+      bs4Dash::menuItem(
         text = "Execute",
         tabName = "exec",
-        menuSubItem(text = "Execute workflow", tabName = "config_list"),
+        bs4Dash::menuSubItem(text = "Execute workflow", tabName = "config_list"),
         startExpanded = TRUE
       )
     )
@@ -114,7 +175,7 @@ server <- function(input, output, session) {
   output$side_ui <- renderUI({
     if(appConfig$auth){
       if(appConfig$auth_ui){
-        req(credentials()$user_auth)
+        req(!is.null(auth_info()))
         renderSideUI()
       }else{
         renderSideUI()
@@ -127,6 +188,7 @@ server <- function(input, output, session) {
   
   renderMainUI = function(){
     tabItems(
+      home_ui("home"),
       config_editor_ui("config_editor"),
       config_list_ui("config_list")
     )
@@ -135,7 +197,7 @@ server <- function(input, output, session) {
   output$main_ui <- renderUI({
     if(appConfig$auth){
       if(appConfig$auth_ui){
-        req(credentials()$user_auth)
+        req(!is.null(auth_info()))
         renderMainUI()
       }else{
         renderMainUI()
@@ -155,5 +217,7 @@ server <- function(input, output, session) {
     session$userData$module(moduleUrl)
     updateModuleUrl(session, moduleUrl)
   })
+  
+  
   
 }
