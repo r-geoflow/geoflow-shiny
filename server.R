@@ -8,28 +8,37 @@ server <- function(input, output, session) {
   # Read the session cookie
   cookie_observer = observe({
     req(!session_reloaded())
-    session_cookie <- cookies::get_cookie("user_session")
+    session_cookie <- cookies::get_cookie("user_profile@geoflow-shiny")
     if (!is.null(session_cookie)) {
-      INFO("Found a session cookie - reload dashboard")
       session_data <- jsonlite::fromJSON(session_cookie)
-      if(any(sapply(appConfig$auth_endpoints, function(x){x$auth_url == session_data$endpoint$auth_url}))){
-        endpoint = appConfig$auth_endpoints[sapply(appConfig$auth_endpoints, function(x){x$auth_url == session_data$endpoint$auth_url})][[1]]
-        switch(endpoint$auth_type,
-               "ocs" = {
-                 #try to reconnect behind the scene
-                 AUTH_API = try(ocs4R::ocsManager$new(
-                   url = endpoint$auth_url,
-                   user = session_data$user,
-                   pwd = session_data$password
-                 ))
-                 if(!is(AUTH_API, "try-error")) if(is(AUTH_API, "ocsManager") && !is.null(AUTH_API$getWebdavRoot())) {
-                   assign("AUTH_API", AUTH_API, envir = GEOFLOW_SHINY_ENV)
-                   shinyjs::show("main-content")
-                   shinyjs::hide("login-wrapper")
-                   auth_info(session_data)
-                 }
-               }       
-        )
+      INFO(sprintf("Found a user profile stored as cookie - try reloading dashboard for user '%s'", session_data$user))
+      stored_password <- tryCatch(
+        appConfig$keyring_backend$get(service = "geoflow-shiny", username = session_data$user),
+        error = function(e) NULL
+      )
+      if(!is.null(stored_password)){
+        INFO(sprintf("Found a password stored in keyring for user '%s'", session_data$user))
+        if(any(sapply(appConfig$auth_endpoints, function(x){x$auth_url == session_data$endpoint$auth_url}))){
+          endpoint = appConfig$auth_endpoints[sapply(appConfig$auth_endpoints, function(x){x$auth_url == session_data$endpoint$auth_url})][[1]]
+          switch(endpoint$auth_type,
+                 "ocs" = {
+                   #try to reconnect behind the scene
+                   AUTH_API = try(ocs4R::ocsManager$new(
+                     url = endpoint$auth_url,
+                     user = session_data$user,
+                     pwd = stored_password
+                   ))
+                   if(!is(AUTH_API, "try-error")) if(is(AUTH_API, "ocsManager") && !is.null(AUTH_API$getWebdavRoot())) {
+                     assign("AUTH_API", AUTH_API, envir = GEOFLOW_SHINY_ENV)
+                     shinyjs::show("main-content")
+                     shinyjs::hide("login-wrapper")
+                     auth_info(session_data)
+                   }
+                 }       
+          )
+        }
+      }else{
+        WARN("No password stored in keyring")
       }
       cookie_observer$destroy()
     }
@@ -66,7 +75,7 @@ server <- function(input, output, session) {
           
           if(!is.null(auth_info()) & !session_reloaded()){
             print(auth_info())
-            initAuthSessionVariables(session, auth_info())
+            initAuthSessionVariables(session, appConfig, auth_info())
             INFO("Load home module")
             home_server("home", auth_info, parent.session = session)
             INFO("Load configuration editor module")
@@ -80,11 +89,9 @@ server <- function(input, output, session) {
           session_reloaded(TRUE)
           session_data = list(
             endpoint = auth_info()$endpoint,
-            user = auth_info()$user,
-            password = auth_info()$password
+            user = auth_info()$user
           )
-          print(session_data)
-          cookies::set_cookie("user_session", as.character(jsonlite::toJSON(session_data)), expiration = 7)
+          cookies::set_cookie("user_profile@geoflow-shiny", as.character(jsonlite::toJSON(session_data)), expiration = 7)
           
         } else {
           shinyjs::hide("main-content")
@@ -96,7 +103,8 @@ server <- function(input, output, session) {
         logout_init()
         shinyjs::hide("main-content")
         shinyjs::show("login-wrapper")
-        cookies::remove_cookie("user_session")
+        cookies::remove_cookie("user_profile@geoflow-shiny")
+        appConfig$keyring_backend$delete(service = "geoflow-shiny", username = auth_info()$user)
       })
       
     }else{
@@ -114,8 +122,6 @@ server <- function(input, output, session) {
             assign("AUTH_API", AUTH_API, envir = GEOFLOW_SHINY_ENV)
             auth_info(list(
               endpoint = list(auth_url = "https://api.d4science.org/workspace", auth_type = "d4science"),
-              backend = NA, 
-              service = NA, 
               user = AUTH_API$getUserProfile()$username, 
               token = jwt_profile$access$access_token
             ))

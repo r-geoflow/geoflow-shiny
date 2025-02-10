@@ -33,6 +33,14 @@ if(Sys.info()[["sysname"]] == "Windows"){
 GEOFLOW_DATA_DIR <- appConfig$data_dir_local
 GEOFLOW_SHINY_ENV <- new.env()
 
+#keyring
+#---------------------------------------------------------------------------------------
+#keyring?
+keyring_backend_name <- if(!is.null(config$auth_keyring_backend)) config$auth_keyring_backend else 'env'
+keyring_backend <- keyring:::known_backends[[keyring_backend_name]]$new()
+appConfig$keyring_backend = keyring_backend
+
+
 #modules
 #---------------------------------------------------------------------------------------
 source("modules/auth_server.R")
