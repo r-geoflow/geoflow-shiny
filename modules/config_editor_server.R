@@ -902,7 +902,7 @@ config_editor_server<- function(id, auth_info, parent.session){
       if(length(software_details$properties)>0) items <- c(items, "Properties")
       
       if(length(items)>0){
-        do.call("bs4Dash::tabsetPanel", c(
+        do.call(bs4Dash::tabsetPanel, c(
           id = "software_form_details_tabs", 
           type = "pills",
           lapply(items, function(item){
@@ -915,7 +915,7 @@ config_editor_server<- function(id, auth_info, parent.session){
                 if(!is.null(software_param$choices)){
                   selectizeInput(
                     inputId = ns(sprintf("software_form_%s_%s", tolower(item), name)),
-                    label = paste(software_param$label, tags$span(class = "glyphicon glyphicon-info-sign software-parameter-info", title = software_param$def)),
+                    label = c(software_param$label, list(tags$span(class = "glyphicon glyphicon-info-sign software-parameter-info", title = software_param$def))),
                     selected = software[[tolower(item)]][[name]],
                     choices = software_param$choices
                   )
@@ -929,7 +929,13 @@ config_editor_server<- function(id, auth_info, parent.session){
                       value = if(!is.null(software[[tolower(item)]][[name]])){
                         software[[tolower(item)]][[name]]
                       }else{
-                        if(!is.null(software_param$default)){software_param$default}else{NULL}
+                        if(!is.null(software_param$default)){software_param$default}else{
+                          if(input$software_form_software_type == "ocs" & name %in% c("url","user","pwd")){
+                            sprintf("{{GEOFLOW_SHINY_AUTH_%s}}", toupper(name))
+                          }else{
+                            NULL
+                          }
+                        }
                       }
                     ),
                     "integer" = numericInput(
