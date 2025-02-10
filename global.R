@@ -36,7 +36,7 @@ GEOFLOW_SHINY_ENV <- new.env()
 #keyring
 #---------------------------------------------------------------------------------------
 #keyring?
-keyring_backend_name <- if(!is.null(config$auth_keyring_backend)) config$auth_keyring_backend else 'env'
+keyring_backend_name <- if(!is.null(appConfig$auth_keyring_backend)) appConfig$auth_keyring_backend else 'env'
 keyring_backend <- keyring:::known_backends[[keyring_backend_name]]$new()
 appConfig$keyring_backend = keyring_backend
 
