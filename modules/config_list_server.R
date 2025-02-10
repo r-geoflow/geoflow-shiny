@@ -45,7 +45,7 @@ config_list_server<- function(id, auth_info, parent.session){
             files <- AUTH_API$listFiles(relPath = appConfig$data_dir_remote)
             files <- files[files$contentType == "application/json",]
             if(nrow(files)>0){
-              files <- files[endsWith(files$name, ".json"),]
+              files <- files[!is.na(files$name) & endsWith(files$name, ".json"),]
               outfiles <- lapply(1:nrow(files), function(i){files[i,]})
             }
           }
