@@ -4,6 +4,7 @@ server <- function(input, output, session) {
   
   auth_info = reactiveVal(NULL)
   session_reloaded = reactiveVal(FALSE)
+  geoflow_configs = reactiveVal(NULL)
   
   # Read the session cookie
   cookie_observer = observe({
@@ -33,6 +34,7 @@ server <- function(input, output, session) {
                      shinyjs::show("main-content")
                      shinyjs::hide("login-wrapper")
                      auth_info(session_data)
+                     geoflow_configs(getConfigurationFiles(config = appConfig, auth_api = AUTH_API, auth_info = auth_info()))
                    }
                  }       
           )
@@ -74,14 +76,17 @@ server <- function(input, output, session) {
         if (!is.null(auth_info())) {
           
           if(!is.null(auth_info()) & !session_reloaded()){
+            
             print(auth_info())
             initAuthSessionVariables(session, appConfig, auth_info())
             INFO("Load home module")
-            home_server("home", auth_info, parent.session = session)
+            home_server("home", auth_info, geoflow_configs, parent.session = session)
             INFO("Load configuration editor module")
-            config_editor_server("config_editor", auth_info, parent.session = session)
+            config_editor_server("config_editor", auth_info, geoflow_configs, parent.session = session)
             INFO("Load configuration list module")
-            config_list_server("config_list", auth_info, parent.session = session)
+            config_list_server("config_list", auth_info, geoflow_configs, parent.session = session)
+            AUTH_API <- try(get("AUTH_API", envir = GEOFLOW_SHINY_ENV), silent = TRUE)
+            geoflow_configs(getConfigurationFiles(config = appConfig, auth_api = AUTH_API, auth_info = auth_info()))
           }
           
           shinyjs::show("main-content")
@@ -97,7 +102,7 @@ server <- function(input, output, session) {
           shinyjs::hide("main-content")
           shinyjs::show("login-wrapper")
         }
-      })
+      }) 
       
       observeEvent(input$`logout-button`, {
         logout_init()
@@ -129,11 +134,11 @@ server <- function(input, output, session) {
               INFO("Set-up geoflow-shiny in auth mode (no UI, token based)")
               initAuthSessionVariables(session, auth_info())
               INFO("Load home module")
-              home_server("home", auth_info, parent.session = session)
+              home_server("home", auth_info, geoflow_configs, parent.session = session)
               INFO("Load configuration editor module")
-              config_editor_server("config_editor", auth_info, parent.session = session)
+              config_editor_server("config_editor", auth_info, geoflow_configs, parent.session = session)
               INFO("Load configuration list module")
-              config_list_server("config_list", auth_info, parent.session = session)
+              config_list_server("config_list", auth_info, geoflow_configs, parent.session = session)
             }
           }
         }
@@ -149,6 +154,7 @@ server <- function(input, output, session) {
     config_editor_server("config_editor", parent.session = session)
     INFO("Load configuration list module")
     config_list_server("config_list", parent.session = session)
+    geoflow_configs(getConfigurationFiles(config = appConfig, auth_api = NULL, auth_info = NULL))
     shinyjs::show("main-content")
     shinyjs::hide("login-wrapper")
 

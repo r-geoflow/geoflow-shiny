@@ -1,5 +1,5 @@
 #config_editor_server
-config_editor_server<- function(id, auth_info, parent.session){
+config_editor_server<- function(id, auth_info, geoflow_configs, parent.session){
 
  moduleServer(id, function(input, output, session){
   

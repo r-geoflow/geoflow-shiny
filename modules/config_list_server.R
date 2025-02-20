@@ -1,5 +1,5 @@
 #config_list_server
-config_list_server<- function(id, auth_info, parent.session){
+config_list_server<- function(id, auth_info, geoflow_configs, parent.session){
   
  moduleServer(id, function(input, output, session){
   
@@ -23,52 +23,9 @@ config_list_server<- function(id, auth_info, parent.session){
   
   AUTH_API <- try(get("AUTH_API", envir = GEOFLOW_SHINY_ENV), silent = TRUE)
   
-  #FUNCTIONS
-  #getConfigurationFiles
-  getConfigurationFiles <- function() {
-    if(appConfig$auth){
-      INFO(sprintf("Listing configuration files in '%s' at '%s'", appConfig$data_dir_remote, auth_info()$endpoint$auth_url))
-      switch(auth_info()$endpoint$auth_type,
-        "ocs" = {
-          outfiles <- list()
-          data_dir_remote_exists <- TRUE
-          folders <- unlist(strsplit(appConfig$data_dir_remote,"/"))
-          folders <- folders[folders!=""]
-          path <- "/"
-          for(folder in folders){
-            folder_path <- paste0(folder, "/")
-            data_dir_remote_exists <- folder_path %in% AUTH_API$listFiles(relPath = path)$name
-            if(!data_dir_remote_exists) break
-            path <- paste0(path, folder_path)
-          }
-          if(data_dir_remote_exists){
-            files <- AUTH_API$listFiles(relPath = appConfig$data_dir_remote)
-            files <- files[files$contentType == "application/json",]
-            if(nrow(files)>0){
-              files <- files[!is.na(files$name) & endsWith(files$name, ".json"),]
-              outfiles <- lapply(1:nrow(files), function(i){files[i,]})
-            }
-          }
-          outfiles
-        },
-        "d4science" = {
-          outfiles <- list()
-          files <- AUTH_API$listWSItemsByPath(appConfig$data_dir_remote)
-          if(length(files)>0) if(nrow(files)>0){
-            files <- files[endsWith(files$name, ".json"),]
-            outfiles <- lapply(1:nrow(files), function(i){files[i,]})
-          }
-          outfiles
-        },
-        list())
-    }else{
-      list.files(GEOFLOW_DATA_DIR, pattern = ".json", full.names = TRUE)
-    }
-  }
-  
   #getConfigurations
   getConfigurations <- function(uuids = NULL){
-    outlist <- getConfigurationFiles()
+    outlist <- geoflow_configs()
     print(outlist)
     out <- NULL
     if(length(outlist)==0){
@@ -113,7 +70,7 @@ config_list_server<- function(id, auth_info, parent.session){
   #edit
   manageButtonEditEvents <- function(uuids){
     prefix <- "button_edit_"
-    outlist <- getConfigurationFiles()
+    outlist <- geoflow_configs()
     print(outlist)
     if(length(outlist)>0) lapply(1:length(outlist),function(i){
       x <- outlist[[i]]
@@ -132,7 +89,7 @@ config_list_server<- function(id, auth_info, parent.session){
   #execute
   manageButtonExecuteEvents <- function(uuids){
     prefix <- "button_execute_"
-    outlist <- getConfigurationFiles()
+    outlist <- geoflow_configs()
     if(length(outlist)>0) lapply(1:length(outlist),function(i){
       x <- outlist[[i]]
       if(appConfig$auth) x <- x$name
@@ -220,7 +177,7 @@ config_list_server<- function(id, auth_info, parent.session){
   
   #loadConfigurationFiles
   loadConfigurationFiles <- function(){
-    config_files <- getConfigurationFiles()
+    config_files <- getConfigurationFiles(config = appConfig, auth_api = AUTH_API, auth_info = auth_info())
     uuids <- NULL
     if(length(config_files)>0) for(i in 1:length(config_files)){
       one_uuid = uuid::UUIDgenerate() 

@@ -7,6 +7,7 @@ options(stringsAsFactors = FALSE)
 source("assets/ui_utils.R")
 source("assets/package_utils.R")
 source("assets/auth_utils.R")
+source("assets/geoflow_utils.R")
 source("assets/commons.R")
 
 #config
