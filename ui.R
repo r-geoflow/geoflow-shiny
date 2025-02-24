@@ -13,7 +13,7 @@ ui <- fluidPage(
     cookie_expiry = if(!is.null(appConfig$auth_cookie_expiry)){appConfig$auth_cookie_expiry}else{7},
     additional_ui = tags$div(
       HTML(appConfig$auth_footer),
-      HTML("<p style='font-size:80%;'>Powered by <a href='https://www.r-project.org/' target='_blank'>R</a> and <a href='https://github.com/r-geoflow' target='_blank'>geoflow</a></p>")
+      HTML("<p style='font-size:80%;'>Powered by <a href='https://www.r-project.org/' target='_blank'><img src='https://www.r-project.org/Rlogo.png' height='50' style='margin-right:10px'></a><a href='https://github.com/r-geoflow' target='_blank'><img src='https://github.com/r-geoflow/geoflow-logos/blob/main/geoflow_square.png?raw=true' height='60' /></a></p>")
     )
   )),
   shinyjs::hidden(
