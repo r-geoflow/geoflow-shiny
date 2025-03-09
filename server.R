@@ -87,12 +87,17 @@ server <- function(input, output, session) {
             
             print(auth_info())
             initAuthSessionVariables(session, appConfig, auth_info())
+            
+            #load modules
             INFO("Load home module")
             home_server("home", auth_info, i18n, geoflow_configs, parent.session = session)
             INFO("Load configuration editor module")
             config_editor_server("config_editor", auth_info, i18n, geoflow_configs, parent.session = session)
             INFO("Load configuration list module")
             config_list_server("config_list", auth_info, i18n, geoflow_configs, parent.session = session)
+            INFO("Load metadata editor module")
+            metadata_editor_server("metadata_editor", auth_info, i18n, geoflow_configs, parent.session = session)
+            
             AUTH_API <- try(get("AUTH_API", envir = GEOFLOW_SHINY_ENV), silent = TRUE)
             geoflow_configs(getConfigurationFiles(config = appConfig, auth_api = AUTH_API, auth_info = auth_info()))
           }
@@ -139,6 +144,7 @@ server <- function(input, output, session) {
               token = jwt_profile$access$access_token
             ))
             if(!is.null(auth_info())){
+              #load modules
               INFO("Set-up geoflow-shiny in auth mode (no UI, token based)")
               initAuthSessionVariables(session, auth_info())
               INFO("Load home module")
@@ -147,6 +153,11 @@ server <- function(input, output, session) {
               config_editor_server("config_editor", auth_info, i18n, geoflow_configs, parent.session = session)
               INFO("Load configuration list module")
               config_list_server("config_list", auth_info, i18n, geoflow_configs, parent.session = session)
+              INFO("Load metadata editor module")
+              metadata_editor_server("metadata_editor", auth_info, i18n, geoflow_configs, parent.session = session)
+              
+              AUTH_API <- try(get("AUTH_API", envir = GEOFLOW_SHINY_ENV), silent = TRUE)
+              geoflow_configs(getConfigurationFiles(config = appConfig, auth_api = AUTH_API, auth_info = auth_info()))
             }
           }
         }
@@ -162,6 +173,8 @@ server <- function(input, output, session) {
     config_editor_server("config_editor", i18n = i18n, geoflow_configs = geoflow_configs, parent.session = session)
     INFO("Load configuration list module")
     config_list_server("config_list", i18n = i18n, geoflow_configs = geoflow_configs, parent.session = session)
+    INFO("Load metadata editor module")
+    metadata_editor_server("metadata_editor", i18n = i18n, geoflow_configs = geoflow_configs, parent.session = session)
     geoflow_configs(getConfigurationFiles(config = appConfig, auth_api = NULL, auth_info = NULL))
     shinyjs::show("main-content")
     shinyjs::hide("login-wrapper")
@@ -178,15 +191,16 @@ server <- function(input, output, session) {
         selected = TRUE
       ),
       bs4Dash::menuItem(
-        text = i18n()$t("MENU_ITEM_CONFIGURE"),
+        text = i18n()$t("MENU_ITEM_CREATE"),
         tabName = "config",
-        bs4Dash::menuSubItem(text = i18n()$t("MENU_SUBITEM_CONFIGURE"), tabName = "config_editor"),
+        bs4Dash::menuSubItem(text = i18n()$t("MENU_SUBITEM_CREATE_METADATA"), tabName = "metadata_editor"),
+        bs4Dash::menuSubItem(text = i18n()$t("MENU_SUBITEM_CREATE_WORKFLOW"), tabName = "config_editor"),
         startExpanded = TRUE
       ),
       bs4Dash::menuItem(
         text = i18n()$t("MENU_ITEM_EXECUTE"),
         tabName = "exec",
-        bs4Dash::menuSubItem(text = i18n()$t("MENU_SUBITEM_EXECUTE"), tabName = "config_list"),
+        bs4Dash::menuSubItem(text = i18n()$t("MENU_SUBITEM_EXECUTE_WORKFLOW"), tabName = "config_list"),
         startExpanded = TRUE
       )
     )
@@ -210,7 +224,8 @@ server <- function(input, output, session) {
     tabItems(
       home_ui("home"),
       config_editor_ui("config_editor"),
-      config_list_ui("config_list")
+      config_list_ui("config_list"),
+      metadata_editor_ui("metadata_editor")
     )
   }
   

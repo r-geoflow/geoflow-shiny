@@ -2,10 +2,11 @@ key,en
 LOGOUT,Log out
 SELECT_LANGUAGE,Language
 MENU_ITEM_HOME,Home
-MENU_ITEM_CONFIGURE,Configure
+MENU_ITEM_CREATE,Create
 MENU_ITEM_EXECUTE,Execute
-MENU_SUBITEM_CONFIGURE,Edit configuration
-MENU_SUBITEM_EXECUTE,Execute workflow
+MENU_SUBITEM_CREATE_METADATA,Create/Edit metadata
+MENU_SUBITEM_CREATE_WORKFLOW,Create/Edit configuration
+MENU_SUBITEM_EXECUTE_WORKFLOW,Execute workflow
 HOME_TITLE,Run interactive workflows with
 HOME_WORKFLOWS,Workflows
 EXEC_TITLE,<h2>List of <b>geoflow</b> configurations <small>Access and execute a Workflows</small></h2><hr>
@@ -31,3 +32,4 @@ TABLE_LANGUAGE,//cdn.datatables.net/plug-ins/1.10.11/i18n/English.json
 TABLE_NAME,Name
 TABLE_LASTMODIFIED,Last modification
 TABLE_ACTIONS,Actions
+METADATA_EDITOR_TITLE,<h2>Create/Edit metadata</h2>

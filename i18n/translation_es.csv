@@ -2,10 +2,11 @@ key,es
 LOGOUT,Cerrar sesión
 SELECT_LANGUAGE,Idioma
 MENU_ITEM_HOME,Inicio
-MENU_ITEM_CONFIGURE,Configurar
+MENU_ITEM_CREATE,Crear
 MENU_ITEM_EXECUTE,Ejecutar
-MENU_SUBITEM_CONFIGURE,Editar configuración
-MENU_SUBITEM_EXECUTE,Ejecutar flujo de trabajo
+MENU_SUBITEM_CREATE_METADATA,Crear/Editar metadata
+MENU_SUBITEM_CREATE_WORKFLOW,Crear/Editar configuración
+MENU_SUBITEM_EXECUTE_WORKFLOW,Ejecutar flujo de trabajo
 HOME_TITLE,Lanzar flujos de trabajo interactivos con
 HOME_WORKFLOWS,Flujos de trabajo
 EXEC_TITLE,<h2>Lista de las configuraciones <b>geoflow</b> <small>Acceder a un flujo de trabajo y ejecutarlo</small></h2><hr>
@@ -31,3 +32,4 @@ TABLE_LANGUAGE,//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json
 TABLE_NAME,Nombre
 TABLE_LASTMODIFIED,Ultima modificación
 TABLE_ACTIONS,Acciones
+METADATA_EDITOR_TITLE,<h2>Crear/Editar metadatos</h2>
