@@ -1,9 +1,14 @@
 #config_editor_server
-config_editor_server<- function(id, auth_info, geoflow_configs, parent.session){
+config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.session){
 
  moduleServer(id, function(input, output, session){
   
   ns <- session$ns
+  
+  observeEvent(i18n(),{
+    #update i18n to module session
+    #shiny.i18n::update_lang(i18n()$get_translation_language(), session = session)
+  })
   
   output$config_editor_info <- renderText({
     session$userData$module("configuration-editor")

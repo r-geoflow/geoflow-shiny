@@ -6,6 +6,14 @@ server <- function(input, output, session) {
   session_reloaded = reactiveVal(FALSE)
   geoflow_configs = reactiveVal(NULL)
   
+  i18n <- reactive({
+    selected <- input$selected_language
+    if (length(selected) > 0 && selected %in% translator$get_languages()) {
+      translator$set_translation_language(selected)
+    }
+    translator
+  })
+  
   # Read the session cookie
   cookie_observer = observe({
     req(!session_reloaded())
@@ -80,11 +88,11 @@ server <- function(input, output, session) {
             print(auth_info())
             initAuthSessionVariables(session, appConfig, auth_info())
             INFO("Load home module")
-            home_server("home", auth_info, geoflow_configs, parent.session = session)
+            home_server("home", auth_info, i18n, geoflow_configs, parent.session = session)
             INFO("Load configuration editor module")
-            config_editor_server("config_editor", auth_info, geoflow_configs, parent.session = session)
+            config_editor_server("config_editor", auth_info, i18n, geoflow_configs, parent.session = session)
             INFO("Load configuration list module")
-            config_list_server("config_list", auth_info, geoflow_configs, parent.session = session)
+            config_list_server("config_list", auth_info, i18n, geoflow_configs, parent.session = session)
             AUTH_API <- try(get("AUTH_API", envir = GEOFLOW_SHINY_ENV), silent = TRUE)
             geoflow_configs(getConfigurationFiles(config = appConfig, auth_api = AUTH_API, auth_info = auth_info()))
           }
@@ -134,11 +142,11 @@ server <- function(input, output, session) {
               INFO("Set-up geoflow-shiny in auth mode (no UI, token based)")
               initAuthSessionVariables(session, auth_info())
               INFO("Load home module")
-              home_server("home", auth_info, geoflow_configs, parent.session = session)
+              home_server("home", auth_info, i18n, geoflow_configs, parent.session = session)
               INFO("Load configuration editor module")
-              config_editor_server("config_editor", auth_info, geoflow_configs, parent.session = session)
+              config_editor_server("config_editor", auth_info, i18n, geoflow_configs, parent.session = session)
               INFO("Load configuration list module")
-              config_list_server("config_list", auth_info, geoflow_configs, parent.session = session)
+              config_list_server("config_list", auth_info, i18n, geoflow_configs, parent.session = session)
             }
           }
         }
@@ -149,11 +157,11 @@ server <- function(input, output, session) {
     #anonymous usage
     INFO("Set-up geoflow-shiny in anonymous mode")
     INFO("Load home module")
-    home_server("home", parent.session = session)
+    home_server("home", i18n = i18n, geoflow_configs = geoflow_configs, parent.session = session)
     INFO("Load configuration editor module")
-    config_editor_server("config_editor", parent.session = session)
+    config_editor_server("config_editor", i18n = i18n, geoflow_configs = geoflow_configs, parent.session = session)
     INFO("Load configuration list module")
-    config_list_server("config_list", parent.session = session)
+    config_list_server("config_list", i18n = i18n, geoflow_configs = geoflow_configs, parent.session = session)
     geoflow_configs(getConfigurationFiles(config = appConfig, auth_api = NULL, auth_info = NULL))
     shinyjs::show("main-content")
     shinyjs::hide("login-wrapper")
@@ -161,24 +169,24 @@ server <- function(input, output, session) {
   }
   
   
-  renderSideUI = function(){
+  renderSideUI = function(i18n){
     bs4Dash::sidebarMenu(
       id = "geoflow-tabs",
       bs4Dash::menuItem(
-        text = "Home",
+        text = i18n()$t("MENU_ITEM_HOME"),
         tabName = "home",
         selected = TRUE
       ),
       bs4Dash::menuItem(
-        text = "Configure",
+        text = i18n()$t("MENU_ITEM_CONFIGURE"),
         tabName = "config",
-        bs4Dash::menuSubItem(text = "Edit configuration", tabName = "config_editor"),
+        bs4Dash::menuSubItem(text = i18n()$t("MENU_SUBITEM_CONFIGURE"), tabName = "config_editor"),
         startExpanded = TRUE
       ),
       bs4Dash::menuItem(
-        text = "Execute",
+        text = i18n()$t("MENU_ITEM_EXECUTE"),
         tabName = "exec",
-        bs4Dash::menuSubItem(text = "Execute workflow", tabName = "config_list"),
+        bs4Dash::menuSubItem(text = i18n()$t("MENU_SUBITEM_EXECUTE"), tabName = "config_list"),
         startExpanded = TRUE
       )
     )
@@ -188,13 +196,13 @@ server <- function(input, output, session) {
     if(appConfig$auth){
       if(appConfig$auth_ui){
         req(!is.null(auth_info()))
-        renderSideUI()
+        renderSideUI(i18n())
       }else{
-        renderSideUI()
+        renderSideUI(i18n())
       }
       
     }else{
-      renderSideUI()
+      renderSideUI(i18n())
     }
   })
   
@@ -232,6 +240,30 @@ server <- function(input, output, session) {
       )
     )
   })
+  
+  output$app_logout <- renderUI({
+    shiny::actionButton(
+      inputId = "logout-button", 
+      label = i18n()$t("LOGOUT"), icon = icon("right-from-bracket"), 
+      class = "btn-danger"
+    )
+  })
+  
+  output$app_language <- renderUI({
+    tags$div(
+      selectInput(
+        "selected_language", label = NULL,
+        choices = setNames(
+          translator$get_languages()[-1],
+          c("English", "Español", "Français")
+        ),
+        selected = appConfig$lang,
+        width = "110px",
+        
+      ),
+      style = "float:right;margin-left:5px;padding-top:2px;"
+    )
+  })
 
   #module page management
   session$userData$module <- reactiveVal(NULL)
@@ -241,6 +273,21 @@ server <- function(input, output, session) {
     moduleUrl <- gsub('_', '-', input$`geoflow-tabs`)
     session$userData$module(moduleUrl)
     updateModuleUrl(session, moduleUrl)
+  })
+  
+  observeEvent(input$selected_language, {
+    INFO(paste("Set app language:", input$selected_language))
+    shiny.i18n::update_lang(input$selected_language)
+    if(appConfig$auth){
+      AUTH_API <- try(get("AUTH_API", envir = GEOFLOW_SHINY_ENV), silent = TRUE)
+      config_files = getConfigurationFiles(config = appConfig, auth_api = AUTH_API, auth_info = auth_info())
+      attr(config_files, "lastModified") = Sys.time()
+      geoflow_configs(config_files)
+    }else{
+      config_files = getConfigurationFiles(config = appConfig, auth_api = NULL, auth_info = NULL)
+      attr(config_files, "lastModified") = Sys.time()
+      geoflow_configs(config_files)
+    }
   })
   
   

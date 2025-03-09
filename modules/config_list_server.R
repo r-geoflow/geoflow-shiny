@@ -1,5 +1,5 @@
 #config_list_server
-config_list_server<- function(id, auth_info, geoflow_configs, parent.session){
+config_list_server<- function(id, auth_info, i18n, geoflow_configs, parent.session){
   
  moduleServer(id, function(input, output, session){
   
@@ -8,15 +8,28 @@ config_list_server<- function(id, auth_info, geoflow_configs, parent.session){
   ipc.queue <- ipc::shinyQueue()
   ipc.queue$consumer$start()
   
+  #reactives
   pageLoaded <- reactiveVal(FALSE)
   reactive_job <- reactiveVal(NULL)
-  reactive_job_status <- reactiveVal("")
+  empty_status = ""; attr(empty_status, "status_code") = ""
+  reactive_job_status <- reactiveVal(empty_status)
   reactive_job_progress <- reactiveVal(0)
+  
+  #event on language change
+  observeEvent(i18n(),{
+    
+    #update job_status (handled as reactive)
+    status_code = attr(reactive_job_status(),"status_code")
+    translated_status = if(status_code != ""){ translator$t(paste0("EXEC_JOB_STATUS_", toupper(status_code))) }else{ "" }
+    attr(translated_status, "status_code") = status_code
+    reactive_job_status(translated_status)
+    
+  })
   
   output$config_list_info <- renderText({
     session$userData$module("configuration-list")
     updateModuleUrl(session, "configuration-list")
-    text <- "<h2>List of <b>geoflow</b> configurations <small>Access your configuration, and execute them</small></h2><hr>"
+    text <- i18n()$t("EXEC_TITLE")
     pageLoaded(TRUE)
     text
   })
@@ -26,11 +39,11 @@ config_list_server<- function(id, auth_info, geoflow_configs, parent.session){
   #getConfigurations
   getConfigurations <- function(uuids = NULL){
     outlist <- geoflow_configs()
-    print(outlist)
     out <- NULL
     if(length(outlist)==0){
        out <- tibble::tibble(
          Name = character(0),
+         LastModified = character(0),
          Actions = character(0)
        ) 
     }else{
@@ -55,14 +68,15 @@ config_list_server<- function(id, auth_info, geoflow_configs, parent.session){
           #onclick = paste0("window.open(window.location.href.split('?')[0] + '?module=configuration-editor&file=", if(appConfig$auth){ x$name }else{ x }, "','_self')")
           Actions = paste0(
             actionButton(inputId = ns(paste0('button_edit_', uuids[i])), class="btn btn-info", style = "margin-right: 2px;",
-                         title = "Edit configuration", label = "", icon = icon("edit")),
+                         title = i18n()$t("EXEC_BUTTON_EDIT"), label = "", icon = icon("edit")),
             actionButton(inputId = ns(paste0('button_execute_', uuids[i])), class="btn btn-primary",
-                         title = "Execute configuration", label = "", icon = icon("play"))
+                         title = i18n()$t("EXEC_BUTTON_EXECUTE"), label = "", icon = icon("play"))
           )
         )
         return(out_tib)
       }))
     }
+    colnames(out) <- c(i18n()$t("TABLE_NAME"), i18n()$t("TABLE_LASTMODIFIED"), i18n()$t("TABLE_ACTIONS"))
     return(out)
   }
   
@@ -71,10 +85,8 @@ config_list_server<- function(id, auth_info, geoflow_configs, parent.session){
   manageButtonEditEvents <- function(uuids){
     prefix <- "button_edit_"
     outlist <- geoflow_configs()
-    print(outlist)
     if(length(outlist)>0) lapply(1:length(outlist),function(i){
       x <- outlist[[i]]
-      print(x)
       if(appConfig$auth) x <- x$name
       button_id <- paste0(prefix,uuids[i])
       observeEvent(input[[button_id]],{
@@ -99,7 +111,8 @@ config_list_server<- function(id, auth_info, geoflow_configs, parent.session){
         shinyjs::disable(button_id)
         
         reactive_job("")
-        reactive_job_status("Started")
+        started = i18n()$t("EXEC_JOB_STATUS_STARTED");attr(started, "status_code") = "started"
+        reactive_job_status(started)
         
         filepath <- if(appConfig$auth){
           switch(auth_info()$endpoint$auth_type,
@@ -121,13 +134,14 @@ config_list_server<- function(id, auth_info, geoflow_configs, parent.session){
         #geoflow execution
         ipc.progress <- ipc::AsyncProgress$new(
           value = 0, min = 0, max = 100,
-          message = sprintf("Workflow '%s'", outconfig$profile$id),
-          detail = "Initializing workflow ... 0%"
+          message = sprintf("%s '%s'", translator$t("EXEC_WORKFLOW"), outconfig$profile$id),
+          detail = translator$t("EXEC_JOB_INITIALIZATION")
         )
         
         future::future({
           ipc.queue$producer$fireEval(print("Process started for geoflow job"))
-          ipc.queue$producer$fireAssignReactive("reactive_job_status", "Started")
+          started = translator$t("EXEC_JOB_STATUS_STARTED"); attr(started, "status_code") = "started"
+          ipc.queue$producer$fireAssignReactive("reactive_job_status", started)
           
           geoflow::executeWorkflow(
             file = filepath,
@@ -139,7 +153,8 @@ config_list_server<- function(id, auth_info, geoflow_configs, parent.session){
             },
             on_initWorkflow = function(config, queue){
               queue$producer$fireEval(print("Successful workflow initialization"))
-              ipc.queue$producer$fireAssignReactive("reactive_job_status", "In progress")
+              inprogress = translator$t("EXEC_JOB_STATUS_INPROGRESS"); attr(inprogress, "status_code") = "inprogress"
+              ipc.queue$producer$fireAssignReactive("reactive_job_status", inprogress)
             },
             on_closeWorkflow = function(config, queue){
               ipc.progress$close()
@@ -148,22 +163,24 @@ config_list_server<- function(id, auth_info, geoflow_configs, parent.session){
               queue$producer$fireAssignReactive("reactive_job_progress", step)
               ipc.progress$set(
                 value = step, 
-                message = sprintf("Worflow [%s] running :",config$profile$id),
-                detail = sprintf("Executing action: '%s' of entity: '%s' ... %s %%",action$id,entity$identifiers[["id"]],step)
+                message = sprintf("%s [%s] :", translator$t("EXEC_WORKFLOW"), config$profile$id),
+                detail = sprintf(translator$t("EXEC_ACTION_EXEC_DETAIL"),action$id,entity$identifiers[["id"]],step)
               )
             },
             session = parent.session
           )
         }) %...>% 
           (function(result){
-            reactive_job_status("Passed")
+            success = translator$t("EXEC_JOB_STATUS_SUCCESS"); attr(success, "status_code") = "success"
+            reactive_job_status(success)
             shinyjs::enable(button_id)
           }) %...T!%
           (function(error){
             ipc.progress$close()
-            reactive_job_status("Failed")
+            error_status = translator$t("EXEC_JOB_STATUS_ERROR"); attr(error_status, "status_code") = "error"
+            reactive_job_status(error_status)
             showModal(modalDialog(title = "Error",
-                                  p(sprintf("Workflow '%s' has thrown an error!", outconfig$profile$id)),
+                                  p(sprintf(translator$t("EXEC_JOB_ERROR_MESSAGE"), outconfig$profile$id)),
                                   p(as.character(error)),
                                   easyClose = TRUE, footer = NULL ))
             shinyjs::enable(button_id)
@@ -176,8 +193,10 @@ config_list_server<- function(id, auth_info, geoflow_configs, parent.session){
   }
   
   #loadConfigurationFiles
-  loadConfigurationFiles <- function(){
-    config_files <- getConfigurationFiles(config = appConfig, auth_api = AUTH_API, auth_info = auth_info())
+  loadConfigurationFiles <- function(force = FALSE){
+    print(i18n()$t("TABLE_LANGUAGE"))
+    config_files <- geoflow_configs()
+    if(force) config_files <- getConfigurationFiles(config = appConfig, auth_api = AUTH_API, auth_info = auth_info())
     uuids <- NULL
     if(length(config_files)>0) for(i in 1:length(config_files)){
       one_uuid = uuid::UUIDgenerate() 
@@ -194,43 +213,67 @@ config_list_server<- function(id, auth_info, geoflow_configs, parent.session){
         dom = 'Bfrtip',
         deferRender = TRUE,
         preDrawCallback = JS('function() { Shiny.unbindAll(this.api().table().node()); }'),
-        drawCallback = JS('function() { Shiny.bindAll(this.api().table().node()); } ')
+        drawCallback = JS('function() { Shiny.bindAll(this.api().table().node()); } '),
+        language = list(url = i18n()$t("TABLE_LANGUAGE"))
       )
     )
     manageButtonEditEvents(uuids)
     manageButtonExecuteEvents(uuids)
   }
   
+  observeEvent(geoflow_configs(),{
+    INFO("TRIGGERED GEOFLOW CONFIGS!!!!")
+    loadConfigurationFiles()
+  })
+  
   observeEvent(pageLoaded(), {
     loadConfigurationFiles()
   })
   
   observeEvent(input$config_list_refresh,{
-    loadConfigurationFiles()
+    loadConfigurationFiles(force = TRUE)
+  })
+  
+  #workflow manager
+  output$workflow_manager <- renderUI({
+    shiny::fluidRow(
+      box(
+        inputId = "config_list_wrapper", 
+        title = tags$span(i18n()$t("EXEC_WORKFLOWS"), tags$small(actionLink(ns("config_list_refresh"), label = NULL, icon = icon("fas fa-sync")))), status = "primary", width = 6,
+        tags$div(shinycssloaders::withSpinner(DT::DTOutput(ns("config_list_table"))), style = "font-size:80%;")
+      ),
+      box(
+        inputId = "config_log_wrapper",
+        title = i18n()$t("EXEC_CONSOLE"), status = "primary", width = 6,
+        uiOutput(ns("config_job_status")),
+        uiOutput(ns("config_job_download")),br(),br(),
+        uiOutput(ns("config_job_interactive_log"))
+      )
+    )
   })
   
   #Interactive job status
   output$config_job_status <- renderUI({ 
     div(
     tags$span(
-      switch(reactive_job_status(),
-       "In progress" = icon("gears"),
-       "Passed" = icon("check"),
-       "Failed" = icon("xmark"),
-       "Aborted" = icon("exclamation"),
+      switch(attr(reactive_job_status(), "status_code"),
+       "inprogress" = icon("gears"),
+       "success" = icon("check"),
+       "error" = icon("xmark"),
+       "aborted" = icon("exclamation"),
         ""
       ),
-      if(reactive_job_status() == "In progress"){
+      if(attr(reactive_job_status(), "status_code") == "inprogress"){
         paste(reactive_job_status(), paste0("(", reactive_job_progress(),"%)"))
       }else{
         reactive_job_status()
       },
-      class = switch(reactive_job_status(),
-         "Started" = "badge badge-info",
-         "In progress" = "badge badge-info",
-         "Passed" = "badge badge-success",
-         "Failed" = "badge badge-danger",
-         "Aborted" = "badge badge-secondary",
+      class = switch(attr(reactive_job_status(), "status_code"),
+         "started" = "badge badge-info",
+         "inprogress" = "badge badge-info",
+         "success" = "badge badge-success",
+         "error" = "badge badge-danger",
+         "aborted" = "badge badge-secondary",
          ""
       ), style="margin-left:7.5px;"),
       style = "float:left;"
@@ -238,11 +281,11 @@ config_list_server<- function(id, auth_info, geoflow_configs, parent.session){
   })
   
   output$config_job_download <- renderUI({
-    if(reactive_job_status() %in% c("Passed", "Failed")){
+    if(attr(reactive_job_status(), "status_code") %in% c("success", "error")){
       div(
         downloadButtonCustom(
           ns("downloadJob"),
-          'Download job archive',
+          i18n()$t("EXEC_BUTTON_JOB_ARCHIVE"),
           icon = icon("download")
         ),
         style = "float:right;margin-right:7.5px;"
@@ -277,10 +320,10 @@ config_list_server<- function(id, auth_info, geoflow_configs, parent.session){
      }
    },
    valueFunc = function(){
-     out_txt <- "No geoflow job started!"
+     out_txt <- i18n()$t("EXEC_JOB_NOJOBSTARTED")
      if(!is.null(reactive_job())){
        if(out_txt == ""){
-         out_txt <- "Starting geoflow job..."
+         out_txt <- i18n()$t("EXEC_JOB_STARTING")
        }else{
          logfile <- file.path(reactive_job(), "job-logs.txt")
          if(file.exists(logfile)){
@@ -306,18 +349,18 @@ config_list_server<- function(id, auth_info, geoflow_configs, parent.session){
       do.call("accordion", c(id="job-steps", lapply(1:nb_parts, function(i){
         bs4Dash::accordionItem(
           title = {
-            the_title <- parts[(i*2)-1]
+            the_title <- i18n()$t(paste0("EXEC_", gsub("\n", "", gsub(" ", "_", toupper(parts[(i*2)-1])))))
             if(i==1){
              tags$span(fa("r-project", fill = "steelblue"), the_title, style = "font-weight:bold;")
             }else{
               if(i<nb_parts){
                 tags$span(fa("far fa-circle-check"), the_title, style = "font-weight:bold;")
               }else{
-                switch(reactive_job_status(),
-                 "Started" = tags$span(fa("gears"), the_title, style = "font-weight:bold;"),
-                 "In progress" = tags$span(fa("gears"), the_title, style = "font-weight:bold;"),
-                 "Passed" = tags$span(fa("far fa-circle-check"), the_title, style = "font-weight:bold;"),
-                 "Failed" = tags$span(fa("far fa-circle-xmark"), the_title, style = "font-weight:bold;")
+                switch(attr(reactive_job_status(), "status_code"),
+                 "started" = tags$span(fa("gears"), the_title, style = "font-weight:bold;"),
+                 "inprogress" = tags$span(fa("gears"), the_title, style = "font-weight:bold;"),
+                 "success" = tags$span(fa("far fa-circle-check"), the_title, style = "font-weight:bold;"),
+                 "error" = tags$span(fa("far fa-circle-xmark"), the_title, style = "font-weight:bold;")
                 )
               }
             }
@@ -329,11 +372,11 @@ config_list_server<- function(id, auth_info, geoflow_configs, parent.session){
               if(i<nb_parts){
                 "success"
               }else{
-                switch(reactive_job_status(),
-                "Started" = "info",
-                "In progress" = "info",
-                "Passed" = "success",
-                "Failed" = "danger"
+                switch(attr(reactive_job_status(), "status_code"),
+                "started" = "info",
+                "inprogress" = "info",
+                "success" = "success",
+                "error" = "danger"
                 )
               }
             }

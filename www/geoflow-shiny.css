@@ -39,6 +39,8 @@ div.datatables {
   height: 20px;
 }
 
+#selected_language-selectized{display:none !important;}
+
 .collapsing {
     -webkit-transition: none;
     transition: none;

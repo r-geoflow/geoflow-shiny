@@ -1,0 +1,33 @@
+key,fr
+LOGOUT,Déconnexion
+SELECT_LANGUAGE,Langue
+MENU_ITEM_HOME,Accueil
+MENU_ITEM_CONFIGURE,Configurer
+MENU_ITEM_EXECUTE,Executer
+MENU_SUBITEM_CONFIGURE,Editer configuration
+MENU_SUBITEM_EXECUTE,Executer flux de travail
+HOME_TITLE,Lancer des flux de travail interactifs avec
+HOME_WORKFLOWS,Flux de travail
+EXEC_TITLE,<h2>Liste des configurations <b>geoflow</b> <small>Accéder à un flux de travail et l'éxecuter</small></h2><hr>
+EXEC_CONSOLE,Console
+EXEC_WORKFLOW,Flux de travail
+EXEC_WORKFLOWS,Flux de travail
+EXEC_WORKFLOW_INITIALIZATION,Initialisation
+EXEC_WORKFLOW_EXECUTION,Execution
+EXEC_SESSION_INFO,Info session
+EXEC_BUTTON_EDIT,Editer
+EXEC_BUTTON_EXECUTE,Executer
+EXEC_BUTTON_JOB_ARCHIVE,Télécharger résultat du travail
+EXEC_JOB_NOJOBSTARTED,Pas de flux de travail démarré!
+EXEC_JOB_STARTING,Démarrage en cours...
+EXEC_JOB_INITIALIZATION,Initialisation du flux de travail ... 0%
+EXEC_JOB_STATUS_STARTED,Démarré
+EXEC_JOB_STATUS_INPROGRESS,En cours
+EXEC_JOB_STATUS_SUCCESS,Succès
+EXEC_JOB_STATUS_ERROR,Erreur
+EXEC_JOB_ERROR_MESSAGE,Erreur lors de l'exécution du flux de travail '%s'!
+EXEC_ACTION_DETAIL_EXEC,Action '%s' en cours d'éxecution - entité '%s' ... %s %%
+TABLE_LANGUAGE,//cdn.datatables.net/plug-ins/1.10.11/i18n/French.json
+TABLE_NAME,Nom
+TABLE_LASTMODIFIED,Dernière modification
+TABLE_ACTIONS,Actions

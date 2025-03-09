@@ -1,0 +1,33 @@
+key,es
+LOGOUT,Cerrar sesión
+SELECT_LANGUAGE,Idioma
+MENU_ITEM_HOME,Inicio
+MENU_ITEM_CONFIGURE,Configurar
+MENU_ITEM_EXECUTE,Ejecutar
+MENU_SUBITEM_CONFIGURE,Editar configuración
+MENU_SUBITEM_EXECUTE,Ejecutar flujo de trabajo
+HOME_TITLE,Lanzar flujos de trabajo interactivos con
+HOME_WORKFLOWS,Flujos de trabajo
+EXEC_TITLE,<h2>Lista de las configuraciones <b>geoflow</b> <small>Acceder a un flujo de trabajo y ejecutarlo</small></h2><hr>
+EXEC_CONSOLE,Consola
+EXEC_WORKFLOW,Flujo de trabajo
+EXEC_WORKFLOWS,Flujos de trabajo
+EXEC_WORKFLOW_INITIALIZATION,Inicialización
+EXEC_WORKFLOW_EXECUTION,Ejecución
+EXEC_SESSION_INFO,Info sesión
+EXEC_BUTTON_EDIT,Editar
+EXEC_BUTTON_EXECUTE,Ejecutar
+EXEC_BUTTON_JOB_ARCHIVE,Descargar archivo del trabajo
+EXEC_JOB_NOJOBSTARTED,Ninguno flujo de trabajo iniciado
+EXEC_JOB_STARTING,Inicialización en curso...
+EXEC_JOB_INITIALIZATION,Inicializando flujo de trabajo ... 0%
+EXEC_JOB_STATUS_STARTED,Iniciado
+EXEC_JOB_STATUS_INPROGRESS,En curso
+EXEC_JOB_STATUS_SUCCESS,Exito
+EXEC_JOB_STATUS_ERROR,Error
+EXEC_JOB_ERROR_MESSAGE,Error durante la ejecución del flujo de trabajo '%s'!
+EXEC_ACTION_DETAIL_EXEC,Acción '%s' en curso de ejecución - entidad '%s' ... %s %%
+TABLE_LANGUAGE,//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json
+TABLE_NAME,Nombre
+TABLE_LASTMODIFIED,Ultima modificación
+TABLE_ACTIONS,Acciones

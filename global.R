@@ -12,8 +12,8 @@ source("assets/commons.R")
 
 #config
 #---------------------------------------------------------------------------------------
-#config_file = "D:/Documents/DEV/Packages/geoflow-shiny_config_inrae.yml"
-config_file <- "resources/config.yml"
+config_file = "D:/Documents/DEV/Packages/geoflow-shiny_config_inrae.yml"
+#config_file <- "resources/config.yml"
 #test shiny server resource file existence (if mount through docker container)
 shiny_server_config_file <- "/etc/geoflow-shiny/config.yml"
 if(file.exists(shiny_server_config_file)) config_file <- shiny_server_config_file
@@ -40,6 +40,12 @@ GEOFLOW_SHINY_ENV <- new.env()
 keyring_backend_name <- if(!is.null(appConfig$auth_keyring_backend)) appConfig$auth_keyring_backend else 'env'
 keyring_backend <- keyring:::known_backends[[keyring_backend_name]]$new()
 appConfig$keyring_backend = keyring_backend
+
+#language/i18n
+#---------------------------------------------------------------------------------------
+if(is.null(appConfig$lang)) appConfig$lang <- "en"
+translator <- shiny.i18n::Translator$new(translation_csvs_path = "./i18n")
+translator$set_translation_language(appConfig$lang)
 
 
 #modules

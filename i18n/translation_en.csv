@@ -1,0 +1,33 @@
+key,en
+LOGOUT,Log out
+SELECT_LANGUAGE,Language
+MENU_ITEM_HOME,Home
+MENU_ITEM_CONFIGURE,Configure
+MENU_ITEM_EXECUTE,Execute
+MENU_SUBITEM_CONFIGURE,Edit configuration
+MENU_SUBITEM_EXECUTE,Execute workflow
+HOME_TITLE,Run interactive workflows with
+HOME_WORKFLOWS,Workflows
+EXEC_TITLE,<h2>List of <b>geoflow</b> configurations <small>Access and execute a Workflows</small></h2><hr>
+EXEC_CONSOLE,Console
+EXEC_WORKFLOW,Workflow
+EXEC_WORKFLOWS,Workflows
+EXEC_WORKFLOW_INITIALIZATION,Workflow initialization
+EXEC_WORKFLOW_EXECUTION,Workflow execution
+EXEC_SESSION_INFO,Session info
+EXEC_BUTTON_EDIT,Edit
+EXEC_BUTTON_EXECUTE,Execute
+EXEC_BUTTON_JOB_ARCHIVE,Download job archive
+EXEC_JOB_NOJOBSTARTED,No geoflow job started!
+EXEC_JOB_STARTING,Starting geoflow job...
+EXEC_JOB_INITIALIZATION,Initializing workflow ... 0%
+EXEC_JOB_STATUS_STARTED,Started
+EXEC_JOB_STATUS_INPROGRESS,In progress
+EXEC_JOB_STATUS_SUCCESS,Success
+EXEC_JOB_STATUS_ERROR,Error
+EXEC_JOB_ERROR_MESSAGE,Workflow '%s' has thrown an error!
+EXEC_ACTION_DETAIL_EXEC,Executing action: '%s' - entity '%s' ... %s %%
+TABLE_LANGUAGE,//cdn.datatables.net/plug-ins/1.10.11/i18n/English.json
+TABLE_NAME,Name
+TABLE_LASTMODIFIED,Last modification
+TABLE_ACTIONS,Actions

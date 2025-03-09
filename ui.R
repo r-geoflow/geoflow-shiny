@@ -3,6 +3,7 @@
 ui <- fluidPage(
   shinyjs::useShinyjs(),
   cookies::cookie_dependency(),
+  shiny.i18n::usei18n(translator),
   tags$head(
     tags$link(rel = "stylesheet", type = "text/css", href = "geoflow-shiny.css")
   ),
@@ -26,11 +27,19 @@ ui <- fluidPage(
               href = appConfig$url,
               image = appConfig$logo
             ),
-            rightUi = if(appConfig$auth) tags$li(
-              class = "dropdown",
-              shinyauthr::logoutUI("logout", icon = icon("right-from-bracket"), style = NULL),
-              uiOutput("user_avatar", inline = T)
-            )
+            rightUi = if(appConfig$auth){
+              tags$li(
+                class = "dropdown",
+                uiOutput("app_logout", inline = T),
+                uiOutput("user_avatar", inline = T),
+                uiOutput("app_language", inline = T)
+              )
+            }else{
+              tags$li(
+                class = "dropdown",
+                uiOutput("app_language", inline = T)
+              ) 
+            }
             
           ),
           sidebar = bs4Dash::dashboardSidebar(
