@@ -16,6 +16,7 @@ server <- function(input, output, session) {
   
   # Read the session cookie
   cookie_observer = observe({
+    print("Observing session cookie")
     req(!session_reloaded())
     session_cookie <- cookies::get_cookie("user_profile@geoflow-shiny")
     if (!is.null(session_cookie)) {

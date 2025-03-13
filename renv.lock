@@ -213,6 +213,28 @@
       ],
       "Hash": "bc2a8a1139d8d4bd9c46086708945124"
     },
+    "arrow": {
+      "Package": "arrow",
+      "Version": "19.0.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "R6",
+        "assertthat",
+        "bit64",
+        "cpp11",
+        "glue",
+        "methods",
+        "purrr",
+        "rlang",
+        "stats",
+        "tidyselect",
+        "utils",
+        "vctrs"
+      ],
+      "Hash": "68a298d1a2bfdb19d429dbb005285c62"
+    },
     "askpass": {
       "Package": "askpass",
       "Version": "1.2.1",
@@ -948,19 +970,21 @@
     },
     "geoflow": {
       "Package": "geoflow",
-      "Version": "0.9999.20241210",
+      "Version": "0.9999.20250309",
       "Source": "GitHub",
       "RemoteType": "github",
       "RemoteHost": "api.github.com",
       "RemoteRepo": "geoflow",
       "RemoteUsername": "r-geoflow",
-      "RemoteSha": "471602db1a2d0deb01506207d6b608b828447605",
+      "RemoteSha": "a9ae913795a1c946b157b9be13fb1d94d9d8c268",
       "Requirements": [
         "R",
         "R6",
         "XML",
+        "arrow",
         "benchmarkme",
         "curl",
+        "digest",
         "dotenv",
         "geometa",
         "geonapi",
@@ -975,17 +999,19 @@
         "png",
         "readr",
         "sf",
+        "sfarrow",
         "terra",
         "uuid",
         "whisker",
         "xml2",
+        "yaml",
         "zip"
       ],
-      "Hash": "1afc4ef7aab548d92218661370302e20"
+      "Hash": "0ed507e9b35ce6489947917547cf76e0"
     },
     "geometa": {
       "Package": "geometa",
-      "Version": "0.8-0",
+      "Version": "0.9.1",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -999,11 +1025,11 @@
         "methods",
         "readr"
       ],
-      "Hash": "9a0a7dba19b4c6b653552f1637780d05"
+      "Hash": "1b72e3198636eafeb4011bf00e54c74b"
     },
     "geonapi": {
       "Package": "geonapi",
-      "Version": "0.7-2",
+      "Version": "0.8",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -1016,7 +1042,7 @@
         "openssl",
         "plyr"
       ],
-      "Hash": "3eaae36e70b938dd2c3c20cf42ea354c"
+      "Hash": "773db1c017702e73d9aa0296d7208902"
     },
     "geonode4R": {
       "Package": "geonode4R",
@@ -1942,6 +1968,19 @@
       ],
       "Hash": "fe02eec2f6b3ba0e24afe83d5ccfb528"
     },
+    "sfarrow": {
+      "Package": "sfarrow",
+      "Version": "0.4.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "arrow",
+        "dplyr",
+        "jsonlite",
+        "sf"
+      ],
+      "Hash": "b320f164b1d7bb7e4582b841e22d15a0"
+    },
     "shiny": {
       "Package": "shiny",
       "Version": "1.7.4",
@@ -1975,6 +2014,25 @@
         "xtable"
       ],
       "Hash": "c2eae3d8c670fa9dfa35a12066f4a1d5"
+    },
+    "shiny.i18n": {
+      "Package": "shiny.i18n",
+      "Version": "0.3.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "R6",
+        "glue",
+        "jsonlite",
+        "methods",
+        "rstudioapi",
+        "shiny",
+        "stringr",
+        "utils",
+        "yaml"
+      ],
+      "Hash": "fb1b47e69750065a4f3c8c4ef24e4891"
     },
     "shinyauthr": {
       "Package": "shinyauthr",
