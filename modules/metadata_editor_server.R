@@ -14,6 +14,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     md_model_draft <- reactiveVal(NULL)
     md_model_draft_idx <- reactiveVal(0L)
     md_model_draft_mode <- reactiveVal("creation")
+    md_model_draft_validation_status <- reactiveVal(NULL)
     updatingTabsetPanel <- reactiveVal(FALSE)
     
     #FUNCTIONS
@@ -197,15 +198,30 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         fluidRow(
           tabBox(
             width = 6,
-            id = ns(paste0("tabbox_", md_model_type(), "_form_view")),
+            id = paste0("tabbox_", md_model_type(), "_form_view"),
             type = "tabs", solidHeader = FALSE, status = "teal",
             tabPanel(
+              icon = icon("pencil"),
+              value = paste0("tabbox_", md_model_type(), "_form_editor"),
               title = switch(md_model_draft_mode(),
                 "creation" = paste0("Create new ",md_model_type()),
                 "edition" = paste0("Edit ", md_model_type()," ", md_model_draft_idx())
               ),
               handle_metadata_form(type = md_model_type()),hr(),
-              bs4Dash::actionButton(inputId = ns(paste0("save_",md_model_type())), label = "Save")
+              bs4Dash::actionButton(inputId = ns(paste0("save_",md_model_type())), label = "Save"),br(),
+              if(!is.null(md_model_draft_validation_status())){
+                bs4Dash::bs4Badge(
+                  if("ERROR" %in% md_model_draft_validation_status()$type) "Validation errors" else "Validation warnings",
+                  color = if("ERROR" %in% md_model_draft_validation_status()$type) "danger" else "warning"
+                )
+              }else{
+                NULL
+              }
+            ),
+            tabPanel(
+              value = paste0("tabbox_", md_model_type(), "_form_validator"),
+              title = "Validation report",
+              uiOutput(ns("validation_issues_table_wrapper"))
             )
           ),
           tabBox(
@@ -226,7 +242,6 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     #meta_table (geoflow pivot table format rendered as RHandsontable)
     output$meta_table <- rhandsontable::renderRHandsontable({
       req(!is.null(md_model_type()))
-      print(md_model())
       metatbl = NULL
       if(length(md_model())==0){
         WARN("No row in metadata table, creating an empty dataframe")
@@ -237,11 +252,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         )
       }else{
         INFO("Convert md_model to dataframe")
-        print(md_model())
-        print(length(md_model()))
-        print(class(md_model()))
         metatbl = do.call("rbind", lapply(md_model(), function(x){x$asDataFrame()}))
-        print(metatbl)
       }
       
       out_tbl <- rhandsontable::rhandsontable(
@@ -259,6 +270,24 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     })
     
     #RENDERERS
+    output$validation_issues_table <- DT::renderDT(server = FALSE, {
+      DT::datatable(
+        md_model_draft_validation_status(), 
+        escape = FALSE,
+        rownames = FALSE,
+        options = list(
+          dom = 't',
+          ordering=F
+        )
+      )
+    })
+    output$validation_issues_table_wrapper <-renderUI({
+      if(!is.null(md_model_draft_validation_status())){
+        DTOutput(ns("validation_issues_table"))
+      }else{
+        tags$em("No validation issues")
+      }
+    })
     #contact
     output$contact_identifiers_table <- DT::renderDT(server = FALSE, {
       DT::datatable(
@@ -311,23 +340,87 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       INFO(sprintf("Select editor for type '%s'", md_model_type()))
       md_model_draft( eval(parse(text = sprintf("geoflow::geoflow_%s$new()", md_model_type()))) )
       md_model_draft_idx(1L)
+      # hideTab(
+      #   inputId = paste0("tabbox_", md_model_type(), "_form_view"),
+      #   target = paste0("tabbox_", md_model_type(), "_form_validator")
+      # )
     })
     observeEvent(input$create_contact,{
       md_model_draft( eval(parse(text = sprintf("geoflow::geoflow_%s$new()", md_model_type()))) )
       md_model_draft_idx(length(md_model())+1)
       md_model_draft_mode("creation")
+      # hideTab(
+      #   inputId = paste0("tabbox_", md_model_type(), "_form_view"),
+      #   target = paste0("tabbox_", md_model_type(), "_form_validator")
+      # )
     })
     observeEvent(input$save_contact,{
       INFO(sprintf("Save %s to metadata table", md_model_type()))
-      print(md_model_draft())
-      contacts = md_model()
-      if(md_model_draft_idx()==0){
-        contacts[[length(contacts)+1]] = md_model_draft()
+      
+      
+      req(!is.null(md_model_type()))
+      validation_errors = switch(md_model_type(),
+             "contact" = {
+               contact = md_model_draft()
+               contact$setOrganizationName(input$contact_org)
+               contact$setLastName(input$contact_lastname)
+               contact$setFirstName(input$contact_firstname)
+               contact$setPositionName(input$contact_positionname)
+               contact$setPostalAddress(input$contact_postaladdress)
+               contact$setPostalCode(input$contact_postalcode)
+               contact$setCity(input$contact_city)
+               contact$setCountry(input$contact_country)
+               contact$setEmail(input$contact_email)
+               contact$setVoice(input$contact_voice)
+               contact$setFacsimile(input$contact_facsimile)
+               contact$setWebsiteUrl(input$contact_websiteurl)
+               contact$setWebsiteName(input$contact_websitename)
+               md_model_draft(contact$clone(deep = T))
+               
+               #perform validation
+               qa_errors = geoflow_validator_contacts$new(source = md_model_draft()$asDataFrame())$validate_content()
+               if(nrow(qa_errors)==0){
+                 qa_errors = NULL
+               }
+               qa_errors
+             }
+
+      )
+      md_model_draft_validation_status(validation_errors)
+      
+      if(!is.null(validation_errors)){
+        ERROR(paste0("There are validation errors with the ", md_model_type(),". Aborting saving the data to geoflow pivot model"))
+        # showTab(
+        #   inputId = paste0("tabbox_", md_model_type(), "_form_view"),
+        #   target = paste0("tabbox_", md_model_type(), "_form_validator")
+        # )
       }else{
-        contacts[[md_model_draft_idx()]] = md_model_draft()
+        INFO(sprintf("There are no validation errors/warnings with the ", md_model_type(),". Aborting saving the data to geoflow pivot model"))
+        # hideTab(
+        #   inputId = paste0("tabbox_", md_model_type(), "_form_view"),
+        #   target = paste0("tabbox_", md_model_type(), "_form_validator")
+        # )
       }
-      md_model(contacts)
-      md_model_draft_mode("edition")
+      
+      save_model = TRUE
+      if(!is.null(validation_errors)) {
+        if("ERROR" %in% validation_errors$type){
+          ERROR("There are validation errors, abort saving the model!")
+          save_model = FALSE
+        }
+      }
+      if(save_model){
+        INFO("Saving model to metadata table")
+        contacts = md_model()
+        if(md_model_draft_idx()==0){
+          contacts[[length(contacts)+1]] = md_model_draft()
+        }else{
+          contacts[[md_model_draft_idx()]] = md_model_draft()
+        }
+        md_model(contacts)
+        md_model_draft_mode("edition")
+      }
+      
     })
     
     #dictionary
@@ -358,38 +451,6 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       }
     })
     
-    # observeEvent(md_model_draft(),{
-    #   # Use isolate to avoid re-triggering the observer
-    #     print("yupi")
-    #     print(active_contact_form_tab())
-    #     updateTabsetPanel(session, ns("contact_form"), selected = active_contact_form_tab())
-    #   
-    #   # isolate({
-    #   #   req(!is.null(md_model_type()))
-    #   #   switch(md_model_type(),
-    #   #          "contact" = {
-    #   #            contact = md_model_draft()
-    #   #            contact$setOrganizationName(input$contact_org)
-    #   #            contact$setLastName(input$contact_lastname)
-    #   #            contact$setFirstName(input$contact_firstname)
-    #   #            contact$setPositionName(input$contact_positionname)
-    #   #            contact$setPostalAddress(input$contact_postaladdress)
-    #   #            contact$setPostalCode(input$contact_postalcode)
-    #   #            contact$setCity(input$contact_city)
-    #   #            contact$setCountry(input$contact_country)
-    #   #            contact$setEmail(input$contact_email)
-    #   #            contact$setVoice(input$contact_voice)
-    #   #            contact$setFacsimile(input$contact_facsimile)
-    #   #            contact$setWebsiteUrl(input$contact_websiteurl)
-    #   #            contact$setWebsiteName(input$contact_websitename)
-    #   #            md_model_draft(contact$clone(deep = T))
-    #   #          }       
-    #   #          
-    #   #   )
-    #   # })
-    #   
-    # })
-    # 
     observeEvent(input$contact_identifier_button_add,{
       print("Add event")
       contact = md_model_draft()
@@ -406,55 +467,6 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       contact$identifiers = list()
       print(contact$identifiers)
       md_model_draft(contact$clone(deep = T))
-    })
-    
-    observeEvent(
-      c(
-        input$contact_org,
-        input$contact_lastname,
-        input$contact_firstname,
-        input$contact_positionname,
-        input$contact_postaladdress,
-        input$contact_postalcode,
-        input$contact_city,
-        input$contact_country,
-        input$contact_email,
-        input$contact_voice,
-        input$contact_facsimile,
-        input$contact_websiteurl,
-        input$contact_websitename
-      ),{
-
-        #isolate({
-          
-          req(!is.null(md_model_type()))
-          switch(md_model_type(),
-                 "contact" = {
-                   contact = md_model_draft()
-                   contact$setOrganizationName(input$contact_org)
-                   contact$setLastName(input$contact_lastname)
-                   contact$setFirstName(input$contact_firstname)
-                   contact$setPositionName(input$contact_positionname)
-                   contact$setPostalAddress(input$contact_postaladdress)
-                   contact$setPostalCode(input$contact_postalcode)
-                   contact$setCity(input$contact_city)
-                   contact$setCountry(input$contact_country)
-                   contact$setEmail(input$contact_email)
-                   contact$setVoice(input$contact_voice)
-                   contact$setFacsimile(input$contact_facsimile)
-                   contact$setWebsiteUrl(input$contact_websiteurl)
-                   contact$setWebsiteName(input$contact_websitename)
-                   md_model_draft(contact$clone(deep = T))
-                 }
-                 
-          )
-          
-          #updatingTabsetPanel(TRUE)
-          #updateTabsetPanel(session, ns("contact_form"), selected = active_contact_form_tab())  
-          #updatingTabsetPanel(FALSE)
-          
-        #})
-          
     })
     
   })
