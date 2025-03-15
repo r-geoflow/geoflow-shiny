@@ -125,7 +125,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
                                        choices = entity_tpl$getAllowedKeyValuesFor("Description"),
                                        selected = "id"
               )),
-              column(6,textInput(ns("entity_description"), "Description",value = "", width = NULL, placeholder = "Title")),
+              column(6,textInput(ns("entity_description"), "Description",value = "", width = NULL, placeholder = "Description")),
               column(3,
                      actionButton(ns("entity_description_button_add"), title="Add description",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;"),
                      actionButton(ns("entity_description_button_clear"), title="Clear description",size="sm",label="",icon=icon("trash"),class = "btn-warning", style = "margin-top:35px;")
@@ -139,9 +139,22 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
             "TODO"
           ),
           tabPanel(
-            value = "entity_creators",
+            value = "entity_contacts",
             title = "Creator",
-            "TODO"
+            fluidRow(
+              column(3, selectizeInput(ns("entity_contact_type"),
+                                       label="Role",
+                                       multiple = F,
+                                       choices = entity_tpl$getAllowedKeyValuesFor("Creator"),
+                                       selected = "id"
+              )),
+              column(6,textInput(ns("entity_contact"), "Contact",value = "", width = NULL, placeholder = "Contact")),
+              column(3,
+                     actionButton(ns("entity_contact_button_add"), title="Add contact",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;"),
+                     actionButton(ns("entity_contact_button_clear"), title="Clear contact",size="sm",label="",icon=icon("trash"),class = "btn-warning", style = "margin-top:35px;")
+              )
+            ),
+            uiOutput(ns("entity_contacts_table_wrapper"))
           ),
           tabPanel(
             value = "entity_dates",
@@ -417,6 +430,25 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         DTOutput(ns("entity_descriptions_table"))
       }else{NULL}
     })
+    #entity -> Contact
+    output$entity_contacts_table <- DT::renderDT(server = FALSE, {
+      DT::datatable(
+        do.call("rbind", lapply(md_model_draft()$contacts, function(contact){
+          data.frame(key = contact$role, id = if(length(contact$identifiers)>0) contact$identifiers[[1]] else "")
+        })), 
+        escape = FALSE,
+        rownames = FALSE,
+        options = list(
+          dom = 't',
+          ordering=F
+        )
+      )
+    })
+    output$entity_contacts_table_wrapper <-renderUI({
+      if(length(md_model_draft()$contacts)>0){
+        DTOutput(ns("entity_contacts_table"))
+      }else{NULL}
+    })
     
     #contact
     #contact -> Identifier
@@ -457,7 +489,11 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         qa_errors = NULL
       }else{
         md_model_draft_valid(FALSE)
-        if(nrow(qa_errors[qa_errors$type == "ERROR",]>0)) shinyjs::disable("save_model")
+        if(nrow(qa_errors[qa_errors$type == "ERROR",]>0)){
+          shinyjs::disable("save_model")
+        }else{
+          shinyjs::enable("save_model")
+        }
       }
       md_model_draft_validation_report(qa_errors)
       if(!is.null(qa_errors)){
@@ -632,6 +668,20 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     observeEvent(input$entity_description_button_clear,{
       entity = md_model_draft()
       entity$descriptions = list()
+      md_model_draft(entity$clone(deep = T))
+    })
+    #events entity -> Creator
+    observeEvent(input$entity_contact_button_add,{
+      entity = md_model_draft()
+      contact = geoflow_contact$new()
+      contact$setRole(input$entity_contact_type)
+      contact$setIdentifier("id", input$entity_contact)
+      entity$addContact(contact)
+      md_model_draft(entity$clone(deep = T))
+    })
+    observeEvent(input$entity_contact_button_clear,{
+      entity = md_model_draft()
+      entity$contacts = list()
       md_model_draft(entity$clone(deep = T))
     })
     
