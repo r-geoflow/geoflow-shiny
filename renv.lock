@@ -414,8 +414,13 @@
     "bs4Dash": {
       "Package": "bs4Dash",
       "Version": "2.3.4",
-      "Source": "Repository",
-      "Repository": "CRAN",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteRepo": "bs4Dash",
+      "RemoteUsername": "eblondel",
+      "RemoteRef": "tabsetpanel-widths-arg",
+      "RemoteSha": "f0ab661b6e87ed260f1302c3d3f4995309dd8cc7",
       "Requirements": [
         "R",
         "bslib",
@@ -428,7 +433,7 @@
         "shiny",
         "waiter"
       ],
-      "Hash": "3b74146479853ff3ac3d34210464f251"
+      "Hash": "351a20045e15263d3a9dec757ac3d501"
     },
     "bslib": {
       "Package": "bslib",
@@ -970,13 +975,13 @@
     },
     "geoflow": {
       "Package": "geoflow",
-      "Version": "0.9999.20250309",
+      "Version": "0.9999.20250314",
       "Source": "GitHub",
       "RemoteType": "github",
       "RemoteHost": "api.github.com",
       "RemoteRepo": "geoflow",
       "RemoteUsername": "r-geoflow",
-      "RemoteSha": "a9ae913795a1c946b157b9be13fb1d94d9d8c268",
+      "RemoteSha": "e16f175b66a1bb686a3acd79df8382f01e1a0f91",
       "Requirements": [
         "R",
         "R6",
@@ -1007,7 +1012,7 @@
         "yaml",
         "zip"
       ],
-      "Hash": "0ed507e9b35ce6489947917547cf76e0"
+      "Hash": "e8774495d93fd702ee43144101f8bff2"
     },
     "geometa": {
       "Package": "geometa",
