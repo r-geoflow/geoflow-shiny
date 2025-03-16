@@ -981,7 +981,7 @@
       "RemoteHost": "api.github.com",
       "RemoteRepo": "geoflow",
       "RemoteUsername": "r-geoflow",
-      "RemoteSha": "ddc0ec6e7cf7610a29dffa77e95f7c5ea51dc636",
+      "RemoteSha": "a2cb65fe759ebe00c38acea755b178699cce36e9",
       "Requirements": [
         "R",
         "R6",
@@ -1012,7 +1012,7 @@
         "yaml",
         "zip"
       ],
-      "Hash": "b3fe06c047d1cff47314c071a2667be9"
+      "Hash": "1b002e94933b12b5096c5ed39649f50a"
     },
     "geometa": {
       "Package": "geometa",
@@ -2038,6 +2038,28 @@
         "yaml"
       ],
       "Hash": "fb1b47e69750065a4f3c8c4ef24e4891"
+    },
+    "shinyWidgets": {
+      "Package": "shinyWidgets",
+      "Version": "0.9.0.9000",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteRepo": "shinyWidgets",
+      "RemoteUsername": "eblondel",
+      "RemoteRef": "create_tree-faster",
+      "RemoteSha": "b37fcbe10e6873594b5719927ca78bd17226a9ad",
+      "Requirements": [
+        "R",
+        "bslib",
+        "grDevices",
+        "htmltools",
+        "jsonlite",
+        "rlang",
+        "sass",
+        "shiny"
+      ],
+      "Hash": "4de8ea2eeca034e71570725fe049a8f3"
     },
     "shinyauthr": {
       "Package": "shinyauthr",

@@ -136,7 +136,33 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
           tabPanel(
             value = "entity_subjects",
             title = "Subject",
-            "TODO"
+            fluidRow(
+              column(3, selectizeInput(ns("entity_subject_type"),
+                                       label="Key",
+                                       multiple = F,
+                                       choices = c(geometa::ISOKeywordType$values(), "taxonomy"),
+                                       selected = "theme"
+              )),
+              column(6, selectizeInput(ns("entity_vocabulary_server"),
+                                       label="Vocabulary server",
+                                       multiple = F,
+                                       choices = setNames(list_vocabularies()$id, nm = list_vocabularies()$def),
+                                       selected = "nvs"
+              ))
+            ),
+            fluidRow(
+              style = "height:400px;overflow-y:auto;",
+              column(12,
+                withSpinner(uiOutput(ns("entity_vocabulary_tree_wrapper")))
+              )
+            ),
+            fluidRow(
+              column(3,
+                     actionButton(ns("entity_subject_button_add"), title="Add subject",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;"),
+                     actionButton(ns("entity_subject_button_clear"), title="Clear subject",size="sm",label="",icon=icon("trash"),class = "btn-warning", style = "margin-top:35px;")
+              )
+            ),
+            uiOutput(ns("entity_subjects_table_wrapper"))
           ),
           tabPanel(
             value = "entity_contacts",
@@ -449,6 +475,24 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         DTOutput(ns("entity_contacts_table"))
       }else{NULL}
     })
+    #tree (subjects)
+    output$entity_vocabulary_tree_wrapper <-renderUI({
+      shinyWidgets::treeInput(
+        inputId = ns("entity_vocabulary_tree"),
+        label = "Select keywords:",
+        choices = shinyWidgets::create_tree(
+          data = {
+            vocab = geoflow::list_vocabularies(T)[sapply(geoflow::list_vocabularies(T), function(x){
+              x$id == input$entity_vocabulary_server
+            })][[1]]
+            vocab$list_concepts()
+          }, 
+          levels = c("collectionLabel", "prefLabel")
+        ),
+        closeDepth = 0
+      )
+    })
+    
     
     #contact
     #contact -> Identifier
