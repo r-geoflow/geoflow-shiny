@@ -21,6 +21,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     md_model_draft_validation_report <- reactiveVal(NULL)
     md_model_subject_selection <- reactiveVal(NULL)
     md_model_subject_draft <- reactiveVal(NULL)
+    md_model_bbox <- reactiveVal(NULL)
     cache_vocabs <- reactiveVal(list())
     update_meta_editor <- reactiveVal(TRUE)
     #model specific reactives
@@ -244,7 +245,23 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
           tabPanel(
             value = "entity_spatialcoverages",
             title = "SpatialCoverage",
-            "TODO"
+            fluidRow(
+              column(6, selectizeInput(ns("entity_srid"),
+                                       label="SRID",
+                                       multiple = F,
+                                       choices = {
+                                         setNames(c(4326), nm = c("WGS 84 (EPSG:4326)"))
+                                       },
+                                       selected = 4326
+              ))
+            ),
+            fluidRow(
+              style = "height:450px;overflow-y:auto;",
+              column(12,
+                leafletOutput(ns("entity_map"), height = "400px"),
+                uiOutput(ns("entity_wkt_wrapper"))
+              )
+            )
           ),
           tabPanel(
             value = "entity_temporalcoverages",
@@ -642,7 +659,33 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         DTOutput(ns("entity_types_table"))
       }else{NULL}
     })
-    
+    #entity -> SpatialCoverage
+    output$entity_map <- renderLeaflet({
+      leaflet() %>%
+        addTiles() %>%
+        addDrawToolbar(
+          singleFeature = TRUE,
+          targetGroup = "draw",
+          rectangleOptions = TRUE,
+          circleMarkerOptions = FALSE,
+          circleOptions = FALSE,
+          markerOptions = FALSE,
+          polylineOptions = FALSE,
+          polygonOptions = FALSE,
+          editOptions = leaflet.extras::editToolbarOptions()
+        ) %>%
+        setView(lng = 0, lat = 0, zoom = 2)
+    })
+    output$entity_wkt_wrapper <- renderUI({
+      if (!is.null(md_model_bbox())) {
+        shiny::textInput(ns("entity_wkt"), label = "WKT", placeholder = "WKT", value = md_model_bbox())
+      } else {
+        shiny::tagList(
+          tags$em("Draw a rectangle on the map to see the WKT representation."),
+          shiny::textInput(ns("entity_wkt"), label = "WKT", placeholder = "WKT", value = NULL)
+        )
+      }
+    })
     
     #contact
     #contact -> Identifier
@@ -985,6 +1028,41 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       entity = md_model_draft()
       entity$setLanguage(input$entity_language)
       md_model_draft(entity$clone(deep = T))
+    })
+    #events entity -> SpatialCoverage
+    observeEvent(input$entity_map_draw_new_feature, {
+      feature <- input$entity_map_draw_new_feature
+      if (feature$geometry$type == "Polygon") {
+        coords <- feature$geometry$coordinates[[1]]
+        bbox_polygon <- sf::st_polygon(list(matrix(unlist(coords), ncol = 2, byrow = TRUE)))
+        bbox_sfc <- sf::st_sfc(bbox_polygon) # Convert to sfc
+        md_model_bbox(sf::st_as_text(bbox_sfc)) # Convert to WKT
+        entity = md_model_draft()
+        entity$setSrid(input$entity_srid)
+        entity$setSpatialBbox(wkt = md_model_bbox())
+        entity$setSpatialExtent(wkt = md_model_bbox())
+      }
+    })
+    observeEvent(input$entity_wkt,{
+      # Parse WKT and extract bounding box coordinates
+      bbox_polygon <- try(sf::st_as_sfc(input$entity_wkt, crs = input$entity_srid), silent = TRUE) # Convert WKT to sfc object
+      if(!is(bbox_polygon, "try-error")){
+        bbox_coords <- sf::st_bbox(bbox_polygon) # Get bounding box (xmin, ymin, xmax, ymax)
+        
+        # Draw bounding box on the map
+        leafletProxy("entity_map") %>%
+          clearShapes() %>% # Clear previous drawings
+          addRectangles(
+            lng1 = bbox_coords["xmin"], lat1 = bbox_coords["ymin"],
+            lng2 = bbox_coords["xmax"], lat2 = bbox_coords["ymax"],
+            color = "blue", fillOpacity = 0.2
+          ) %>%
+          setView(
+            lng = mean(c(bbox_coords["xmin"], bbox_coords["xmax"])),
+            lat = mean(c(bbox_coords["ymin"], bbox_coords["ymax"])),
+            zoom = 2
+          )
+      }
     })
     
     #contact specific form events

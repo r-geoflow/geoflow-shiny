@@ -78,10 +78,15 @@ loadAppPackages <- function(){
   require(RSQLite)
   
   #geospatial
+  require(sf)
+  sf::sf_use_s2(FALSE)
   require(geometa)
   require(geoflow)
   require(geonapi)
   require(ows4R)
+  require(leaflet)
+  require(leaflet.providers)
+  require(leaflet.extras)
   
   #apis
   require(googledrive)
