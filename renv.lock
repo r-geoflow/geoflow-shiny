@@ -98,6 +98,45 @@
       ],
       "Hash": "e779c7d9f35cc364438578f334cffee2"
     },
+    "R.methodsS3": {
+      "Package": "R.methodsS3",
+      "Version": "1.8.2",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "utils"
+      ],
+      "Hash": "278c286fd6e9e75d0c2e8f731ea445c8"
+    },
+    "R.oo": {
+      "Package": "R.oo",
+      "Version": "1.27.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "R.methodsS3",
+        "methods",
+        "utils"
+      ],
+      "Hash": "6ac79ff194202248cf946fe3a5d6d498"
+    },
+    "R.utils": {
+      "Package": "R.utils",
+      "Version": "2.13.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "R.methodsS3",
+        "R.oo",
+        "methods",
+        "tools",
+        "utils"
+      ],
+      "Hash": "d32373d88da809f8974d5307481862b0"
+    },
     "R6": {
       "Package": "R6",
       "Version": "2.5.1",
@@ -975,13 +1014,13 @@
     },
     "geoflow": {
       "Package": "geoflow",
-      "Version": "0.9999.20250314",
+      "Version": "0.9999.20250412",
       "Source": "GitHub",
       "RemoteType": "github",
       "RemoteHost": "api.github.com",
       "RemoteRepo": "geoflow",
       "RemoteUsername": "r-geoflow",
-      "RemoteSha": "a2cb65fe759ebe00c38acea755b178699cce36e9",
+      "RemoteSha": "f6b2867bd90b8eccff315b8584b0a641f2a4bab5",
       "Requirements": [
         "R",
         "R6",
@@ -991,6 +1030,7 @@
         "curl",
         "digest",
         "dotenv",
+        "dplyr",
         "geometa",
         "geonapi",
         "geonode4R",
@@ -1000,7 +1040,6 @@
         "methods",
         "mime",
         "ows4R",
-        "plyr",
         "png",
         "readr",
         "sf",
@@ -1012,7 +1051,7 @@
         "yaml",
         "zip"
       ],
-      "Hash": "1b002e94933b12b5096c5ed39649f50a"
+      "Hash": "bdfd7e0a05d1516ab5e3b1b81e14a7fe"
     },
     "geometa": {
       "Package": "geometa",
@@ -1304,6 +1343,29 @@
       ],
       "Hash": "5aab57a3bd297eee1c1d862735972182"
     },
+    "jsTreeR": {
+      "Package": "jsTreeR",
+      "Version": "2.6.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "R.utils",
+        "base64enc",
+        "fontawesome",
+        "htmltools",
+        "htmlwidgets",
+        "jquerylib",
+        "miniUI",
+        "rstudioapi",
+        "shiny",
+        "shinyAce",
+        "stats",
+        "tools",
+        "utils"
+      ],
+      "Hash": "f28b334bc286aaf39b99b18368dc43f7"
+    },
     "jsonld": {
       "Package": "jsonld",
       "Version": "2.2.1",
@@ -1464,6 +1526,18 @@
         "tools"
       ],
       "Hash": "18e9c28c1d3ca1560ce30658b22ce104"
+    },
+    "miniUI": {
+      "Package": "miniUI",
+      "Version": "0.1.1.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "htmltools",
+        "shiny",
+        "utils"
+      ],
+      "Hash": "fec5f52652d60615fdb3957b3d74324a"
     },
     "ncdf4": {
       "Package": "ncdf4",
@@ -2039,27 +2113,19 @@
       ],
       "Hash": "fb1b47e69750065a4f3c8c4ef24e4891"
     },
-    "shinyWidgets": {
-      "Package": "shinyWidgets",
-      "Version": "0.9.0.9000",
-      "Source": "GitHub",
-      "RemoteType": "github",
-      "RemoteHost": "api.github.com",
-      "RemoteRepo": "shinyWidgets",
-      "RemoteUsername": "eblondel",
-      "RemoteRef": "create_tree-faster",
-      "RemoteSha": "b37fcbe10e6873594b5719927ca78bd17226a9ad",
+    "shinyAce": {
+      "Package": "shinyAce",
+      "Version": "0.4.4",
+      "Source": "Repository",
+      "Repository": "CRAN",
       "Requirements": [
         "R",
-        "bslib",
-        "grDevices",
-        "htmltools",
         "jsonlite",
-        "rlang",
-        "sass",
-        "shiny"
+        "shiny",
+        "tools",
+        "utils"
       ],
-      "Hash": "4de8ea2eeca034e71570725fe049a8f3"
+      "Hash": "59a83458750b23d58fe6565872fccb3d"
     },
     "shinyauthr": {
       "Package": "shinyauthr",

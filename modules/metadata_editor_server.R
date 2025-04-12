@@ -19,10 +19,14 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     md_model_draft_mode <- reactiveVal("creation")
     md_model_draft_valid <- reactiveVal(NULL)
     md_model_draft_validation_report <- reactiveVal(NULL)
+    md_model_subject_selection <- reactiveVal(NULL)
+    md_model_subject_draft <- reactiveVal(NULL)
+    cache_vocabs <- reactiveVal(list())
     update_meta_editor <- reactiveVal(TRUE)
     #model specific reactives
     active_contact_form_tab <- reactiveVal("contact_identifiers")
     active_entity_form_tab <- reactiveVal("entity_identifiers")
+    ref_hierarchy <- reactiveVal(NULL)
     
     #FUNCTIONS
     setID = function(type, id){
@@ -146,14 +150,18 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
               column(6, selectizeInput(ns("entity_vocabulary_server"),
                                        label="Vocabulary server",
                                        multiple = F,
-                                       choices = setNames(list_vocabularies()$id, nm = list_vocabularies()$def),
-                                       selected = "nvs"
+                                       choices = {
+                                         vocabs = list_vocabularies()
+                                         setNames(c(vocabs$id, "custom"), nm = c(vocabs$def, "Custom"))
+                                        },
+                                       selected = "custom"
               ))
             ),
             fluidRow(
               style = "height:400px;overflow-y:auto;",
               column(12,
-                withSpinner(uiOutput(ns("entity_vocabulary_tree_wrapper")))
+                uiOutput(ns("entity_vocabulary_custom")),
+                uiOutput(ns("entity_vocabulary_tree_wrapper"))
               )
             ),
             fluidRow(
@@ -185,17 +193,53 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
           tabPanel(
             value = "entity_dates",
             title = "Date",
-            "TODO"
+            fluidRow(
+              column(3, selectizeInput(ns("entity_date_type"),
+                                       label="Date type",
+                                       multiple = F,
+                                       choices = entity_tpl$getAllowedKeyValuesFor("Date"),
+                                       selected = "creation"
+              )),
+              column(6,dateInput(ns("entity_date"), "Date",value = Sys.Date(), width = NULL)),
+              column(3,
+                     actionButton(ns("entity_date_button_add"), title="Add date",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;"),
+                     actionButton(ns("entity_date_button_clear"), title="Clear date",size="sm",label="",icon=icon("trash"),class = "btn-warning", style = "margin-top:35px;")
+              )
+            ),
+            uiOutput(ns("entity_dates_table_wrapper"))
           ),
           tabPanel(
             value = "entity_types",
             title = "Type",
-            "TODO"
+            fluidRow(
+              column(3, selectizeInput(ns("entity_resource_type"),
+                                       label="Key",
+                                       multiple = F,
+                                       choices = entity_tpl$getAllowedKeyValuesFor("Type"),
+                                       selected = "generic"
+              )),
+              column(6,textInput(ns("entity_resource"), "Type",value = "dataset", width = NULL, placeholder = "Type")),
+              column(3,
+                     actionButton(ns("entity_type_button_add"), title="Add type",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;"),
+                     actionButton(ns("entity_type_button_clear"), title="Clear type",size="sm",label="",icon=icon("trash"),class = "btn-warning", style = "margin-top:35px;")
+              )
+            ),
+            uiOutput(ns("entity_types_table_wrapper"))
           ),
           tabPanel(
             value = "entity_languages",
             title = "Language",
-            "TODO"
+            fluidRow(
+              column(6, selectizeInput(ns("entity_language"),
+                                       label="Language",
+                                       multiple = F,
+                                       choices = {
+                                         languages = geometa::ISOLanguage$values(labels = T)
+                                         setNames(languages[,1], nm = languages[,2])
+                                       },
+                                       selected = "eng"
+              ))
+            )
           ),
           tabPanel(
             value = "entity_spatialcoverages",
@@ -259,8 +303,10 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
           color = "primary",
           icon = icon("users"),
           footer = shiny::tagList(
-            bs4Dash::actionButton(inputId = ns("create_contact_table"), label = "Create table"), #TODO
-            bs4Dash::actionButton(inputId = ns("load_contact_table"), label = "Load table") #TODO
+            bs4Dash::actionButton(inputId = ns("create_contact_table"), label = "Create table"),
+            bs4Dash::actionButton(inputId = ns("load_contact_table"), label = "Load table"), #TODO
+            bs4Dash::actionButton(inputId = ns("create_contact"), label = "Create contact")
+            
           )
         ),
         bs4Dash::bs4ValueBox(
@@ -270,8 +316,9 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
           color = "primary",
           icon = icon("table"),
           footer = shiny::tagList(
-            bs4Dash::actionButton(inputId = ns("create_entity_table"), label = "Create table"), #TODO
-            bs4Dash::actionButton(inputId = ns("load_entity_table"), label = "Load table") #TODO
+            bs4Dash::actionButton(inputId = ns("create_entity_table"), label = "Create table"),
+            bs4Dash::actionButton(inputId = ns("load_entity_table"), label = "Load table"), #TODO
+            bs4Dash::actionButton(inputId = ns("create_entity"), label = "Create entity")
           )
         ),
         bs4Dash::bs4ValueBox(
@@ -282,7 +329,8 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
           icon = icon("table-list"),
           footer = shiny::tagList(
             bs4Dash::actionButton(inputId = ns("create_dictionary_table"), label = "Create table"), #TODO
-            bs4Dash::actionButton(inputId = ns("load_dictionary_table"), label = "Load table") #TODO
+            bs4Dash::actionButton(inputId = ns("load_dictionary_table"), label = "Load table"), #TODO
+            bs4Dash::actionButton(inputId = ns("create_dictionary"), label = "Create dictionary")
           )
         )
       )
@@ -294,9 +342,6 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       req(!is.null(md_model_type()))
       print("render meta editor")
       shiny::tagList(
-        fluidRow(
-          bs4Dash::actionButton(inputId = ns(paste0(sprintf("create_%s", md_model_type()))), label = paste("Create", md_model_type()))
-        ),
         fluidRow(
           tabBox(
             width = 6,
@@ -475,22 +520,127 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         DTOutput(ns("entity_contacts_table"))
       }else{NULL}
     })
-    #tree (subjects)
-    output$entity_vocabulary_tree_wrapper <-renderUI({
-      shinyWidgets::treeInput(
-        inputId = ns("entity_vocabulary_tree"),
-        label = "Select keywords:",
-        choices = shinyWidgets::create_tree(
-          data = {
-            vocab = geoflow::list_vocabularies(T)[sapply(geoflow::list_vocabularies(T), function(x){
-              x$id == input$entity_vocabulary_server
-            })][[1]]
-            vocab$list_concepts()
-          }, 
-          levels = c("collectionLabel", "prefLabel")
+    #entity -> Subject
+    output$entity_vocabulary_tree <- jsTreeR::renderJstree({
+      req(input$entity_vocabulary_server != "custom")
+      cached_vocabs = cache_vocabs()
+      hierarchy = cached_vocabs[[input$entity_vocabulary_server]]
+      if(is.null(hierarchy)) {
+        vocab = md_model_subject_selection()
+        hierarchy = vocab$get_concepts_hierarchy(
+          lang = i18n()$get_translation_language(),
+          method = if(!is.null(vocab$rdf)) "R" else "SPARQL",
+          out_format = "list"
+        )
+        cached_vocabs[[input$entity_vocabulary_server]] = hierarchy
+        cache_vocabs(cached_vocabs)
+      }
+      jsTreeR::jstree(hierarchy$children, theme = "proton", checkboxes = T, checkWithText = T, multiple = T, selectLeavesOnly = T)
+    })
+    output$entity_vocabulary_tree_wrapper <- renderUI({
+      if(input$entity_vocabulary_server != "custom"){
+        withSpinner(jsTreeR::jstreeOutput(ns("entity_vocabulary_tree")))
+      }else{
+        NULL
+      }
+    })
+    output$entity_vocabulary_custom <- renderUI({
+      req(input$entity_vocabulary_server == "custom")
+      shiny::tagList(
+        fluidRow(
+          column(4,textInput(ns("custom_vocab_thesaurus_name"), "Thesaurus name",value = NULL, width = NULL, placeholder = "Thesaurus name")),
+          column(4,textInput(ns("custom_vocab_thesaurus_uri"), "Thesaurus URI",value = NULL, width = NULL, placeholder = "Thesaurus URI"))
         ),
-        closeDepth = 0
+        fluidRow(
+          column(4,textInput(ns("custom_vocab_keyword_name"), "Keyword", value = NULL, width = NULL, placeholder = "Keyword")),
+          column(4,textInput(ns("custom_vocab_keyword_uri"), "Keyword URI", value = NULL, width = NULL, placeholder = "Keyword URI")),
+          column(4,
+                 actionButton(ns("custom_vocab_keyword_button_add"), title="Add keyword",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;"),
+                 actionButton(ns("custom_vocab_keyword_button_clear"), title="Clear keyword",size="sm",label="",icon=icon("trash"),class = "btn-warning", style = "margin-top:35px;")
+          )
+        ),
+        uiOutput(ns("entity_vocabulary_custom_keyword_table_wrapper"))
       )
+    })
+    
+    output$entity_vocabulary_custom_keyword_table <- DT::renderDT(server = FALSE, {
+      req(!is.null(md_model_subject_draft()))
+      DT::datatable(
+        do.call("rbind", lapply(md_model_subject_draft()$keywords, function(kwd){
+          data.frame(keyword = kwd$name, uri = if(!is.null(kwd$uri)) kwd$uri else "")
+        })), 
+        escape = FALSE,
+        rownames = FALSE,
+        options = list(
+          dom = 't',
+          ordering=F
+        )
+      )
+    })
+    output$entity_vocabulary_custom_keyword_table_wrapper <-renderUI({
+      if(input$entity_vocabulary_server == "custom" & length(md_model_subject_draft()$keywords)>0){
+        DTOutput(ns("entity_vocabulary_custom_keyword_table"))
+      }else{NULL}  
+    })
+    output$entity_subjects_table <- DT::renderDT(server = FALSE, {
+      req(!is.null(md_model_draft()))
+      DT::datatable(
+        do.call("rbind", lapply(md_model_draft()$subjects, function(subj){
+          print(subj$name)
+          print(subj$uri)
+          print(sapply(subj$keywords, function(x){x$name}))
+          data.frame(key = subj$key, title = subj$name, keywords = paste0(sapply(subj$keywords, function(kwd){kwd$name}),collapse=","))
+        })), 
+        escape = FALSE,
+        rownames = FALSE,
+        options = list(
+          dom = 't',
+          ordering=F
+        )
+      )
+    })
+    output$entity_subjects_table_wrapper <-renderUI({
+      if(length(md_model_draft()$subjects) > 0){
+        DTOutput(ns("entity_subjects_table"))
+      }else{NULL}  
+    })
+    #entity -> Date
+    output$entity_dates_table <- DT::renderDT(server = FALSE, {
+      DT::datatable(
+        do.call("rbind", lapply(md_model_draft()$dates, function(date){
+          data.frame(dateType = date$key, date = date$value)
+        })), 
+        escape = FALSE,
+        rownames = FALSE,
+        options = list(
+          dom = 't',
+          ordering=F
+        )
+      )
+    })
+    output$entity_dates_table_wrapper <-renderUI({
+      if(length(md_model_draft()$dates)>0){
+        DTOutput(ns("entity_dates_table"))
+      }else{NULL}
+    })
+    #entity -> Type
+    output$entity_types_table <- DT::renderDT(server = FALSE, {
+      DT::datatable(
+        do.call("rbind", lapply(names(md_model_draft()$types), function(idname){
+          data.frame(key = idname, type = md_model_draft()$types[[idname]])
+        })), 
+        escape = FALSE,
+        rownames = FALSE,
+        options = list(
+          dom = 't',
+          ordering=F
+        )
+      )
+    })
+    output$entity_types_table_wrapper <-renderUI({
+      if(length(md_model_draft()$types)>0){
+        DTOutput(ns("entity_types_table"))
+      }else{NULL}
     })
     
     
@@ -550,7 +700,9 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     observeEvent(input$save_model,{
       INFO(sprintf("Save %s to metadata table", md_model_type()))
       req(!is.null(md_model_type()))
-      
+      if(md_model_type()=="entity"){
+        md_model_subject_draft(NULL)
+      }
       qa_errors = md_model_draft_validation_report()
       save_model = TRUE
       if(!is.null(qa_errors)) {
@@ -628,6 +780,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     
     #SPECIFIC FORM EVENTS
     #entity specific form events
+    #----------------------------
     observeEvent(input$entity_form, {
       INFO(sprintf("Selecting tab %s", input$entity_form))
       active_entity_form_tab(input$entity_form)
@@ -728,8 +881,114 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       entity$contacts = list()
       md_model_draft(entity$clone(deep = T))
     })
+    #events entity -> Subject
+    #custom vocab
+    observeEvent(input$custom_vocab_keyword_button_add,{
+      INFO("Add a keyword for custom vocab")
+      if(is.null(md_model_subject_draft())){
+        md_model_subject_draft(geoflow_subject$new())
+      }
+      print(input$custom_vocab_thesaurus_name)
+      print(input$custom_vocab_thesaurus_uri)
+      print(input$custom_vocab_keyword_name)
+      print(input$custom_vocab_keyword_uri)
+      subj = md_model_subject_draft()
+      subj$setKey(input$entity_subject_type)
+      if(input$custom_vocab_thesaurus_name != "") subj$setName(input$custom_vocab_thesaurus_name)
+      if(input$custom_vocab_thesaurus_uri != "") subj$setUri(input$custom_vocab_thesaurus_uri)
+      subj$addKeyword(
+        keyword = input$custom_vocab_keyword_name,
+        uri = if(!is.null(input$custom_vocab_keyword_uri) & input$custom_vocab_keyword_uri != "") input$custom_vocab_keyword_uri else NULL
+      )
+      md_model_subject_draft(subj$clone(deep = T))
+      print(sapply(md_model_subject_draft()$keywords, function(x){x$name}))
+    })
+    observeEvent(input$custom_vocab_keyword_button_clear,{
+      INFO("Clear subject model draft")
+      md_model_subject_draft(NULL)
+    })
+    #existing vocab
+    observeEvent(input$entity_vocabulary_server,{
+      req(input$entity_vocabulary_server != "custom")
+      md_model_subject_draft(NULL)
+      vocabs = geoflow::list_vocabularies(T) 
+      vocab = vocabs[sapply(vocabs, function(x){
+        x$id == input$entity_vocabulary_server
+      })][[1]]
+      md_model_subject_selection(vocab)
+    })
+    observe({
+      req(input$entity_vocabulary_server != "custom")
+      if(is.null(md_model_subject_draft())){
+        md_model_subject_draft(geoflow_subject$new())
+      }
+      subj = md_model_subject_draft()
+      subj$setKey(input$entity_subject_type)
+      subj$setName(md_model_subject_selection()$def)
+      subj$setUri(md_model_subject_selection()$id) #we put here the vocabulary Id
+      kwds = sapply(input$entity_vocabulary_tree_checked, function(x){x$text})
+      kwds = kwds[kwds != ""]
+      subj$keywords = lapply(kwds, function(x){geoflow_keyword$new(name = x)})
+      md_model_subject_draft(subj)
+      print(subj)
+    })
+    observeEvent(input$entity_subject_button_add,{
+      INFO("Add subject to entity")
+      entity = md_model_draft()
+      subj = md_model_subject_draft()
+      same_subject = sapply(entity$subjects, function(x){x$key == subj$key & x$name == subj$name})
+      if(any(same_subject)){
+        entity$subjects[[which(same_subject)]] <- subj
+      }else{
+        entity$addSubject(subj)
+      }
+      md_model_draft(entity$clone(deep = T))
+    })
+    observeEvent(input$entity_subject_button_clear,{
+      INFO("Clear subjects from entity")
+      entity = md_model_draft()
+      entity$subjects = list()
+      md_model_draft(entity$clone(deep = T))
+    })
+    #events entity -> Date
+    observeEvent(input$entity_date_button_add,{
+      update_meta_editor(FALSE)
+      entity = md_model_draft()
+      entity$addDate(
+        dateType = input$entity_date_type,
+        date = input$entity_date
+      )
+      md_model_draft(entity$clone(deep = T))
+    })
+    observeEvent(input$entity_date_button_clear,{
+      entity = md_model_draft()
+      entity$dates = list()
+      md_model_draft(entity$clone(deep = T))
+    })
+    #events entity -> Type
+    observeEvent(input$entity_type_button_add,{
+      update_meta_editor(FALSE)
+      entity = md_model_draft()
+      entity$setType(
+        key = input$entity_resource_type,
+        type = input$entity_resource
+      )
+      md_model_draft(entity$clone(deep = T))
+    })
+    observeEvent(input$entity_type_button_clear,{
+      entity = md_model_draft()
+      entity$types = list()
+      md_model_draft(entity$clone(deep = T))
+    })
+    #events entity -> Language
+    observeEvent(input$entity_language,{
+      entity = md_model_draft()
+      entity$setLanguage(input$entity_language)
+      md_model_draft(entity$clone(deep = T))
+    })
     
     #contact specific form events
+    #----------------------------
     observeEvent(input$contact_form, {
       active_contact_form_tab(input$contact_form)
     })
