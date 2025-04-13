@@ -299,7 +299,34 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
           tabPanel(
             value = "entity_formats",
             title = "Format",
-            "TODO"
+            fluidRow(
+              column(3, selectizeInput(ns("entity_format_type"),
+                                       label="Format type",
+                                       multiple = F,
+                                       choices = entity_tpl$getAllowedKeyValuesFor("Relation"),
+                                       selected = "id"
+              )),
+              column(6,selectizeInput(ns("entity_format_name"),
+                                      label="Format",
+                                      multiple = F,
+                                      
+                                      choices = as.character(mime::mimemap),
+                                      selected = NULL
+              ))
+            ),
+            fluidRow(
+              column(3),
+              column(6,textInput(ns("entity_format_description"), "Description",value = "", width = NULL, placeholder = "Description"))
+            ),
+            fluidRow(
+              column(3),
+              column(6, textInput(ns("entity_format_link"), "Link", value = "", width = NULL, placeholder = "Link")),
+              column(3,
+                     actionButton(ns("entity_format_button_add"), title="Add format",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;"),
+                     actionButton(ns("entity_format_button_clear"), title="Clear format",size="sm",label="",icon=icon("trash"),class = "btn-warning", style = "margin-top:35px;")
+              )
+            ),
+            uiOutput(ns("entity_formats_table_wrapper"))
           ),
           tabPanel(
             value = "entity_provenances",
@@ -709,7 +736,13 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     output$entity_relations_table <- DT::renderDT(server = FALSE, {
       DT::datatable(
         do.call("rbind", lapply(md_model_draft()$relations, function(rel){
-          data.frame(key = rel$key, name = rel$name, description = rel$description, link = rel$link)
+          data.frame(
+            key = rel$key, 
+            name = rel$name, 
+            description = if(!is.null(rel$description)) rel$description else "", 
+            link = rel$link
+          )
+          
         })), 
         escape = FALSE,
         rownames = FALSE,
@@ -722,6 +755,30 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     output$entity_relations_table_wrapper <-renderUI({
       if(length(md_model_draft()$relations)>0){
         DTOutput(ns("entity_relations_table"))
+      }else{NULL}
+    })
+    #entity -> Format
+    output$entity_formats_table <- DT::renderDT(server = FALSE, {
+      DT::datatable(
+        do.call("rbind", lapply(md_model_draft()$formats, function(format){
+          data.frame(
+            key = format$key, 
+            name = format$name, 
+            description = if(!is.null(format$description)) format$description else "", 
+            uri = if(!is.null(format$uri)) format$uri else ""
+          )
+        })), 
+        escape = FALSE,
+        rownames = FALSE,
+        options = list(
+          dom = 't',
+          ordering=F
+        )
+      )
+    })
+    output$entity_formats_table_wrapper <-renderUI({
+      if(length(md_model_draft()$formats)>0){
+        DTOutput(ns("entity_formats_table"))
       }else{NULL}
     })
     
@@ -1117,6 +1174,22 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     observeEvent(input$entity_relation_button_clear,{
       entity = md_model_draft()
       entity$relations = list()
+      md_model_draft(entity$clone(deep = T))
+    })
+    #events entity -> Format
+    observeEvent(input$entity_format_button_add,{
+      entity = md_model_draft()
+      form = geoflow_format$new()
+      form$setKey(input$entity_format_type)
+      form$setName(input$entity_format_name)
+      if(input$entity_format_description != "") form$setDescription(input$entity_format_description)
+      if(input$entity_format_link != "") form$setLink(input$entity_format_link)
+      entity$addFormat(form)
+      md_model_draft(entity$clone(deep = T))
+    })
+    observeEvent(input$entity_format_button_clear,{
+      entity = md_model_draft()
+      entity$formats = list()
       md_model_draft(entity$clone(deep = T))
     })
     
