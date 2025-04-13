@@ -271,7 +271,25 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
           tabPanel(
             value = "entity_relations",
             title = "Relation",
-            "TODO"
+            fluidRow(
+              column(3, selectizeInput(ns("entity_relation_type"),
+                                       label="Key",
+                                       multiple = F,
+                                       choices = entity_tpl$getAllowedKeyValuesFor("Relation"),
+                                       selected = "id"
+              )),
+              column(4,textInput(ns("entity_relation_name"), "Name",value = "", width = NULL, placeholder = "Name")),
+              column(4,textInput(ns("entity_relation_description"), "Description",value = "", width = NULL, placeholder = "Description"))
+            ),
+            fluidRow(
+              column(3),
+              column(4, textInput(ns("entity_relation_link"), "Link", value = "", width = NULL, placeholder = "Link")),
+              column(4,
+                     actionButton(ns("entity_relation_button_add"), title="Add relation",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;"),
+                     actionButton(ns("entity_relation_button_clear"), title="Clear relation",size="sm",label="",icon=icon("trash"),class = "btn-warning", style = "margin-top:35px;")
+              )
+            ),
+            uiOutput(ns("entity_relations_table_wrapper"))
           ),
           tabPanel(
             value = "entity_rights",
@@ -686,6 +704,26 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         )
       }
     })
+    #entity -> TemporalCoverage
+    #entity -> Relation
+    output$entity_relations_table <- DT::renderDT(server = FALSE, {
+      DT::datatable(
+        do.call("rbind", lapply(md_model_draft()$relations, function(rel){
+          data.frame(key = rel$key, name = rel$name, description = rel$description, link = rel$link)
+        })), 
+        escape = FALSE,
+        rownames = FALSE,
+        options = list(
+          dom = 't',
+          ordering=F
+        )
+      )
+    })
+    output$entity_relations_table_wrapper <-renderUI({
+      if(length(md_model_draft()$relations)>0){
+        DTOutput(ns("entity_relations_table"))
+      }else{NULL}
+    })
     
     #contact
     #contact -> Identifier
@@ -1063,6 +1101,23 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
             zoom = 2
           )
       }
+    })
+    #events entity -> TemporalCoverage
+    #events entity -> Relation
+    observeEvent(input$entity_relation_button_add,{
+      entity = md_model_draft()
+      rel = geoflow_relation$new()
+      rel$setKey(input$entity_relation_type)
+      rel$setName(input$entity_relation_name)
+      if(input$entity_relation_description != "") rel$setDescription(input$entity_relation_description)
+      rel$setLink(input$entity_relation_link)
+      entity$addRelation(rel)
+      md_model_draft(entity$clone(deep = T))
+    })
+    observeEvent(input$entity_relation_button_clear,{
+      entity = md_model_draft()
+      entity$relations = list()
+      md_model_draft(entity$clone(deep = T))
     })
     
     #contact specific form events
