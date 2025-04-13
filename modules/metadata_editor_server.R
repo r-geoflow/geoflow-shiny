@@ -283,8 +283,8 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
             ),
             fluidRow(
               column(3),
-              column(4, textInput(ns("entity_relation_link"), "Link", value = "", width = NULL, placeholder = "Link")),
-              column(4,
+              column(6, textInput(ns("entity_relation_link"), "Link", value = "", width = NULL, placeholder = "Link")),
+              column(2,
                      actionButton(ns("entity_relation_button_add"), title="Add relation",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;"),
                      actionButton(ns("entity_relation_button_clear"), title="Clear relation",size="sm",label="",icon=icon("trash"),class = "btn-warning", style = "margin-top:35px;")
               )
