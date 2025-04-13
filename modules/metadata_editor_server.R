@@ -112,8 +112,8 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
                                        choices = entity_tpl$getAllowedKeyValuesFor("Title"),
                                        selected = "id"
               )),
-              column(6,textInput(ns("entity_title"), "Title",value = "", width = NULL, placeholder = "Title")),
-              column(3,
+              column(7,textInput(ns("entity_title"), "Title",value = "", width = NULL, placeholder = "Title")),
+              column(2,
                      actionButton(ns("entity_title_button_add"), title="Add title",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;"),
                      actionButton(ns("entity_title_button_clear"), title="Clear title",size="sm",label="",icon=icon("trash"),class = "btn-warning", style = "margin-top:35px;")
               )
@@ -130,8 +130,8 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
                                        choices = entity_tpl$getAllowedKeyValuesFor("Description"),
                                        selected = "id"
               )),
-              column(6,textInput(ns("entity_description"), "Description",value = "", width = NULL, placeholder = "Description")),
-              column(3,
+              column(7,textAreaInput(ns("entity_description"), "Description",value = "", width = NULL, placeholder = "Description")),
+              column(2,
                      actionButton(ns("entity_description_button_add"), title="Add description",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;"),
                      actionButton(ns("entity_description_button_clear"), title="Clear description",size="sm",label="",icon=icon("trash"),class = "btn-warning", style = "margin-top:35px;")
               )
@@ -183,8 +183,8 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
                                        choices = entity_tpl$getAllowedKeyValuesFor("Creator"),
                                        selected = "id"
               )),
-              column(6,textInput(ns("entity_contact"), "Contact",value = "", width = NULL, placeholder = "Contact")),
-              column(3,
+              column(7,textInput(ns("entity_contact"), "Contact",value = "", width = NULL, placeholder = "Contact")),
+              column(2,
                      actionButton(ns("entity_contact_button_add"), title="Add contact",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;"),
                      actionButton(ns("entity_contact_button_clear"), title="Clear contact",size="sm",label="",icon=icon("trash"),class = "btn-warning", style = "margin-top:35px;")
               )
@@ -201,8 +201,8 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
                                        choices = entity_tpl$getAllowedKeyValuesFor("Date"),
                                        selected = "creation"
               )),
-              column(6,dateInput(ns("entity_date"), "Date",value = Sys.Date(), width = NULL)),
-              column(3,
+              column(7,dateInput(ns("entity_date"), "Date",value = Sys.Date(), width = NULL)),
+              column(2,
                      actionButton(ns("entity_date_button_add"), title="Add date",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;"),
                      actionButton(ns("entity_date_button_clear"), title="Clear date",size="sm",label="",icon=icon("trash"),class = "btn-warning", style = "margin-top:35px;")
               )
@@ -219,8 +219,8 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
                                        choices = entity_tpl$getAllowedKeyValuesFor("Type"),
                                        selected = "generic"
               )),
-              column(6,textInput(ns("entity_resource"), "Type",value = "dataset", width = NULL, placeholder = "Type")),
-              column(3,
+              column(7,textInput(ns("entity_resource"), "Type",value = "dataset", width = NULL, placeholder = "Type")),
+              column(2,
                      actionButton(ns("entity_type_button_add"), title="Add type",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;"),
                      actionButton(ns("entity_type_button_clear"), title="Clear type",size="sm",label="",icon=icon("trash"),class = "btn-warning", style = "margin-top:35px;")
               )
@@ -278,12 +278,15 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
                                        choices = entity_tpl$getAllowedKeyValuesFor("Relation"),
                                        selected = "id"
               )),
-              column(4,textInput(ns("entity_relation_name"), "Name",value = "", width = NULL, placeholder = "Name")),
-              column(4,textInput(ns("entity_relation_description"), "Description",value = "", width = NULL, placeholder = "Description"))
+              column(7,textInput(ns("entity_relation_name"), "Name",value = "", width = NULL, placeholder = "Name"))
             ),
             fluidRow(
               column(3),
-              column(6, textInput(ns("entity_relation_link"), "Link", value = "", width = NULL, placeholder = "Link")),
+              column(7,textAreaInput(ns("entity_relation_description"), "Description",value = "", width = NULL, placeholder = "Description"))
+            ),
+            fluidRow(
+              column(3),
+              column(7, textInput(ns("entity_relation_link"), "Link", value = "", width = NULL, placeholder = "Link")),
               column(2,
                      actionButton(ns("entity_relation_button_add"), title="Add relation",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;"),
                      actionButton(ns("entity_relation_button_clear"), title="Clear relation",size="sm",label="",icon=icon("trash"),class = "btn-warning", style = "margin-top:35px;")
@@ -306,7 +309,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
                                        choices = entity_tpl$getAllowedKeyValuesFor("Relation"),
                                        selected = "id"
               )),
-              column(6,selectizeInput(ns("entity_format_name"),
+              column(7,selectizeInput(ns("entity_format_name"),
                                       label="Format",
                                       multiple = F,
                                       
@@ -316,12 +319,12 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
             ),
             fluidRow(
               column(3),
-              column(6,textInput(ns("entity_format_description"), "Description",value = "", width = NULL, placeholder = "Description"))
+              column(7,textAreaInput(ns("entity_format_description"), "Description",value = "", width = NULL, placeholder = "Description"))
             ),
             fluidRow(
               column(3),
-              column(6, textInput(ns("entity_format_link"), "Link", value = "", width = NULL, placeholder = "Link")),
-              column(3,
+              column(7, textInput(ns("entity_format_link"), "Link", value = "", width = NULL, placeholder = "Link")),
+              column(2,
                      actionButton(ns("entity_format_button_add"), title="Add format",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;"),
                      actionButton(ns("entity_format_button_clear"), title="Clear format",size="sm",label="",icon=icon("trash"),class = "btn-warning", style = "margin-top:35px;")
               )
