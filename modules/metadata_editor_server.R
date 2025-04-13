@@ -301,7 +301,20 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
           tabPanel(
             value = "entity_rights",
             title = "Rights",
-            "TODO"
+            fluidRow(
+              column(3, selectizeInput(ns("entity_right_type"),
+                                       label = "Right type",
+                                       multiple = F,
+                                       choices = entity_tpl$getAllowedKeyValuesFor("Rights"),
+                                       selected = "license"
+              )),
+              column(7, uiOutput(ns("entity_right_wrapper"))),
+              column(2,
+                     actionButton(ns("entity_right_button_add"), title="Add right",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;"),
+                     actionButton(ns("entity_right_button_clear"), title="Clear right",size="sm",label="",icon=icon("trash"),class = "btn-warning", style = "margin-top:35px;")
+              )
+            ),
+            uiOutput(ns("entity_rights_table_wrapper"))
           ),
           tabPanel(
             value = "entity_formats",
@@ -776,6 +789,74 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         DTOutput(ns("entity_relations_table"))
       }else{NULL}
     })
+    #entity -> Rights
+    output$entity_right_wrapper <- renderUI({
+      switch(input$entity_right_type,
+        "license" = {
+          selectizeInput(ns("entity_right"),
+                         label="License",
+                         multiple = F,
+                         choices = {
+                           licenses = zen4R::get_licenses()
+                           setNames(licenses$id, nm = licenses$title)
+                         },
+                         selected = "cc-by-4.0"
+          )
+        },
+        "useConstraint" = {
+          selectizeInput(ns("entity_right"),
+                         label="Use constraint",
+                         multiple = F,
+                         choices = geometa::ISORestriction$values(),
+                         selected = NULL
+          )
+        },
+        "accessConstraint" = {
+          selectizeInput(ns("entity_right"),
+                         label="Access constraint",
+                         multiple = F,
+                         choices = geometa::ISORestriction$values(),
+                         selected = NULL
+          )
+        },
+        "otherConstraint" = {
+          textInput(ns("entity_right"), "Other constraint",value = "", width = NULL, placeholder = "Other constraint")
+        },
+        "use" = {
+          textInput(ns("entity_right"), "Use limitation",value = "", width = NULL, placeholder = "Use limitation")
+        },
+        "useLimitation" = {
+          textInput(ns("entity_right"), "Use limitation",value = "", width = NULL, placeholder = "Use limitation")
+        },
+        "accessRight" = {
+          textInput(ns("entity_right"), "Access right",value = "", width = NULL, placeholder = "Access right")
+        },
+        "accessConditions" = {
+          textInput(ns("entity_right"), "Access conditions",value = "", width = NULL, placeholder = "Access conditions")
+        }
+      )
+    })
+    output$entity_rights_table <- DT::renderDT(server = FALSE, {
+      DT::datatable(
+        do.call("rbind", lapply(md_model_draft()$rights, function(right){
+          data.frame(
+            key = right$key, 
+            name = right$values[[1]]
+          )
+        })), 
+        escape = FALSE,
+        rownames = FALSE,
+        options = list(
+          dom = 't',
+          ordering=F
+        )
+      )
+    })
+    output$entity_rights_table_wrapper <-renderUI({
+      if(length(md_model_draft()$rights)>0){
+        DTOutput(ns("entity_rights_table"))
+      }else{NULL}
+    })
     #entity -> Format
     output$entity_formats_table <- DT::renderDT(server = FALSE, {
       DT::datatable(
@@ -1232,6 +1313,20 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       entity$relations = list()
       md_model_draft(entity$clone(deep = T))
     })
+    #events entity -> Rights
+    observeEvent(input$entity_right_button_add,{
+      entity = md_model_draft()
+      right = geoflow_right$new()
+      right$setKey(input$entity_right_type)
+      right$setValues(input$entity_right)
+      entity$addRight(right)
+      md_model_draft(entity$clone(deep = T))
+    })
+    observeEvent(input$entity_format_button_clear,{
+      entity = md_model_draft()
+      entity$rights = list()
+      md_model_draft(entity$clone(deep = T))
+    })
     #events entity -> Format
     observeEvent(input$entity_format_button_add,{
       entity = md_model_draft()
@@ -1249,7 +1344,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       md_model_draft(entity$clone(deep = T))
     })
     
-    #events entity -> Format
+    #events entity -> Provenance
     observeEvent(input$entity_prov_process_button_add,{
       entity = md_model_draft()
       prov = geoflow_provenance$new()
