@@ -266,7 +266,11 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
           tabPanel(
             value = "entity_temporalcoverages",
             title = "TemporalCoverage",
-            "TODO"
+            fluidRow(
+              fluidRow(
+                column(12, dateRangeInput(ns("entity_temporalcoverage"), label = "Temporal coverage"))
+              )
+            )
           ),
           tabPanel(
             value = "entity_relations",
@@ -306,7 +310,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
               column(3, selectizeInput(ns("entity_format_type"),
                                        label="Format type",
                                        multiple = F,
-                                       choices = entity_tpl$getAllowedKeyValuesFor("Relation"),
+                                       choices = entity_tpl$getAllowedKeyValuesFor("Format"),
                                        selected = "id"
               )),
               column(7,selectizeInput(ns("entity_format_name"),
@@ -334,7 +338,19 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
           tabPanel(
             value = "entity_provenances",
             title = "Provenance",
-            "TODO"
+            fluidRow(
+              column(12, textInput(ns("entity_prov_statement"), "Statement", value = "", width = NULL, placeholder = "Statement")),
+            ),
+            hr(),
+            fluidRow(
+              column(5, textInput(ns("entity_prov_process_rationale"), "Process rationale", value = "", width = NULL, placeholder = "Process rationale")),
+              column(5, textAreaInput(ns("entity_prov_process_description"), "Process description", value = "", width = NULL, placeholder = "Process description")),
+              column(2,
+                     actionButton(ns("entity_prov_process_button_add"), title="Add process",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;"),
+                     actionButton(ns("entity_prov_process_button_clear"), title="Clear processes",size="sm",label="",icon=icon("trash"),class = "btn-warning", style = "margin-top:35px;")
+              )
+            ),
+            uiOutput(ns("entity_processes_table_wrapper"))
           ),
           tabPanel(
             value = "entity_datasets",
@@ -784,6 +800,30 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         DTOutput(ns("entity_formats_table"))
       }else{NULL}
     })
+    #entity -> Provenance
+    output$entity_processes_table <- DT::renderDT(server = FALSE, {
+      req(!is.null(md_model_draft()$provenance))
+      DT::datatable(
+        do.call("rbind", lapply(md_model_draft()$provenance$processes, function(process){
+          data.frame(
+            rationale = process$rationale, 
+            description = process$description
+          )
+        })), 
+        escape = FALSE,
+        rownames = FALSE,
+        options = list(
+          dom = 't',
+          ordering=F
+        )
+      )
+    })
+    output$entity_processes_table_wrapper <-renderUI({
+      if(length(md_model_draft()$provenance$processes)>0){
+        DTOutput(ns("entity_processes_table"))
+      }else{NULL}
+    })
+    
     
     #contact
     #contact -> Identifier
@@ -1163,6 +1203,19 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       }
     })
     #events entity -> TemporalCoverage
+    observeEvent(input$entity_temporalcoverage,{
+      time = input$entity_temporalcoverage
+      if(any(!is.na(time))){
+        entity = md_model_draft()
+        if(any(is.na(time))){
+          time = time[!is.na(time)]
+          entity$setTemporalExtent(str = time)
+        }else{
+          entity$setTemporalExtent(str = paste0(time, collapse="/"))
+        }
+        md_model_draft(entity$clone(deep = T))
+      }
+    })
     #events entity -> Relation
     observeEvent(input$entity_relation_button_add,{
       entity = md_model_draft()
@@ -1186,13 +1239,34 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       form$setKey(input$entity_format_type)
       form$setName(input$entity_format_name)
       if(input$entity_format_description != "") form$setDescription(input$entity_format_description)
-      if(input$entity_format_link != "") form$setLink(input$entity_format_link)
+      if(input$entity_format_link != "") form$setUri(input$entity_format_link)
       entity$addFormat(form)
       md_model_draft(entity$clone(deep = T))
     })
     observeEvent(input$entity_format_button_clear,{
       entity = md_model_draft()
       entity$formats = list()
+      md_model_draft(entity$clone(deep = T))
+    })
+    
+    #events entity -> Format
+    observeEvent(input$entity_prov_process_button_add,{
+      entity = md_model_draft()
+      prov = geoflow_provenance$new()
+      if(!is.null(entity$provenance)){
+        prov = entity$provenance
+      }
+      prov$setStatement(input$entity_prov_statement)
+      process = geoflow_process$new()
+      process$setRationale(input$entity_prov_process_rationale)
+      process$setDescription(input$entity_prov_process_description)
+      prov$addProcess(process)
+      entity$setProvenance(prov)
+      md_model_draft(entity$clone(deep = T))
+    })
+    observeEvent(input$entity_prov_process_button_clear,{
+      entity = md_model_draft()
+      entity$provenant = NULL
       md_model_draft(entity$clone(deep = T))
     })
     
