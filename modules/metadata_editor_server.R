@@ -23,7 +23,6 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     md_model_subject_draft <- reactiveVal(NULL)
     md_model_bbox <- reactiveVal(NULL)
     cache_vocabs <- reactiveVal(list())
-    update_meta_editor <- reactiveVal(TRUE)
     #model specific reactives
     active_contact_form_tab <- reactiveVal("contact_identifiers")
     active_entity_form_tab <- reactiveVal("entity_identifiers")
@@ -471,6 +470,38 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
             )
           )
         )
+      )
+    })
+    
+    output$meta_editor_entry_selector_wrapper <- renderUI({
+      req(length(md_model())>0)
+      selectizeInput(ns("meta_editor_entry_selector"),
+                     label = sprintf("Edit %s entry", md_model_type()),
+                     multiple = F,
+                     choices = {
+                       switch(md_model_type(),
+                         "contact" = {
+                           setNames(
+                             object = sapply(md_model(), function(x){x$identifiers[[1]]}),
+                             nm = sapply(md_model(), function(x){ 
+                               if(!is.null(x$firstName) & !is.null(x$lastName)){
+                                 paste(x$firstName, x$lastName)
+                               }else{
+                                 if(!is.null(x$organizationName)){
+                                   x$organizationName
+                                 }else{
+                                   x$identifiers[[1]]
+                                 }
+                               }
+                            })
+                           )
+                         },
+                         "entity" = {
+                           sapply(md_model(), function(x){x$identifiers[[1]]})
+                         }
+                       )
+                     },
+                     selected = if(md_model_draft_mode() == "edition") md_model_draft()$identifiers[[1]] else NULL
       )
     })
     
@@ -932,6 +963,26 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     observeEvent(input$check_model,{
       INFO(sprintf("Check %s validity", md_model_type()))
       req(!is.null(md_model_type()))
+      INFO("Copying view to model")
+      switch(md_model_type(),
+             "contact" = {
+               contact = md_model_draft()
+               contact$setOrganizationName(input$contact_org)
+               contact$setLastName(input$contact_lastname)
+               contact$setFirstName(input$contact_firstname)
+               contact$setPositionName(input$contact_positionname)
+               contact$setPostalAddress(input$contact_postaladdress)
+               contact$setPostalCode(input$contact_postalcode)
+               contact$setCity(input$contact_city)
+               contact$setCountry(input$contact_country)
+               contact$setEmail(input$contact_email)
+               contact$setVoice(input$contact_voice)
+               contact$setFacsimile(input$contact_facsimile)
+               contact$setWebsiteUrl(input$contact_websiteurl)
+               contact$setWebsiteName(input$contact_websitename)
+               md_model_draft(contact$clone(deep = T))
+             }       
+      )
       
       #perform validation
       meta_validator = switch(md_model_type(),
@@ -964,6 +1015,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       req(!is.null(md_model_type()))
       if(md_model_type()=="entity"){
         md_model_subject_draft(NULL)
+        md_model_bbox(NULL)
       }
       qa_errors = md_model_draft_validation_report()
       save_model = TRUE
@@ -983,8 +1035,19 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         }
         md_model(meta_elements)
         md_model_draft_mode("edition")
+        updateSelectizeInput(inputId = "meta_editor_entry_selector", selected = md_model_draft()$identifiers[[1]])
       }
       
+    })
+    
+    #core - select entry (meta_editor_entry_selector)
+    observeEvent(input$meta_editor_entry_selector,{
+      has_entry = sapply(md_model(), function(x){ input$meta_editor_entry_selector %in% x$identifiers })
+      selected_entry = md_model()[has_entry][[1]]
+      md_model_draft(selected_entry)
+      md_model_draft_idx(which(has_entry))
+      md_model_draft_valid(NULL)
+      md_model_draft_validation_report(NULL)
     })
     
     #entities
@@ -1008,6 +1071,8 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       md_model_draft( eval(parse(text = sprintf("geoflow::geoflow_%s$new()", md_model_type()))) )
       md_model_draft_idx(length(md_model())+1)
       md_model_draft_mode("creation")
+      md_model_draft_valid(NULL)
+      md_model_draft_validation_report(NULL)
     })
     
     #contacts
@@ -1030,6 +1095,8 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       md_model_draft( eval(parse(text = sprintf("geoflow::geoflow_%s$new()", md_model_type()))) )
       md_model_draft_idx(length(md_model())+1)
       md_model_draft_mode("creation")
+      md_model_draft_valid(NULL)
+      md_model_draft_validation_report(NULL)
     })
     
     #dictionary
@@ -1049,49 +1116,6 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     #SPECIFIC FORM EVENTS
     #entity specific form events
     #----------------------------
-    observeEvent(input$entity_form, {
-      INFO(sprintf("Selecting tab %s", input$entity_form))
-      active_entity_form_tab(input$entity_form)
-    })
-    observe({
-      print(input$entity_form)
-      if(!is.null(input$entity_form)) if(input$entity_form != active_entity_form_tab()) {
-        isolate({
-          updateTabsetPanel(session, ns("entity_form"), selected = active_entity_form_tab()) 
-        })
-      }
-    })
-    observeEvent(c(
-      input$contact_org,
-      input$contact_lastname,
-      input$contact_firstname,
-      input$contact_positionname,
-      input$contact_postaladdress,
-      input$contact_postalcode,
-      input$contact_city,
-      input$contact_country,
-      input$contact_email,
-      input$contact_voice,
-      input$contact_facsimile,
-      input$contact_websiteurl,
-      input$contact_websitename
-    ),{
-      contact = md_model_draft()
-      contact$setOrganizationName(input$contact_org)
-      contact$setLastName(input$contact_lastname)
-      contact$setFirstName(input$contact_firstname)
-      contact$setPositionName(input$contact_positionname)
-      contact$setPostalAddress(input$contact_postaladdress)
-      contact$setPostalCode(input$contact_postalcode)
-      contact$setCity(input$contact_city)
-      contact$setCountry(input$contact_country)
-      contact$setEmail(input$contact_email)
-      contact$setVoice(input$contact_voice)
-      contact$setFacsimile(input$contact_facsimile)
-      contact$setWebsiteUrl(input$contact_websiteurl)
-      contact$setWebsiteName(input$contact_websitename)
-      md_model_draft(contact$clone(deep = T))
-    })
     #events entity -> Identifier
     observeEvent(input$entity_identifier_button_add,{
       entity = md_model_draft()
@@ -1108,7 +1132,6 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     })
     #events entity -> Title
     observeEvent(input$entity_title_button_add,{
-      update_meta_editor(FALSE)
       entity = md_model_draft()
       entity$setTitle(
         key = input$entity_title_type,
@@ -1156,10 +1179,6 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       if(is.null(md_model_subject_draft())){
         md_model_subject_draft(geoflow_subject$new())
       }
-      print(input$custom_vocab_thesaurus_name)
-      print(input$custom_vocab_thesaurus_uri)
-      print(input$custom_vocab_keyword_name)
-      print(input$custom_vocab_keyword_uri)
       subj = md_model_subject_draft()
       subj$setKey(input$entity_subject_type)
       if(input$custom_vocab_thesaurus_name != "") subj$setName(input$custom_vocab_thesaurus_name)
@@ -1169,7 +1188,6 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         uri = if(!is.null(input$custom_vocab_keyword_uri) & input$custom_vocab_keyword_uri != "") input$custom_vocab_keyword_uri else NULL
       )
       md_model_subject_draft(subj$clone(deep = T))
-      print(sapply(md_model_subject_draft()$keywords, function(x){x$name}))
     })
     observeEvent(input$custom_vocab_keyword_button_clear,{
       INFO("Clear subject model draft")
@@ -1220,7 +1238,6 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     })
     #events entity -> Date
     observeEvent(input$entity_date_button_add,{
-      update_meta_editor(FALSE)
       entity = md_model_draft()
       entity$addDate(
         dateType = input$entity_date_type,
@@ -1235,7 +1252,6 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     })
     #events entity -> Type
     observeEvent(input$entity_type_button_add,{
-      update_meta_editor(FALSE)
       entity = md_model_draft()
       entity$setType(
         key = input$entity_resource_type,
@@ -1373,17 +1389,6 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     
     #contact specific form events
     #----------------------------
-    observeEvent(input$contact_form, {
-      active_contact_form_tab(input$contact_form)
-    })
-    observe({
-      print(input$contact_form)
-      if(!is.null(input$contact_form)) if(input$contact_form != active_contact_form_tab()) {
-        isolate({
-          updateTabsetPanel(session, ns("contact_form"), selected = active_contact_form_tab()) 
-        })
-      }
-    })
     observeEvent(input$contact_identifier_button_add,{
       contact = md_model_draft()
       contact$setIdentifier(
@@ -1397,7 +1402,6 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       contact$identifiers = list()
       md_model_draft(contact$clone(deep = T))
     })
-    
   })
   
 }
