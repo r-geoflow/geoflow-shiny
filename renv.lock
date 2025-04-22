@@ -228,14 +228,14 @@
     },
     "Rcpp": {
       "Package": "Rcpp",
-      "Version": "1.0.13-1",
+      "Version": "1.0.14",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
         "methods",
         "utils"
       ],
-      "Hash": "6b868847b365672d6c1677b1608da9ed"
+      "Hash": "e7bdd9ee90e96921ca8a0f1972d66682"
     },
     "V8": {
       "Package": "V8",
@@ -1916,7 +1916,7 @@
     },
     "raster": {
       "Package": "raster",
-      "Version": "3.6-32",
+      "Version": "3.6-30",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -1926,7 +1926,7 @@
         "sp",
         "terra"
       ],
-      "Hash": "1e193fc2c727a6f83cf95d9e16024423"
+      "Hash": "0e2829df8cb74a98179c886b023ffea8"
     },
     "rdflib": {
       "Package": "rdflib",
