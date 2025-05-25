@@ -16,8 +16,8 @@ server <- function(input, output, session) {
   
   # Read the session cookie
   cookie_observer = observe({
-    print("Observing session cookie")
     req(!session_reloaded())
+    print("Observing session cookie")
     session_cookie <- cookies::get_cookie("user_profile@geoflow-shiny")
     if (!is.null(session_cookie)) {
       session_data <- jsonlite::fromJSON(session_cookie)
@@ -51,8 +51,8 @@ server <- function(input, output, session) {
       }else{
         WARN("No password stored in keyring")
       }
-      cookie_observer$destroy()
     }
+    cookie_observer$destroy()
   })
   
   onStop(function(){
