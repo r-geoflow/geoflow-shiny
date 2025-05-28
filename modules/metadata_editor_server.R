@@ -33,11 +33,8 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       sprintf("%s_%s", type, id)
     }
     
+    #handle_metadata_form
     handle_metadata_form = function(type, model = NULL){
-      if(!is.null(model)){
-        print("print model")
-        print(model$asDataFrame())
-      }
       switch(type,
         "contact" = tabsetPanel(
           width = 3,
@@ -58,7 +55,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
                      actionButton(ns("contact_identifier_button_add"), title="Add identifier",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;")
               )
             ),
-            uiOutput(ns("contact_identifiers_table_wrapper"))
+            DTOutput(ns("contact_identifiers_table"))
           ),
           tabPanel(
             value = "contact_details",
@@ -98,11 +95,10 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
               )),
               column(6,textInput(ns("entity_identifier"), "Identifier",value = "", width = NULL, placeholder = "Identifier")),
               column(3,
-                     actionButton(ns("entity_identifier_button_add"), title="Add identifier",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;"),
-                     actionButton(ns("entity_identifier_button_clear"), title="Clear identifier",size="sm",label="",icon=icon("trash"),class = "btn-warning", style = "margin-top:35px;")
+                     actionButton(ns("entity_identifier_button_add"), title="Add identifier",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;")
               )
             ),
-            uiOutput(ns("entity_identifiers_table_wrapper"))
+            DTOutput(ns("entity_identifiers_table"))
           ),
           tabPanel(
             value = "entity_titles",
@@ -116,11 +112,10 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
               )),
               column(7,textInput(ns("entity_title"), "Title",value = "", width = NULL, placeholder = "Title")),
               column(2,
-                     actionButton(ns("entity_title_button_add"), title="Add title",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;"),
-                     actionButton(ns("entity_title_button_clear"), title="Clear title",size="sm",label="",icon=icon("trash"),class = "btn-warning", style = "margin-top:35px;")
+                     actionButton(ns("entity_title_button_add"), title="Add title",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;")
               )
             ),
-            uiOutput(ns("entity_titles_table_wrapper"))
+            DTOutput(ns("entity_titles_table"))
           ),
           tabPanel(
             value = "entity_descriptions",
@@ -134,11 +129,10 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
               )),
               column(7,textAreaInput(ns("entity_description"), "Description",value = "", width = NULL, placeholder = "Description")),
               column(2,
-                     actionButton(ns("entity_description_button_add"), title="Add description",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;"),
-                     actionButton(ns("entity_description_button_clear"), title="Clear description",size="sm",label="",icon=icon("trash"),class = "btn-warning", style = "margin-top:35px;")
+                     actionButton(ns("entity_description_button_add"), title="Add description",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;")
               )
             ),
-            uiOutput(ns("entity_descriptions_table_wrapper"))
+            DTOutput(ns("entity_descriptions_table"))
           ),
           tabPanel(
             value = "entity_subjects",
@@ -187,11 +181,9 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
               )),
               column(7,textInput(ns("entity_contact"), "Contact",value = "", width = NULL, placeholder = "Contact")),
               column(2,
-                     actionButton(ns("entity_contact_button_add"), title="Add contact",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;"),
-                     actionButton(ns("entity_contact_button_clear"), title="Clear contact",size="sm",label="",icon=icon("trash"),class = "btn-warning", style = "margin-top:35px;")
-              )
+                     actionButton(ns("entity_contact_button_add"), title="Add contact",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;"))
             ),
-            uiOutput(ns("entity_contacts_table_wrapper"))
+            DTOutput(ns("entity_contacts_table"))
           ),
           tabPanel(
             value = "entity_dates",
@@ -205,11 +197,10 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
               )),
               column(7,dateInput(ns("entity_date"), "Date",value = Sys.Date(), width = NULL)),
               column(2,
-                     actionButton(ns("entity_date_button_add"), title="Add date",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;"),
-                     actionButton(ns("entity_date_button_clear"), title="Clear date",size="sm",label="",icon=icon("trash"),class = "btn-warning", style = "margin-top:35px;")
+                     actionButton(ns("entity_date_button_add"), title="Add date",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;")
               )
             ),
-            uiOutput(ns("entity_dates_table_wrapper"))
+            DTOutput(ns("entity_dates_table"))
           ),
           tabPanel(
             value = "entity_types",
@@ -223,11 +214,10 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
               )),
               column(7,textInput(ns("entity_resource"), "Type",value = "dataset", width = NULL, placeholder = "Type")),
               column(2,
-                     actionButton(ns("entity_type_button_add"), title="Add type",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;"),
-                     actionButton(ns("entity_type_button_clear"), title="Clear type",size="sm",label="",icon=icon("trash"),class = "btn-warning", style = "margin-top:35px;")
+                     actionButton(ns("entity_type_button_add"), title="Add type",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;")
               )
             ),
-            uiOutput(ns("entity_types_table_wrapper"))
+            DTOutput(ns("entity_types_table"))
           ),
           tabPanel(
             value = "entity_languages",
@@ -378,6 +368,117 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       
     }
     
+    #check_model
+    check_model = function(type, model){
+      INFO(sprintf("Check %s validity", type))
+      req(!is.null(type))
+      INFO("Copying view to model")
+      switch(type,
+             "contact" = {
+               contact = model
+               contact$setOrganizationName(input$contact_org)
+               contact$setLastName(input$contact_lastname)
+               contact$setFirstName(input$contact_firstname)
+               contact$setPositionName(input$contact_positionname)
+               contact$setPostalAddress(input$contact_postaladdress)
+               contact$setPostalCode(input$contact_postalcode)
+               contact$setCity(input$contact_city)
+               contact$setCountry(input$contact_country)
+               contact$setEmail(input$contact_email)
+               contact$setVoice(input$contact_voice)
+               contact$setFacsimile(input$contact_facsimile)
+               contact$setWebsiteUrl(input$contact_websiteurl)
+               contact$setWebsiteName(input$contact_websitename)
+               md_model_draft(contact$clone(deep = T))
+             },
+             "entity" = {
+               entity = model
+               md_model_draft(entity$clone(deep = T))
+             }
+      )
+      
+      #perform validation
+      meta_validator = switch(type,
+                              "contact" = geoflow_validator_contacts$new(source = md_model_draft()$asDataFrame()),
+                              "entity" = geoflow_validator_entities$new(source = md_model_draft()$asDataFrame())
+      )
+      qa_errors = meta_validator$validate_content()
+      print(qa_errors)
+      valid = FALSE
+      if(nrow(qa_errors)==0){
+        INFO(paste0("No validation errors with the ", type,". Saving data to geoflow pivot model"))
+        valid = TRUE
+      }else{
+        if(nrow(qa_errors[qa_errors$type == "ERROR",]>0)){
+          ERROR(paste0("Validation errors with the ", type,". Aborting saving the data to geoflow pivot model"))
+          valid = FALSE
+        }else{
+          WARN(paste0("Validation warnings with the ", type,". Saving data to geoflow pivot model"))
+          valid = TRUE
+        }
+      }
+      md_model_draft_valid(valid)
+      md_model_draft_validation_report(qa_errors)
+    }
+    
+    #render_field_elements_table
+    render_field_elements_table = function(field, is_named_list = TRUE, 
+                                           field_key = NULL, field_value = NULL, field_value_list = FALSE, 
+                                           btn_remove_id){
+      objs <- md_model_draft()[[field]]
+      if (is.null(objs) || length(objs) == 0) {
+        tbl <- tibble::tibble(key = character(0), value = character(0), delete = character(0))
+      } else {
+        if(is_named_list){
+          tbl <- do.call(rbind, lapply(names(objs), function(objname) {
+            tibble::tibble(key = objname, value = objs[[objname]])
+          }))
+        }else{
+          tbl <- do.call("rbind", lapply(objs, function(obj){
+            data.frame(key = obj[[field_key]], value = if(field_value_list) obj[[field_value]][[1]] else obj[[field_value]])
+          }))
+        }
+        tbl$delete <- sprintf(
+          '<button class="delete_btn btn btn-link" style="color:red;" data-row="%s" title="Delete">
+        <span class="glyphicon glyphicon-trash" aria-hidden="true"></span>
+      </button>', seq_len(length(objs))
+        )
+      }
+      names(tbl)[3] <- "Actions"
+      if(nrow(tbl)>0) DT::datatable(
+        tbl,
+        escape = FALSE,
+        rownames = FALSE,
+        selection = "none",
+        options = list(
+          paging = FALSE,
+          searching = FALSE,
+          ordering = FALSE,
+          dom = 't'
+        ),
+        callback = JS(
+          sprintf(
+            "table.on('click', 'button.delete_btn', function() {
+               var row = $(this).data('row');
+               Shiny.setInputValue('%s', row, {priority: 'event'});
+             });", btn_remove_id
+          )
+        )
+      )
+    }
+    #handle_field_element_remove_event
+    handle_field_element_remove_event = function(field, input_btn_remove){
+      row <- as.numeric(input_btn_remove)
+      model <- md_model_draft()
+      if (!is.null(model[[field]]) && length(model[[field]]) > 0 && !is.na(row) && row >= 1 && row <= length(model[[field]])) {
+        model[[field]] <- model[[field]][-row]
+      } else {
+        model[[field]] <- list()
+      }
+      if(length(model[[field]])==0) model[[field]] = list()
+      check_model(type = md_model_type(), model = model)
+    }
+    
     #UIs
     
     #metadata editor info
@@ -435,9 +536,10 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     
     #metadata editor
     output$meta_editor <- renderUI({
+      print("render meta editor")
       req(!is.null(md_model_type()))
       valid = md_model_draft_valid()
-      print("render meta editor")
+      print(valid)
       shiny::tagList(
         fluidRow(
           tabBox(
@@ -453,7 +555,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
               ),
               handle_metadata_form(type = md_model_type(), model = if(md_model_draft_mode() == "edition") md_model_draft() else NULL),hr(),
               bs4Dash::actionButton(inputId = ns("check_model"), label = "Check"),
-              bs4Dash::actionButton(inputId = ns("save_model"), label = "Save", style= if((is.null(valid) || (is.logical(valid) & !valid)) & md_model_draft_mode() == "creation") "display:none;" else {NULL}),br(),
+              bs4Dash::actionButton(inputId = ns("save_model"), label = "Save", style= if(is.null(valid) || (is.logical(valid) & !valid)) "display:none;" else {NULL}),br(),
               uiOutput(ns("meta_editor_validation_status"))
             ),
             tabPanel(
@@ -547,7 +649,6 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         INFO("Convert md_model to dataframe")
         metatbl = do.call("rbind", lapply(md_model(), function(x){x$asDataFrame()}))
         INFO("Conversion done!")
-        print(metatbl)
       }
       
       out_tbl <- rhandsontable::rhandsontable(
@@ -586,82 +687,41 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     #entity
     #entity -> Identifier
     output$entity_identifiers_table <- DT::renderDT(server = FALSE, {
-      print(names(md_model_draft()$identifiers))
-      DT::datatable(
-        do.call("rbind", lapply(names(md_model_draft()$identifiers), function(idname){
-          print(idname)
-          data.frame(key = idname, id = md_model_draft()$identifiers[[idname]])
-        })), 
-        escape = FALSE,
-        rownames = FALSE,
-        options = list(
-          dom = 't',
-          ordering=F
-        )
+      render_field_elements_table(
+        field = "identifiers", 
+        is_named_list = TRUE, 
+        btn_remove_id = ns("entity_identifier_button_remove")
       )
     })
-    output$entity_identifiers_table_wrapper <-renderUI({
-      if(length(md_model_draft()$identifiers)>0){
-        DTOutput(ns("entity_identifiers_table"))
-      }else{NULL}
-    })
+
     #entity -> Title
     output$entity_titles_table <- DT::renderDT(server = FALSE, {
-      DT::datatable(
-        do.call("rbind", lapply(names(md_model_draft()$titles), function(idname){
-          data.frame(key = idname, id = md_model_draft()$titles[[idname]])
-        })), 
-        escape = FALSE,
-        rownames = FALSE,
-        options = list(
-          dom = 't',
-          ordering=F
-        )
+      render_field_elements_table(
+        field = "titles",
+        is_named_list = TRUE,
+        btn_remove_id = ns("entity_title_button_remove")
       )
     })
-    output$entity_titles_table_wrapper <-renderUI({
-      if(length(md_model_draft()$titles)>0){
-        DTOutput(ns("entity_titles_table"))
-      }else{NULL}
-    })
+    
     #entity -> Description
     output$entity_descriptions_table <- DT::renderDT(server = FALSE, {
-      DT::datatable(
-        do.call("rbind", lapply(names(md_model_draft()$descriptions), function(idname){
-          data.frame(key = idname, id = md_model_draft()$descriptions[[idname]])
-        })), 
-        escape = FALSE,
-        rownames = FALSE,
-        options = list(
-          dom = 't',
-          ordering=F
-        )
+      render_field_elements_table(
+        field = "descriptions",
+        is_named_list = TRUE,
+        btn_remove_id = ns("entity_description_button_remove")
       )
     })
-    output$entity_descriptions_table_wrapper <-renderUI({
-      if(length(md_model_draft()$descriptions)>0){
-        DTOutput(ns("entity_descriptions_table"))
-      }else{NULL}
-    })
+    
     #entity -> Contact
     output$entity_contacts_table <- DT::renderDT(server = FALSE, {
-      DT::datatable(
-        do.call("rbind", lapply(md_model_draft()$contacts, function(contact){
-          data.frame(key = contact$role, id = if(length(contact$identifiers)>0) contact$identifiers[[1]] else "")
-        })), 
-        escape = FALSE,
-        rownames = FALSE,
-        options = list(
-          dom = 't',
-          ordering=F
-        )
+      render_field_elements_table(
+        field = "contacts",
+        is_named_list = FALSE,
+        field_key = "role", field_value = "identifiers", field_value_list = TRUE,
+        btn_remove_id = ns("entity_contact_button_remove")
       )
     })
-    output$entity_contacts_table_wrapper <-renderUI({
-      if(length(md_model_draft()$contacts)>0){
-        DTOutput(ns("entity_contacts_table"))
-      }else{NULL}
-    })
+    
     #entity -> Subject
     output$entity_vocabulary_tree <- jsTreeR::renderJstree({
       req(input$entity_vocabulary_server != "custom")
@@ -728,9 +788,6 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       req(!is.null(md_model_draft()))
       DT::datatable(
         do.call("rbind", lapply(md_model_draft()$subjects, function(subj){
-          print(subj$name)
-          print(subj$uri)
-          print(sapply(subj$keywords, function(x){x$name}))
           data.frame(key = subj$key, title = subj$name, keywords = paste0(sapply(subj$keywords, function(kwd){kwd$name}),collapse=","))
         })), 
         escape = FALSE,
@@ -748,42 +805,23 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     })
     #entity -> Date
     output$entity_dates_table <- DT::renderDT(server = FALSE, {
-      DT::datatable(
-        do.call("rbind", lapply(md_model_draft()$dates, function(date){
-          data.frame(dateType = date$key, date = date$value)
-        })), 
-        escape = FALSE,
-        rownames = FALSE,
-        options = list(
-          dom = 't',
-          ordering=F
-        )
+      render_field_elements_table(
+        field = "dates",
+        is_named_list = FALSE,
+        field_key = "key", field_value = "value",
+        btn_remove_id = ns("entity_date_button_remove")
       )
     })
-    output$entity_dates_table_wrapper <-renderUI({
-      if(length(md_model_draft()$dates)>0){
-        DTOutput(ns("entity_dates_table"))
-      }else{NULL}
-    })
+  
     #entity -> Type
     output$entity_types_table <- DT::renderDT(server = FALSE, {
-      DT::datatable(
-        do.call("rbind", lapply(names(md_model_draft()$types), function(idname){
-          data.frame(key = idname, type = md_model_draft()$types[[idname]])
-        })), 
-        escape = FALSE,
-        rownames = FALSE,
-        options = list(
-          dom = 't',
-          ordering=F
-        )
+      render_field_elements_table(
+        field = "types",
+        is_named_list = TRUE,
+        btn_remove_id = ns("entity_type_button_remove")
       )
     })
-    output$entity_types_table_wrapper <-renderUI({
-      if(length(md_model_draft()$types)>0){
-        DTOutput(ns("entity_types_table"))
-      }else{NULL}
-    })
+
     #entity -> SpatialCoverage
     output$entity_map <- renderLeaflet({
       leaflet() %>%
@@ -957,97 +995,17 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     #contact
     #contact -> Identifier
     output$contact_identifiers_table <- DT::renderDT(server = FALSE, {
-      contact = md_model_draft()
-      tbl = if (length(contact$identifiers) > 0) {
-        do.call("rbind", lapply(names(contact$identifiers), function(idname){
-          tibble::tibble(key = idname, id = if(length(contact$identifiers)>0) contact$identifiers[[idname]] else "")
-        }))
-      }else{tibble::tibble(key = character(0), id = character(0))}
-      tbl$delete <- if (length(contact$identifiers) > 0) sprintf(
-        '<button class="delete_btn btn btn-danger" data-row="%s" title="Delete">
-           <span class="glyphicon glyphicon-trash" aria-hidden="true"></span>
-         </button>',
-        seq_len(length(contact$identifiers))
-      )else character(0)
-      print(tbl)
-      DT::datatable(
-        tbl, 
-        escape = FALSE,
-        rownames = FALSE,
-        selection = "none",
-        options = list(
-          paging = FALSE,
-          searching = FALSE,
-          ordering = FALSE,
-          dom = 't'
-        ),
-        callback = JS(
-          sprintf(
-            "table.on('click', 'button.delete_btn', function() {
-               var row = $(this).data('row');
-               console.log('Row');
-               console.log(row);
-               Shiny.setInputValue('%s', row, {priority: 'event'});
-             });", ns("contact_identifier_button_remove")
-          )
-        )
+      render_field_elements_table(
+        field = "identifiers",
+        is_named_list = TRUE,
+        btn_remove_id = ns("contact_identifier_button_remove")
       )
-    })
-    output$contact_identifiers_table_wrapper <-renderUI({
-      DTOutput(ns("contact_identifiers_table"))
     })
     
     #EVENTS
     #core - check_metadata
     observeEvent(input$check_model,{
-      INFO(sprintf("Check %s validity", md_model_type()))
-      req(!is.null(md_model_type()))
-      INFO("Copying view to model")
-      switch(md_model_type(),
-             "contact" = {
-               contact = md_model_draft()
-               contact$setOrganizationName(input$contact_org)
-               contact$setLastName(input$contact_lastname)
-               contact$setFirstName(input$contact_firstname)
-               contact$setPositionName(input$contact_positionname)
-               contact$setPostalAddress(input$contact_postaladdress)
-               contact$setPostalCode(input$contact_postalcode)
-               contact$setCity(input$contact_city)
-               contact$setCountry(input$contact_country)
-               contact$setEmail(input$contact_email)
-               contact$setVoice(input$contact_voice)
-               contact$setFacsimile(input$contact_facsimile)
-               contact$setWebsiteUrl(input$contact_websiteurl)
-               contact$setWebsiteName(input$contact_websitename)
-               md_model_draft(contact$clone(deep = T))
-             }       
-      )
-      
-      #perform validation
-      meta_validator = switch(md_model_type(),
-        "contact" = geoflow_validator_contacts$new(source = md_model_draft()$asDataFrame()),
-        "entity" = geoflow_validator_entities$new(source = md_model_draft()$asDataFrame())
-      )
-      qa_errors = meta_validator$validate_content()
-      print(qa_errors)
-      valid = FALSE
-      if(nrow(qa_errors)==0){
-        INFO(paste0("No validation errors with the ", md_model_type(),". Saving data to geoflow pivot model"))
-        shinyjs::show("save_model")
-        valid = TRUE
-      }else{
-        if(nrow(qa_errors[qa_errors$type == "ERROR",]>0)){
-          ERROR(paste0("Validation errors with the ", md_model_type(),". Aborting saving the data to geoflow pivot model"))
-          shinyjs::hide("save_model")
-          valid = FALSE
-        }else{
-          WARN(paste0("Validation warnings with the ", md_model_type(),". Saving data to geoflow pivot model"))
-          shinyjs::show("save_model")
-          valid = TRUE
-        }
-      }
-      md_model_draft_valid(valid)
-      md_model_draft_validation_report(qa_errors)
+      check_model(type = md_model_type(), model = md_model_draft())
     })
     #core - save_metadata
     observeEvent(input$save_model,{
@@ -1083,12 +1041,10 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     
     #core - select entry (meta_editor_entry_selector)
     observeEvent(input$meta_editor_entry_selector,{
-      has_entry = sapply(md_model(), function(x){ input$meta_editor_entry_selector %in% x$identifiers })
+      has_entry = sapply(md_model(), function(x){ input$meta_editor_entry_selector %in% c(x$identifiers,"?") })
       selected_entry = md_model()[has_entry][[1]]
-      md_model_draft(selected_entry)
       md_model_draft_idx(which(has_entry))
-      md_model_draft_valid(NULL)
-      md_model_draft_validation_report(NULL)
+      check_model(type = md_model_type(), model = md_model_draft())
     })
     
     #entities
@@ -1105,7 +1061,6 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       md_model_type("entity")
       INFO(sprintf("Select editor for type '%s'", md_model_type()))
       md_model_draft( eval(parse(text = sprintf("geoflow::geoflow_%s$new()", md_model_type()))) )
-      print(md_model_draft())
       md_model_draft_idx(1L)
     })
     observeEvent(input$create_entity, {
@@ -1164,12 +1119,10 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         key = input$entity_identifier_type,
         id = input$entity_identifier
       )
-      md_model_draft(entity$clone(deep = T))
+      check_model(type = md_model_type(), model = entity)
     })
-    observeEvent(input$entity_identifier_button_clear,{
-      entity = md_model_draft()
-      entity$identifiers = list()
-      md_model_draft(entity$clone(deep = T))
+    observeEvent(input$entity_identifier_button_remove,{
+      handle_field_element_remove_event(field = "identifiers", input_btn_remove = input$entity_identifier_button_remove)
     })
     #events entity -> Title
     observeEvent(input$entity_title_button_add,{
@@ -1178,12 +1131,10 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         key = input$entity_title_type,
         title = input$entity_title
       )
-      md_model_draft(entity$clone(deep = T))
+      check_model(type = md_model_type(), model = entity)
     })
-    observeEvent(input$entity_title_button_clear,{
-      entity = md_model_draft()
-      entity$titles = list()
-      md_model_draft(entity$clone(deep = T))
+    observeEvent(input$entity_title_button_remove,{
+      handle_field_element_remove_event(field = "titles", input_btn_remove = input$entity_title_button_remove)
     })
     #events entity -> Description
     observeEvent(input$entity_description_button_add,{
@@ -1192,12 +1143,10 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         key = input$entity_description_type,
         description = input$entity_description
       )
-      md_model_draft(entity$clone(deep = T))
+      check_model(type = md_model_type(), model = entity)
     })
-    observeEvent(input$entity_description_button_clear,{
-      entity = md_model_draft()
-      entity$descriptions = list()
-      md_model_draft(entity$clone(deep = T))
+    observeEvent(input$entity_description_button_remove,{
+      handle_field_element_remove_event(field = "descriptions", input_btn_remove = input$entity_description_button_remove)
     })
     #events entity -> Creator
     observeEvent(input$entity_contact_button_add,{
@@ -1206,12 +1155,10 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       contact$setRole(input$entity_contact_type)
       contact$setIdentifier("id", input$entity_contact)
       entity$addContact(contact)
-      md_model_draft(entity$clone(deep = T))
+      check_model(type = md_model_type(), model = entity)
     })
-    observeEvent(input$entity_contact_button_clear,{
-      entity = md_model_draft()
-      entity$contacts = list()
-      md_model_draft(entity$clone(deep = T))
+    observeEvent(input$entity_contact_button_remove,{
+      handle_field_element_remove_event(field = "contacts", input_btn_remove = input$entity_contact_button_remove)
     })
     #events entity -> Subject
     #custom vocab
@@ -1284,12 +1231,10 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         dateType = input$entity_date_type,
         date = input$entity_date
       )
-      md_model_draft(entity$clone(deep = T))
+      check_model(type = md_model_type(), model = entity)
     })
-    observeEvent(input$entity_date_button_clear,{
-      entity = md_model_draft()
-      entity$dates = list()
-      md_model_draft(entity$clone(deep = T))
+    observeEvent(input$entity_date_button_remove,{
+      handle_field_element_remove_event(field = "dates", input_btn_remove = input$entity_date_button_remove)  
     })
     #events entity -> Type
     observeEvent(input$entity_type_button_add,{
@@ -1298,12 +1243,10 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         key = input$entity_resource_type,
         type = input$entity_resource
       )
-      md_model_draft(entity$clone(deep = T))
+      check_model(type = md_model_type(), model = entity)
     })
-    observeEvent(input$entity_type_button_clear,{
-      entity = md_model_draft()
-      entity$types = list()
-      md_model_draft(entity$clone(deep = T))
+    observeEvent(input$entity_type_button_remove,{
+      handle_field_element_remove_event(field = "types", input_btn_remove = input$entity_type_button_remove)  
     })
     #events entity -> Language
     observeEvent(input$entity_language,{
@@ -1436,7 +1379,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         key = input$contact_identifier_type,
         id = input$contact_identifier
       )
-      md_model_draft(contact$clone(deep = T))
+      check_model(type = md_model_type(), model = contact)
     })
     observeEvent(input$contact_identifier_button_remove,{
       row <- as.numeric(input$contact_identifier_button_remove)
@@ -1445,9 +1388,9 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         contact$identifiers <- contact$identifiers[-row]
       } else {
         contact$identifiers <- list()
-        #if(md_model_draft_mode()=="edition") shinyjs::hide(ns("contact_identifiers_table"))
       }
-      md_model_draft(contact$clone(deep = TRUE))
+      if(length(contact$identifiers)==0) contact$identifiers = list()
+      check_model(type = md_model_type(), model = contact)
     })
   })
   
