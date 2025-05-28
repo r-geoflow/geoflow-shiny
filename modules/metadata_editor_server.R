@@ -34,6 +34,10 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     }
     
     handle_metadata_form = function(type, model = NULL){
+      if(!is.null(model)){
+        print("print model")
+        print(model$asDataFrame())
+      }
       switch(type,
         "contact" = tabsetPanel(
           width = 3,
@@ -51,11 +55,10 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
               )),
               column(6,textInput(ns("contact_identifier"), "Identifier",value = "", width = NULL, placeholder = "Identifier")),
               column(3,
-                     actionButton(ns("contact_identifier_button_add"), title="Add identifier",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;"),
-                     actionButton(ns("contact_identifier_button_clear"), title="Clear identifier",size="sm",label="",icon=icon("trash"),class = "btn-warning", style = "margin-top:35px;")
+                     actionButton(ns("contact_identifier_button_add"), title="Add identifier",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;")
               )
             ),
-            uiOutput(ns("contact_identifiers_table_wrapper"))
+            DT::DTOutput(ns("contact_identifiers_table"))
           ),
           tabPanel(
             value = "contact_details",
@@ -433,6 +436,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     #metadata editor
     output$meta_editor <- renderUI({
       req(!is.null(md_model_type()))
+      valid = md_model_draft_valid()
       print("render meta editor")
       shiny::tagList(
         fluidRow(
@@ -449,7 +453,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
               ),
               handle_metadata_form(type = md_model_type(), model = if(md_model_draft_mode() == "edition") md_model_draft() else NULL),hr(),
               bs4Dash::actionButton(inputId = ns("check_model"), label = "Check"),
-              bs4Dash::actionButton(inputId = ns("save_model"), label = "Save", disabled = TRUE),br(),
+              bs4Dash::actionButton(inputId = ns("save_model"), label = "Save", style= if((is.null(valid) || (is.logical(valid) & !valid)) & md_model_draft_mode() == "creation") "display:none;" else {NULL}),br(),
               uiOutput(ns("meta_editor_validation_status"))
             ),
             tabPanel(
@@ -481,27 +485,36 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
                      choices = {
                        switch(md_model_type(),
                          "contact" = {
-                           setNames(
-                             object = sapply(md_model(), function(x){x$identifiers[[1]]}),
-                             nm = sapply(md_model(), function(x){ 
-                               if(!is.null(x$firstName) & !is.null(x$lastName)){
-                                 paste(x$firstName, x$lastName)
-                               }else{
-                                 if(!is.null(x$organizationName)){
-                                   x$organizationName
+                           if(length(md_model())>0){
+                             setNames(
+                               object = sapply(md_model(), function(x){if(length(x$identifiers)>0) x$identifiers[[1]] else "?"}),
+                               nm = sapply(md_model(), function(x){
+                                 if(nzchar(x$firstName) & nzchar(x$lastName)){
+                                   paste(x$firstName, x$lastName)
                                  }else{
-                                   x$identifiers[[1]]
+                                   if(nzchar(x$organizationName)){
+                                     x$organizationName
+                                   }else{
+                                     if(length(x$identifiers)>0) x$identifiers[[1]] else "?"
+                                   }
                                  }
-                               }
-                            })
-                           )
+                              })
+                             )
+                           }else{
+                             c()
+                           }
                          },
                          "entity" = {
-                           sapply(md_model(), function(x){x$identifiers[[1]]})
+                           if(length(md_model())>0){
+                             sapply(md_model(), function(x){if(length(x$identifiers)>0) x$identifiers[[1]] else "?"})
+                           }else{
+                             c()
+                           }
+                           
                          }
                        )
                      },
-                     selected = if(md_model_draft_mode() == "edition") md_model_draft()$identifiers[[1]] else NULL
+                     selected = if(md_model_draft_mode() == "edition" & length(md_model_draft()$identifiers)>0) md_model_draft()$identifiers[[1]] else NULL
       )
     })
     
@@ -533,6 +546,8 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       }else{
         INFO("Convert md_model to dataframe")
         metatbl = do.call("rbind", lapply(md_model(), function(x){x$asDataFrame()}))
+        INFO("Conversion done!")
+        print(metatbl)
       }
       
       out_tbl <- rhandsontable::rhandsontable(
@@ -571,8 +586,10 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     #entity
     #entity -> Identifier
     output$entity_identifiers_table <- DT::renderDT(server = FALSE, {
+      print(names(md_model_draft()$identifiers))
       DT::datatable(
         do.call("rbind", lapply(names(md_model_draft()$identifiers), function(idname){
+          print(idname)
           data.frame(key = idname, id = md_model_draft()$identifiers[[idname]])
         })), 
         escape = FALSE,
@@ -940,23 +957,45 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     #contact
     #contact -> Identifier
     output$contact_identifiers_table <- DT::renderDT(server = FALSE, {
-      DT::datatable(
+      tbl = if (length(md_model_draft()$identifiers) > 0) {
         do.call("rbind", lapply(names(md_model_draft()$identifiers), function(idname){
-          data.frame(key = idname, id = md_model_draft()$identifiers[[idname]])
-        })), 
+          tibble::tibble(key = idname, id = if(length(md_model_draft()$identifiers)>0) md_model_draft()$identifiers[[idname]] else "")
+        }))
+      }else{tibble::tibble(key = character(0), id = character(0))}
+      tbl$delete <- if (length(md_model_draft()$identifiers) > 0) sprintf(
+        '<button class="delete_btn btn btn-trash" data-row="%s" title="Delete">
+           <span class="glyphicon glyphicon-trash" aria-hidden="true"></span>
+         </button>',
+        seq_len(length(md_model_draft()$identifiers))
+      )else character(0)
+      DT::datatable(
+        tbl, 
         escape = FALSE,
         rownames = FALSE,
+        selection = "none",
         options = list(
-          dom = 't',
-          ordering=F
+          paging = FALSE,
+          searching = FALSE,
+          ordering = FALSE,
+          dom = 't'
+        ),
+        callback = JS(
+          sprintf(
+            "table.on('click', 'button.delete_btn', function() {
+               var row = $(this).data('row');
+               console.log('Row');
+               console.log(row);
+               Shiny.setInputValue('%s', row, {priority: 'event'});
+             });", ns("contact_identifier_button_remove")
+          )
         )
       )
     })
-    output$contact_identifiers_table_wrapper <-renderUI({
-      if(length(md_model_draft()$identifiers)>0){
-        DTOutput(ns("contact_identifiers_table"))
-      }else{NULL}
-    })
+    # output$contact_identifiers_table_wrapper <-renderUI({
+    #   if(length(md_model_draft()$identifiers)>0){
+    #     DTOutput(ns("contact_identifiers_table"))
+    #   }else{NULL}
+    # })
     
     #EVENTS
     #core - check_metadata
@@ -990,24 +1029,25 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         "entity" = geoflow_validator_entities$new(source = md_model_draft()$asDataFrame())
       )
       qa_errors = meta_validator$validate_content()
+      print(qa_errors)
+      valid = FALSE
       if(nrow(qa_errors)==0){
-        md_model_draft_valid(TRUE)
-        shinyjs::enable("save_model")
-        qa_errors = NULL
+        INFO(paste0("No validation errors with the ", md_model_type(),". Saving data to geoflow pivot model"))
+        shinyjs::show("save_model")
+        valid = TRUE
       }else{
-        md_model_draft_valid(FALSE)
         if(nrow(qa_errors[qa_errors$type == "ERROR",]>0)){
-          shinyjs::disable("save_model")
+          ERROR(paste0("Validation errors with the ", md_model_type(),". Aborting saving the data to geoflow pivot model"))
+          shinyjs::hide("save_model")
+          valid = FALSE
         }else{
-          shinyjs::enable("save_model")
+          WARN(paste0("Validation warnings with the ", md_model_type(),". Saving data to geoflow pivot model"))
+          shinyjs::show("save_model")
+          valid = TRUE
         }
       }
+      md_model_draft_valid(valid)
       md_model_draft_validation_report(qa_errors)
-      if(!is.null(qa_errors)){
-        ERROR(paste0("Validation errors with the ", md_model_type(),". Aborting saving the data to geoflow pivot model"))
-      }else{
-        INFO(paste0("No validation errors/warnings with the ", md_model_type(),". Aborting saving the data to geoflow pivot model"))
-      }
     })
     #core - save_metadata
     observeEvent(input$save_model,{
@@ -1028,14 +1068,15 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       if(save_model){
         INFO("Saving model to metadata table")
         meta_elements = md_model()
+        print(length(meta_elements))
         if(md_model_draft_idx()==0){
           meta_elements[[length(meta_elements)+1]] = md_model_draft()
         }else{
           meta_elements[[md_model_draft_idx()]] = md_model_draft()
         }
         md_model(meta_elements)
-        md_model_draft_mode("edition")
-        updateSelectizeInput(inputId = "meta_editor_entry_selector", selected = md_model_draft()$identifiers[[1]])
+        md_model_draft_mode("edition")#triggers twice the render model
+        updateSelectizeInput(inputId = "meta_editor_entry_selector", selected = if(length(md_model_draft()$identifiers)>0) md_model_draft()$identifiers[[1]] else NULL)
       }
       
     })
@@ -1397,10 +1438,17 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       )
       md_model_draft(contact$clone(deep = T))
     })
-    observeEvent(input$contact_identifier_button_clear,{
-      contact = md_model_draft()
-      contact$identifiers = list()
-      md_model_draft(contact$clone(deep = T))
+    observeEvent(input$contact_identifier_button_remove,{
+      row <- as.numeric(input$contact_identifier_button_remove)
+      if (!is.na(row) && row >= 1 && row <= length(md_model_draft()$identifiers)) {
+        print("Row to delete")
+        print(row)
+        contact = md_model_draft()
+        contact$identifiers = contact$identifiers[-row]
+        md_model_draft(contact$clone(deep = TRUE))
+        print(md_model_draft()$identifiers)
+        print("yupi")
+      }
     })
   })
   
