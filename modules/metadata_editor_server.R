@@ -58,7 +58,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
                      actionButton(ns("contact_identifier_button_add"), title="Add identifier",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;")
               )
             ),
-            DT::DTOutput(ns("contact_identifiers_table"))
+            uiOutput(ns("contact_identifiers_table_wrapper"))
           ),
           tabPanel(
             value = "contact_details",
@@ -957,17 +957,19 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     #contact
     #contact -> Identifier
     output$contact_identifiers_table <- DT::renderDT(server = FALSE, {
-      tbl = if (length(md_model_draft()$identifiers) > 0) {
-        do.call("rbind", lapply(names(md_model_draft()$identifiers), function(idname){
-          tibble::tibble(key = idname, id = if(length(md_model_draft()$identifiers)>0) md_model_draft()$identifiers[[idname]] else "")
+      contact = md_model_draft()
+      tbl = if (length(contact$identifiers) > 0) {
+        do.call("rbind", lapply(names(contact$identifiers), function(idname){
+          tibble::tibble(key = idname, id = if(length(contact$identifiers)>0) contact$identifiers[[idname]] else "")
         }))
       }else{tibble::tibble(key = character(0), id = character(0))}
-      tbl$delete <- if (length(md_model_draft()$identifiers) > 0) sprintf(
-        '<button class="delete_btn btn btn-trash" data-row="%s" title="Delete">
+      tbl$delete <- if (length(contact$identifiers) > 0) sprintf(
+        '<button class="delete_btn btn btn-danger" data-row="%s" title="Delete">
            <span class="glyphicon glyphicon-trash" aria-hidden="true"></span>
          </button>',
-        seq_len(length(md_model_draft()$identifiers))
+        seq_len(length(contact$identifiers))
       )else character(0)
+      print(tbl)
       DT::datatable(
         tbl, 
         escape = FALSE,
@@ -991,11 +993,9 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         )
       )
     })
-    # output$contact_identifiers_table_wrapper <-renderUI({
-    #   if(length(md_model_draft()$identifiers)>0){
-    #     DTOutput(ns("contact_identifiers_table"))
-    #   }else{NULL}
-    # })
+    output$contact_identifiers_table_wrapper <-renderUI({
+      DTOutput(ns("contact_identifiers_table"))
+    })
     
     #EVENTS
     #core - check_metadata
@@ -1424,7 +1424,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     })
     observeEvent(input$entity_prov_process_button_clear,{
       entity = md_model_draft()
-      entity$provenant = NULL
+      entity$provenance = NULL
       md_model_draft(entity$clone(deep = T))
     })
     
@@ -1440,15 +1440,14 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     })
     observeEvent(input$contact_identifier_button_remove,{
       row <- as.numeric(input$contact_identifier_button_remove)
-      if (!is.na(row) && row >= 1 && row <= length(md_model_draft()$identifiers)) {
-        print("Row to delete")
-        print(row)
-        contact = md_model_draft()
-        contact$identifiers = contact$identifiers[-row]
-        md_model_draft(contact$clone(deep = TRUE))
-        print(md_model_draft()$identifiers)
-        print("yupi")
+      contact <- md_model_draft()
+      if (!is.null(contact$identifiers) && length(contact$identifiers) > 0 && !is.na(row) && row >= 1 && row <= length(contact$identifiers)) {
+        contact$identifiers <- contact$identifiers[-row]
+      } else {
+        contact$identifiers <- list()
+        #if(md_model_draft_mode()=="edition") shinyjs::hide(ns("contact_identifiers_table"))
       }
+      md_model_draft(contact$clone(deep = TRUE))
     })
   })
   
