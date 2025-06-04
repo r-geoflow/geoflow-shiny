@@ -5,6 +5,8 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     
     ns <- session$ns
     
+    AUTH_API <- try(get("AUTH_API", envir = GEOFLOW_SHINY_ENV), silent = TRUE)
+    
     #templates
     contact_tpl = geoflow_contact$new()
     entity_tpl = geoflow_entity$new()
@@ -27,6 +29,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     active_contact_form_tab <- reactiveVal("contact_identifiers")
     active_entity_form_tab <- reactiveVal("entity_identifiers")
     ref_hierarchy <- reactiveVal(NULL)
+    ref_contacts <- reactiveVal(NULL)
     
     #FUNCTIONS
     setID = function(type, id){
@@ -36,7 +39,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     #handle_metadata_form
     handle_metadata_form = function(type, model = NULL){
       switch(type,
-        "contact" = tabsetPanel(
+        "contact" = bs4Dash::tabsertPanel(
           width = 3,
           id = ns("contact_form"),
           type = "pills", vertical = T,
@@ -79,7 +82,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
             fluidRow(column(6, tags$b("Website name")), column(6, textInput(ns("contact_websitename"), label = NULL, value = if(!is.null(model)) model$websiteName else "", width = NULL, placeholder = "Website name")))
           )
         ),
-        "entity" = tabsetPanel(
+        "entity" = bs4Dash::tabsetPanel(
           width = 3,
           id = ns("entity_form"),
           type = "pills", vertical = T,
@@ -173,13 +176,18 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
             value = "entity_contacts",
             title = "Creator",
             fluidRow(
+              column(3,
+                     actionButton(ns("entity_contact_load"), title = "Load contacts", size = "sm", label="", icon=icon("users"))
+              )
+            ),
+            fluidRow(
               column(3, selectizeInput(ns("entity_contact_type"),
                                        label="Role",
                                        multiple = F,
                                        choices = entity_tpl$getAllowedKeyValuesFor("Creator"),
                                        selected = "id"
               )),
-              column(7,textInput(ns("entity_contact"), "Contact",value = "", width = NULL, placeholder = "Contact")),
+              column(7,uiOutput(ns("entity_contact_wrapper"))),
               column(2,
                      actionButton(ns("entity_contact_button_add"), title="Add contact",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;"))
             ),
@@ -713,6 +721,33 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     })
     
     #entity -> Contact
+    output$entity_contact_wrapper <- renderUI({
+      if(is.null(ref_contacts())){
+        textInput(ns("entity_contact"), "Contact",value = "", width = NULL, placeholder = "Contact")
+      }else{
+        selectizeInput(ns("entity_contact"),
+                       label="Contact",
+                       multiple = F,
+                       choices = {
+                         setNames(
+                           sapply(ref_contacts(), function(x){x$identifiers[[1]]}), 
+                           nm = sapply(ref_contacts(), function(x){
+                             if(nzchar(x$firstName) & !is.na(x$firstName) & nzchar(x$lastName) & !is.na(x$lastName)){
+                               paste(x$firstName, x$lastName)
+                             }else{
+                               if(nzchar(x$organizationName)){
+                                 x$organizationName
+                               }else{
+                                 if(length(x$identifiers)>0) x$identifiers[[1]] else "?"
+                               }
+                             }
+                           })
+                         )
+                       },
+                       selected = NULL
+        )
+      }
+    })
     output$entity_contacts_table <- DT::renderDT(server = FALSE, {
       render_field_elements_table(
         field = "contacts",
@@ -1149,6 +1184,82 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       handle_field_element_remove_event(field = "descriptions", input_btn_remove = input$entity_description_button_remove)
     })
     #events entity -> Creator
+    observeEvent(input$entity_contact_load,{
+      shiny::showModal(
+        shiny::modalDialog(
+          title = "Load list of contacts",
+          if(appConfig$auth){
+            withSpinner(
+              tagList(
+                jsTreeR::jstreeOutput(ns("entity_contacts_load_tree")),
+                actionButton(ns("entity_contacts_load_tree_select"), label = "Select", style = "float:right")
+              )   
+            )
+          }else{
+            tagList(
+              fileInput(ns("entity_contacts_local_file"), label = "File",multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = "Choose file"),
+              actionButton(ns("entity_contacts_local_file_select"), label = "Select", style = "float:right")
+            )
+          },
+          easyClose = TRUE, footer = NULL 
+        )
+      )
+    })
+    output$entity_contacts_load_tree <- jsTreeR::renderJstree({
+      jsTreeR::jstree(
+        list(
+          build_tree_data_dir(
+            auth_api = AUTH_API, 
+            root = appConfig$data_dir_remote,
+            mime_types = c(".csv", ".xlsx", ".xls")
+          )
+        ),
+        types = list(
+          file = list(icon = "jstree-file"),
+          folder = list(icon = "jstree-folder")
+        ),
+        selectLeavesOnly = TRUE,
+        checkboxes = FALSE,
+        multiple = FALSE,
+        search = TRUE
+      )
+    })
+    observeEvent(input$entity_contacts_load_tree_select,{
+      selected_resource = input$entity_contacts_load_tree_selected
+      
+      config = list()
+      config$profile$id = "load_ocs_contacts"
+      config$software$input$ocs = AUTH_API
+      config = geoflow::add_config_utils(config)
+      contact_handler = geoflow::geoflow_handler$new(yaml = system.file("metadata/contact", "contact_handler_ocs.yml", package = "geoflow"))
+      contacts = contact_handler$fun(
+        handler = contact_handler,
+        source = selected_resource[[1]]$data,
+        config = config
+      )
+      ref_contacts(contacts)
+      shiny::removeModal()
+    })
+    observeEvent(input$entity_contacts_local_file_select,{
+      req(!is.null(input$entity_contacts_local_file))
+      
+      config = list()
+      config$profile$id = "load_local_contacts"
+      config = geoflow::add_config_utils(config)
+      contact_handler = switch(mime::guess_type(input$entity_contacts_local_file$datapath),
+        "text/csv" = geoflow::geoflow_handler$new(yaml = system.file("metadata/contact", "contact_handler_csv.yml", package = "geoflow")),
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" = geoflow::geoflow_handler$new(yaml = system.file("metadata/contact", "contact_handler_excel.yml", package = "geoflow")),
+        "application/vn.ms-excel" = geoflow::geoflow_handler$new(yaml = system.file("metadata/contact", "contact_handler_excel.yml", package = "geoflow"))
+      )
+      contacts = contact_handler$fun(
+        handler = contact_handler,
+        source = input$entity_contacts_local_file$datapath,
+        config = config
+      )
+      ref_contacts(contacts)
+      shiny::removeModal()
+      
+    })
     observeEvent(input$entity_contact_button_add,{
       entity = md_model_draft()
       contact = geoflow_contact$new()
