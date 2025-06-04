@@ -39,7 +39,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     #handle_metadata_form
     handle_metadata_form = function(type, model = NULL){
       switch(type,
-        "contact" = bs4Dash::tabsertPanel(
+        "contact" = bs4Dash::tabsetPanel(
           width = 3,
           id = ns("contact_form"),
           type = "pills", vertical = T,
@@ -509,7 +509,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
           icon = icon("users"),
           footer = shiny::tagList(
             bs4Dash::actionButton(inputId = ns("create_contact_table"), label = "Create table"),
-            bs4Dash::actionButton(inputId = ns("load_contact_table"), label = "Load table"), #TODO
+            bs4Dash::actionButton(inputId = ns("load_contact_table"), label = "Load table"),
             bs4Dash::actionButton(inputId = ns("create_contact"), label = "Create contact")
             
           )
@@ -599,7 +599,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
                              setNames(
                                object = sapply(md_model(), function(x){if(length(x$identifiers)>0) x$identifiers[[1]] else "?"}),
                                nm = sapply(md_model(), function(x){
-                                 if(nzchar(x$firstName) & nzchar(x$lastName)){
+                                 if(nzchar(x$firstName) & !is.na(x$firstName) & nzchar(x$lastName) & !is.na(x$lastName)){
                                    paste(x$firstName, x$lastName)
                                  }else{
                                    if(nzchar(x$organizationName)){
@@ -823,7 +823,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       req(!is.null(md_model_draft()))
       DT::datatable(
         do.call("rbind", lapply(md_model_draft()$subjects, function(subj){
-          data.frame(key = subj$key, title = subj$name, keywords = paste0(sapply(subj$keywords, function(kwd){kwd$name}),collapse=","))
+          data.frame(key = subj$key, title = if(!is.null(subj$name)) subj$name else "-", keywords = paste0(sapply(subj$keywords, function(kwd){kwd$name}),collapse=","))
         })), 
         escape = FALSE,
         rownames = FALSE,
@@ -1079,7 +1079,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       has_entry = sapply(md_model(), function(x){ input$meta_editor_entry_selector %in% c(x$identifiers,"?") })
       selected_entry = md_model()[has_entry][[1]]
       md_model_draft_idx(which(has_entry))
-      check_model(type = md_model_type(), model = md_model_draft())
+      md_model_draft(selected_entry$clone(deep = TRUE))
     })
     
     #entities
@@ -1097,6 +1097,90 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       INFO(sprintf("Select editor for type '%s'", md_model_type()))
       md_model_draft( eval(parse(text = sprintf("geoflow::geoflow_%s$new()", md_model_type()))) )
       md_model_draft_idx(1L)
+    })
+    observeEvent(input$load_entity_table, {
+      shiny::showModal(
+        shiny::modalDialog(
+          title = "Load list of entities",
+          if(appConfig$auth){
+            withSpinner(
+              tagList(
+                jsTreeR::jstreeOutput(ns("entities_load_tree")),
+                actionButton(ns("entities_load_tree_select"), label = "Select", style = "float:right")
+              )   
+            )
+          }else{
+            tagList(
+              fileInput(ns("entities_local_file"), label = "File",multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = "Choose file"),
+              actionButton(ns("entities_local_file_select"), label = "Select", style = "float:right")
+            )
+          },
+          easyClose = TRUE, footer = NULL 
+        )
+      )
+    })
+    output$entities_load_tree <- jsTreeR::renderJstree({
+      jsTreeR::jstree(
+        list(
+          build_tree_data_dir(
+            auth_api = AUTH_API, 
+            root = appConfig$data_dir_remote,
+            mime_types = c(".csv", ".xlsx", ".xls")
+          )
+        ),
+        types = list(
+          file = list(icon = "jstree-file"),
+          folder = list(icon = "jstree-folder")
+        ),
+        selectLeavesOnly = TRUE,
+        checkboxes = FALSE,
+        multiple = FALSE,
+        search = TRUE
+      )
+    })
+    observeEvent(input$entities_load_tree_select,{
+      selected_resource = input$entities_load_tree_selected
+      
+      config = list()
+      config$profile$id = "load_ocs_entities"
+      config$software$input$ocs = AUTH_API
+      config = geoflow::add_config_utils(config)
+      entity_handler = geoflow::geoflow_handler$new(yaml = system.file("metadata/entity", "entity_handler_ocs.yml", package = "geoflow"))
+      entities = entity_handler$fun(
+        handler = entity_handler,
+        source = selected_resource[[1]]$data,
+        config = config
+      )
+      md_model_type("entity")
+      md_model(entities)
+      md_model_draft_mode("edition")#triggers twice the render model
+      updateSelectizeInput(inputId = "meta_editor_entry_selector", selected = NULL)
+      
+      shiny::removeModal()
+    })
+    observeEvent(input$entities_local_file_select,{
+      req(!is.null(input$entities_local_file))
+      
+      config = list()
+      config$profile$id = "load_local_entities"
+      config = geoflow::add_config_utils(config)
+      entity_handler = switch(mime::guess_type(input$entities_local_file$datapath),
+                               "text/csv" = geoflow::geoflow_handler$new(yaml = system.file("metadata/entity", "entity_handler_csv.yml", package = "geoflow")),
+                               "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" = geoflow::geoflow_handler$new(yaml = system.file("metadata/entity", "entity_handler_excel.yml", package = "geoflow")),
+                               "application/vn.ms-excel" = geoflow::geoflow_handler$new(yaml = system.file("metadata/entity", "entity_handler_excel.yml", package = "geoflow"))
+      )
+      entities = entity_handler$fun(
+        handler = entity_handler,
+        source = input$entities_local_file$datapath,
+        config = config
+      )
+      md_model_type("entity")
+      md_model(entities)
+      md_model_draft_mode("edition")#triggers twice the render model
+      updateSelectizeInput(inputId = "meta_editor_entry_selector", selected = NULL)
+      
+      shiny::removeModal()
+      
     })
     observeEvent(input$create_entity, {
       md_model_draft( eval(parse(text = sprintf("geoflow::geoflow_%s$new()", md_model_type()))) )
@@ -1121,6 +1205,90 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       INFO(sprintf("Select editor for type '%s'", md_model_type()))
       md_model_draft( eval(parse(text = sprintf("geoflow::geoflow_%s$new()", md_model_type()))) )
       md_model_draft_idx(1L)
+    })
+    observeEvent(input$load_contact_table, {
+      shiny::showModal(
+        shiny::modalDialog(
+          title = "Load list of contacts",
+          if(appConfig$auth){
+            withSpinner(
+              tagList(
+                jsTreeR::jstreeOutput(ns("contacts_load_tree")),
+                actionButton(ns("contacts_load_tree_select"), label = "Select", style = "float:right")
+              )   
+            )
+          }else{
+            tagList(
+              fileInput(ns("contacts_local_file"), label = "File",multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = "Choose file"),
+              actionButton(ns("contacts_local_file_select"), label = "Select", style = "float:right")
+            )
+          },
+          easyClose = TRUE, footer = NULL 
+        )
+      )
+    })
+    output$contacts_load_tree <- jsTreeR::renderJstree({
+      jsTreeR::jstree(
+        list(
+          build_tree_data_dir(
+            auth_api = AUTH_API, 
+            root = appConfig$data_dir_remote,
+            mime_types = c(".csv", ".xlsx", ".xls")
+          )
+        ),
+        types = list(
+          file = list(icon = "jstree-file"),
+          folder = list(icon = "jstree-folder")
+        ),
+        selectLeavesOnly = TRUE,
+        checkboxes = FALSE,
+        multiple = FALSE,
+        search = TRUE
+      )
+    })
+    observeEvent(input$contacts_load_tree_select,{
+      selected_resource = input$contacts_load_tree_selected
+      
+      config = list()
+      config$profile$id = "load_ocs_contacts"
+      config$software$input$ocs = AUTH_API
+      config = geoflow::add_config_utils(config)
+      contact_handler = geoflow::geoflow_handler$new(yaml = system.file("metadata/contact", "contact_handler_ocs.yml", package = "geoflow"))
+      contacts = contact_handler$fun(
+        handler = contact_handler,
+        source = selected_resource[[1]]$data,
+        config = config
+      )
+      md_model_type("contact")
+      md_model(contacts)
+      md_model_draft_mode("edition")#triggers twice the render model
+      updateSelectizeInput(inputId = "meta_editor_entry_selector", selected = NULL)
+
+      shiny::removeModal()
+    })
+    observeEvent(input$contacts_local_file_select,{
+      req(!is.null(input$contacts_local_file))
+      
+      config = list()
+      config$profile$id = "load_local_contacts"
+      config = geoflow::add_config_utils(config)
+      contact_handler = switch(mime::guess_type(input$contacts_local_file$datapath),
+                               "text/csv" = geoflow::geoflow_handler$new(yaml = system.file("metadata/contact", "contact_handler_csv.yml", package = "geoflow")),
+                               "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" = geoflow::geoflow_handler$new(yaml = system.file("metadata/contact", "contact_handler_excel.yml", package = "geoflow")),
+                               "application/vn.ms-excel" = geoflow::geoflow_handler$new(yaml = system.file("metadata/contact", "contact_handler_excel.yml", package = "geoflow"))
+      )
+      contacts = contact_handler$fun(
+        handler = contact_handler,
+        source = input$contacts_local_file$datapath,
+        config = config
+      )
+      md_model_type("contact")
+      md_model(contacts)
+      md_model_draft_mode("edition")#triggers twice the render model
+      updateSelectizeInput(inputId = "meta_editor_entry_selector", selected = NULL)
+      
+      shiny::removeModal()
+      
     })
     observeEvent(input$create_contact,{
       md_model_draft( eval(parse(text = sprintf("geoflow::geoflow_%s$new()", md_model_type()))) )
