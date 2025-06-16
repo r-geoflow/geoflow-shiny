@@ -25,6 +25,7 @@ build_tree_data_dir = function(auth_api, root, mime_types, folder_basename = FAL
     }else{
       list()
     },
+    data = root,
     type = "folder"
   )
 }
