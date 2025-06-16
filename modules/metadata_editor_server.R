@@ -47,11 +47,12 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
             value = "contact_identifiers",
             title = "Identifier(s)",
             fluidRow(
-              column(3, selectizeInput(ns("contact_identifier_type"),
+              column(3, selectInput(ns("contact_identifier_type"),
                                        label="Key",
                                        multiple = F,
                                        choices = contact_tpl$getAllowedKeyValuesFor("Identifier"),
-                                       selected = "id"
+                                       selected = "id",
+                                       selectize = FALSE
               )),
               column(6,textInput(ns("contact_identifier"), "Identifier",value = "", width = NULL, placeholder = "Identifier")),
               column(3,
@@ -90,11 +91,12 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
             value = "entity_identifiers",
             title = "Identifier",
             fluidRow(
-              column(3, selectizeInput(ns("entity_identifier_type"),
+              column(3, selectInput(ns("entity_identifier_type"),
                                        label="Key",
                                        multiple = F,
                                        choices = entity_tpl$getAllowedKeyValuesFor("Identifier"),
-                                       selected = "id"
+                                       selected = "id",
+                                       selectize = FALSE
               )),
               column(6,textInput(ns("entity_identifier"), "Identifier",value = "", width = NULL, placeholder = "Identifier")),
               column(3,
@@ -107,11 +109,12 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
             value = "entity_titles",
             title = "Title",
             fluidRow(
-              column(3, selectizeInput(ns("entity_title_type"),
+              column(3, selectInput(ns("entity_title_type"),
                                        label="Key",
                                        multiple = F,
                                        choices = entity_tpl$getAllowedKeyValuesFor("Title"),
-                                       selected = "id"
+                                       selected = "id",
+                                       selectize = FALSE
               )),
               column(7,textInput(ns("entity_title"), "Title",value = "", width = NULL, placeholder = "Title")),
               column(2,
@@ -124,11 +127,12 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
             value = "entity_descriptions",
             title = "Description",
             fluidRow(
-              column(3, selectizeInput(ns("entity_description_type"),
+              column(3, selectInput(ns("entity_description_type"),
                                        label="Key",
                                        multiple = F,
                                        choices = entity_tpl$getAllowedKeyValuesFor("Description"),
-                                       selected = "id"
+                                       selected = "id",
+                                       selectize = FALSE
               )),
               column(7,textAreaInput(ns("entity_description"), "Description",value = "", width = NULL, placeholder = "Description")),
               column(2,
@@ -141,20 +145,22 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
             value = "entity_subjects",
             title = "Subject",
             fluidRow(
-              column(3, selectizeInput(ns("entity_subject_type"),
+              column(3, selectInput(ns("entity_subject_type"),
                                        label="Key",
                                        multiple = F,
                                        choices = c(geometa::ISOKeywordType$values(), "taxonomy"),
-                                       selected = "theme"
+                                       selected = "theme",
+                                       selectize = FALSE
               )),
-              column(6, selectizeInput(ns("entity_vocabulary_server"),
+              column(6, selectInput(ns("entity_vocabulary_server"),
                                        label="Vocabulary server",
                                        multiple = F,
                                        choices = {
                                          vocabs = list_vocabularies()
                                          setNames(c(vocabs$id, "custom"), nm = c(vocabs$def, "Custom"))
                                         },
-                                       selected = "custom"
+                                       selected = "custom",
+                                       selectize = FALSE
               ))
             ),
             fluidRow(
@@ -181,11 +187,12 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
               )
             ),
             fluidRow(
-              column(3, selectizeInput(ns("entity_contact_type"),
+              column(3, selectInput(ns("entity_contact_type"),
                                        label="Role",
                                        multiple = F,
                                        choices = entity_tpl$getAllowedKeyValuesFor("Creator"),
-                                       selected = "id"
+                                       selected = "id",
+                                       selectize = FALSE
               )),
               column(7,uiOutput(ns("entity_contact_wrapper"))),
               column(2,
@@ -197,11 +204,12 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
             value = "entity_dates",
             title = "Date",
             fluidRow(
-              column(3, selectizeInput(ns("entity_date_type"),
+              column(3, selectInput(ns("entity_date_type"),
                                        label="Date type",
                                        multiple = F,
                                        choices = entity_tpl$getAllowedKeyValuesFor("Date"),
-                                       selected = "creation"
+                                       selected = "creation",
+                                       selectize = FALSE
               )),
               column(7,dateInput(ns("entity_date"), "Date",value = Sys.Date(), width = NULL)),
               column(2,
@@ -214,11 +222,12 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
             value = "entity_types",
             title = "Type",
             fluidRow(
-              column(3, selectizeInput(ns("entity_resource_type"),
+              column(3, selectInput(ns("entity_resource_type"),
                                        label="Key",
                                        multiple = F,
                                        choices = entity_tpl$getAllowedKeyValuesFor("Type"),
-                                       selected = "generic"
+                                       selected = "generic",
+                                       selectize = FALSE
               )),
               column(7,textInput(ns("entity_resource"), "Type",value = "dataset", width = NULL, placeholder = "Type")),
               column(2,
@@ -231,14 +240,15 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
             value = "entity_languages",
             title = "Language",
             fluidRow(
-              column(6, selectizeInput(ns("entity_language"),
+              column(6, selectInput(ns("entity_language"),
                                        label="Language",
                                        multiple = F,
                                        choices = {
                                          languages = geometa::ISOLanguage$values(labels = T)
                                          setNames(languages[,1], nm = languages[,2])
                                        },
-                                       selected = "eng"
+                                       selected = "eng",
+                                       selectize = FALSE
               ))
             )
           ),
@@ -246,13 +256,14 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
             value = "entity_spatialcoverages",
             title = "SpatialCoverage",
             fluidRow(
-              column(6, selectizeInput(ns("entity_srid"),
+              column(6, selectInput(ns("entity_srid"),
                                        label="SRID",
                                        multiple = F,
                                        choices = {
                                          setNames(c(4326), nm = c("WGS 84 (EPSG:4326)"))
                                        },
-                                       selected = 4326
+                                       selected = 4326,
+                                       selectize = FALSE
               ))
             ),
             fluidRow(
@@ -276,11 +287,12 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
             value = "entity_relations",
             title = "Relation",
             fluidRow(
-              column(3, selectizeInput(ns("entity_relation_type"),
+              column(3, selectInput(ns("entity_relation_type"),
                                        label="Key",
                                        multiple = F,
                                        choices = entity_tpl$getAllowedKeyValuesFor("Relation"),
-                                       selected = "id"
+                                       selected = "id",
+                                       selectize = FALSE
               )),
               column(7,textInput(ns("entity_relation_name"), "Name",value = "", width = NULL, placeholder = "Name"))
             ),
@@ -302,11 +314,12 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
             value = "entity_rights",
             title = "Rights",
             fluidRow(
-              column(3, selectizeInput(ns("entity_right_type"),
+              column(3, selectInput(ns("entity_right_type"),
                                        label = "Right type",
                                        multiple = F,
                                        choices = entity_tpl$getAllowedKeyValuesFor("Rights"),
-                                       selected = "license"
+                                       selected = "license",
+                                       selectize = FALSE
               )),
               column(7, uiOutput(ns("entity_right_wrapper"))),
               column(2,
@@ -320,18 +333,20 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
             value = "entity_formats",
             title = "Format",
             fluidRow(
-              column(3, selectizeInput(ns("entity_format_type"),
+              column(3, selectInput(ns("entity_format_type"),
                                        label="Format type",
                                        multiple = F,
                                        choices = entity_tpl$getAllowedKeyValuesFor("Format"),
-                                       selected = "id"
+                                       selected = "id",
+                                       selectize = FALSE
               )),
-              column(7,selectizeInput(ns("entity_format_name"),
+              column(7,selectInput(ns("entity_format_name"),
                                       label="Format",
                                       multiple = F,
                                       
                                       choices = as.character(mime::mimemap),
-                                      selected = NULL
+                                      selected = NULL,
+                                      selectize = FALSE
               ))
             ),
             fluidRow(
@@ -368,7 +383,215 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
           tabPanel(
             value = "entity_datasets",
             title = "Data",
-            "TODO"
+            fluidRow(
+              bs4Dash::accordion(
+                id = "entity_data_blocks",
+                bs4Dash::accordionItem(
+                  title = tags$span(icon("download"), " ", "Data access"),
+                  fluidRow(
+                    column(4, selectInput(ns("entity_data_access"),
+                                          label="Access",
+                                          multiple = F,
+                                          choices = {
+                                            geoflow::list_data_accessors()$id
+                                          },
+                                          selected = if(!is.null(model)) model$data$access else NULL,
+                                          selectize = FALSE
+                    )),
+                    column(4, selectInput(ns("entity_data_type"),
+                                          label="Mode",
+                                          multiple = F,
+                                          choices = {
+                                            setNames(
+                                              c("source", "dir"),
+                                              nm = c("File(s)", "Directory")
+                                            )
+                                          },
+                                          selected = "source",
+                                          selectize = FALSE
+                    )),
+                    column(4, selectInput(ns("entity_data_sourcetype"),
+                                          label="Source type",
+                                          multiple = F,
+                                          choices = {
+                                            geoflow::geoflow_data$new()$getAllowedSourceTypes()
+                                          },
+                                          selected = if(!is.null(model)) model$data$sourceType else NULL,
+                                          selectize = FALSE
+                    ))
+                  ),
+                  hr(),
+                  uiOutput(ns("entity_data_type_entry")),
+                  hr(),
+                  fluidRow(
+                    column(12, textAreaInput(
+                      ns("entity_data_sourcesql"),
+                      label = "Source SQL",
+                      value = if(!is.null(model)) model$data$sourceSql else NULL,
+                      width = NULL,
+                      placeholder = "Source SQL"
+                    ))
+                  )
+                ),
+                bs4Dash::accordionItem(
+                  title = tags$span(icon("table-list"), " ", "Data characteristics"),
+                  icon = icon("table-list"),
+                  fluidRow(
+                    column(6, selectInput(ns("entity_data_spatialrepresentationtype"),
+                                          label="Spatial Representation type",
+                                          multiple = F,
+                                          choices = {
+                                            c("vector","grid")
+                                          },
+                                          selected = if(!is.null(model)) model$data$spatialRepresentationType else "vector",
+                                          selectize = FALSE
+                    )),
+                    column(4, textInput(ns("entity_data_featuretype"),
+                                          label="Feature type",
+                                          width = NULL,
+                                          value = if(!is.null(model)) model$data$featureType else NULL,
+                                          placeholder = "Feature type"
+                    )),
+                  )
+                ),
+                bs4Dash::accordionItem(
+                  title = tags$span(icon("upload"), " ", "Upload configuration"),
+                  fluidRow(
+                    column(4, selectInput(ns("entity_data_upload"),
+                                          label="Upload?",
+                                          multiple = F,
+                                          choices = {
+                                            c(TRUE,FALSE)
+                                          },
+                                          selected = if(!is.null(model)) model$data$upload else TRUE,
+                                          selectize = FALSE
+                    )),
+                    column(4, selectInput(ns("entity_data_uploadtype"),
+                                          label="Upload type",
+                                          multiple = F,
+                                          choices = {
+                                            geoflow::geoflow_data$new()$getAllowedUploadTypes()
+                                          },
+                                          selected = if(!is.null(model)) model$data$uploadType else NULL,
+                                          selectize = FALSE
+                    ))
+                  ),
+                  hr(),
+                  fluidRow(
+                    column(6, textInput(
+                      ns("entity_data_uploadsource"),
+                      label = "Upload source",
+                      value = if(!is.null(model) & !is.null(model$data$uploadSource)) model$data$uploadSource[[1]] else NULL,
+                      width = NULL,
+                      placeholder = "Source to upload"
+                    ))
+                  )
+                ),
+                bs4Dash::accordionItem(
+                  title = tags$span(icon("upload"), icon("globe"), " ", "Upload configuration - GeoServer settings"),
+                  h6("Layer identification"),
+                  fluidRow(
+                    column(6,textInput(ns("entity_data_layername"),
+                                       label = "Name",
+                                       value = if(!is.null(model)) model$data$layername else NULL,
+                                       width = NULL,
+                                       placeholder = "Name"
+                    )),
+                    column(6,textInput(ns("entity_data_layeruri"),
+                                       label = "URI",
+                                       value = if(!is.null(model)) model$data$layeruri else NULL,
+                                       width = NULL,
+                                       placeholder = "URI"
+                    ))
+                  ),
+                  fluidRow(
+                    column(12,textInput(ns("entity_data_layertitle"),
+                                        label = "Title",
+                                        value = if(!is.null(model)) model$data$layertitle else NULL,
+                                        width = NULL,
+                                        placeholder = "Title"
+                    ))
+                  ),
+                  fluidRow(
+                    column(12,textAreaInput(
+                      ns("entity_data_layerdesc"),
+                      label = "Description",
+                      value = if(!is.null(model)) model$data$layerdesc else NULL,
+                      width = NULL,
+                      placeholder = "Description"
+                    ))
+                  ),
+                  h6("SQL View layer settings"),
+                  fluidRow(
+                    column(12, textAreaInput(
+                      ns("entity_data_sql"),
+                      label = "SQL (for Geoserver SQL views)",
+                      value = if(!is.null(model)) model$data$sql else NULL,
+                      width = NULL,
+                      placeholder = "SQL (for Geoserver SQL views)"
+                    ))
+                  ),
+                  fluidRow(
+                    column(6, textInput(
+                      ns("entity_data_geometry_field"),
+                      label = "Geometry field",
+                      value = if(!is.null(model)) model$data$geometryField else NULL,
+                      width = NULL,
+                      placeholder = "Geometry field"
+                    )),
+                    column(6, selectInput(ns("entity_data_geometry_type"),
+                      label="Geometry type",
+                      multiple = F,
+                      choices = {
+                        c("Geometry", "GeometryCollection", "Point","MultiPoint","LineString","MultiLineString","Polygon","MultiPolygon")
+                      },
+                      selected =  if(!is.null(model)) model$data$geometryType else "Geometry",
+                      selectize = FALSE
+                    ))
+                  ),
+                  fluidRow(
+                    column(3, textInput(ns("entity_data_parameter_fieldname"),
+                      label = "Parameter fieldname",
+                      value = NULL,
+                      width = NULL,
+                      placeholder = "Parameter fieldname"
+                    )),
+                    column(3, textInput(ns("entity_data_parameter_alias"),
+                      label = "Parameter alias (optional)",
+                      value = NULL,
+                      width = NULL,
+                      placeholder = "Parameter alias"
+                    )),
+                    column(3, textInput(ns("entity_data_parameter_regexp"),
+                      label = "Parameter control (regexp)",
+                      value = NULL,
+                      width = NULL,
+                      placeholder = "Parameter control (regexp)"
+                    )),
+                    column(2, textInput(ns("entity_data_parameter_defaultvalue"),
+                      label = "Default value",
+                      value = NULL,
+                      width = NULL,
+                      placeholder = "Default value"
+                    )),
+                    column(1,
+                           actionButton(ns("entity_data_parameter_button_add"), title="Add parameter",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;")
+                    )
+                  ),
+                  uiOutput(ns("entity_data_parameters_table_wrapper"))
+                ),
+                bs4Dash::accordionItem(
+                  title = tags$span(icon("upload"), icon("cloud"), " ", "Upload configuration - Cloud settings"),
+                  fluidRow(
+                  )
+                ),
+                bs4Dash::accordionItem(
+                  title = "Dictionary settings",
+                  fluidRow(
+                  )
+                )
+              )
+            )
           )
         ),
         "dictionary" = "COMING SOON"
@@ -401,6 +624,37 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
              },
              "entity" = {
                entity = model
+               #main dc fields managed through observers
+               #data simple fields
+               #=> data -> data access fields
+               entity$data$setAccess(input$entity_data_access)
+               switch(input$entity_data_type,
+                "dir" = {
+                  entity$data$source = NULL
+                  entity$data$dir = input$entity_data_dir
+                },
+                "source"= {
+                  entity$data$dir = NULL
+                  #sources are managed through observer
+                }
+               )
+               entity$data$setSourceType(input$entity_data_sourcetype)
+               #=> data -> data characteristics
+               if(nzchar(input$entity_data_spatialrepresentationtype)) entry$data$setSpatialRepresentationType(input$entity_data_spatialrepresentationtype)
+               if(nzchar(input$entity_data_featuretype)) entity$data$setFeatureType(input$entity_data_featuretype)
+               #=> data -> upload fields
+               if(nzchar(input$entity_data_uploadtype)) entity$data$setUploadType(input$entity_data_uploadtype)
+               if(nzchar(input$entity_data_uploadsource)) entity$data$setUploadSource(input$entity_data_uploadsource)
+               #=> data -> Geoserver fields
+               if(nzchar(input$entity_data_layername)) entity$data$setLayername(input$entity_data_layername)
+               if(nzchar(input$entity_data_layertitle)) entity$data$setLayertitle(input$entity_data_layertitle)
+               if(nzchar(input$entity_data_layerdesc)) entity$data$setLayerdesc(input$entity_data_layerdesc)
+               if(nzchar(input$entity_data_layeruri)) entity$data$setLayeruri(input$entity_data_layeruri)
+               if(nzchar(input$entity_data_sql)) entity$data$setSql(input$entity_data_sql)
+               if(nzchar(input$entity_data_geometry_field)) entity$data$setGeometryField(input$entity_data_geometry_field)
+               if(nzchar(input$entity_data_geometry_type)) entity$data$setGeometryType(input$entity_data_geometry_type)
+               #parameters managed through observer
+               
                md_model_draft(entity$clone(deep = T))
              }
       )
@@ -430,29 +684,57 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     }
     
     #render_field_elements_table
-    render_field_elements_table = function(field, is_named_list = TRUE, 
+    render_field_elements_table = function(field, object_field = NULL, field_model = c("kvp","attributes"), list_elements = list(),
                                            field_key = NULL, field_value = NULL, field_value_list = FALSE, 
                                            btn_remove_id){
       objs <- md_model_draft()[[field]]
+      if(!is.null(object_field)) objs <- objs[[object_field]]
       if (is.null(objs) || length(objs) == 0) {
         tbl <- tibble::tibble(key = character(0), value = character(0), delete = character(0))
       } else {
-        if(is_named_list){
-          tbl <- do.call(rbind, lapply(names(objs), function(objname) {
-            tibble::tibble(key = objname, value = objs[[objname]])
-          }))
-        }else{
-          tbl <- do.call("rbind", lapply(objs, function(obj){
-            data.frame(key = obj[[field_key]], value = if(field_value_list) obj[[field_value]][[1]] else obj[[field_value]])
-          }))
-        }
+        tbl <- switch(field_model,
+          "kvp" = {
+            is_named_list = !is.null(names(objs))
+            if(is_named_list){
+              if(length(list_elements)==0){
+                do.call(rbind, lapply(names(objs), function(objname) {
+                  tibble::tibble(key = objname, value = objs[[objname]])
+                }))
+              }else{
+                print(names(objs))
+                do.call(rbind, lapply(names(objs), function(objname){
+                  tibble::as_tibble(
+                    do.call(cbind, lapply(list_elements, function(x){
+                      col_tbl = tibble::tibble(col = if(!is.null(objs[[objname]][[x]])) objs[[objname]][[x]] else "-")
+                      names(col_tbl) = x
+                      return(col_tbl)
+                    }))
+                  )
+                }))
+              }
+            }else{
+              do.call("rbind", lapply(objs, function(obj){
+                data.frame(key = obj[[field_key]], value = if(field_value_list) obj[[field_value]][[1]] else obj[[field_value]])
+              }))
+            }
+          },
+          "attributes" = {
+            do.call("rbind", lapply(objs, function(obj){
+              data.frame(
+                name = obj,
+                description = if(!is.null(attr(obj, "description"))) attr(obj, "description") else "-",
+                uri = if(!is.null(attr(obj, "uri"))) attr(obj, "uri") else "-"
+              )
+            }))
+          }
+        )
         tbl$delete <- sprintf(
           '<button class="delete_btn btn btn-link" style="color:red;" data-row="%s" title="Delete">
         <span class="glyphicon glyphicon-trash" aria-hidden="true"></span>
       </button>', seq_len(length(objs))
         )
       }
-      names(tbl)[3] <- "Actions"
+      names(tbl)[length(names(tbl))] <- "Actions"
       if(nrow(tbl)>0) DT::datatable(
         tbl,
         escape = FALSE,
@@ -475,15 +757,24 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       )
     }
     #handle_field_element_remove_event
-    handle_field_element_remove_event = function(field, input_btn_remove){
+    handle_field_element_remove_event = function(field, object_field = NULL, input_btn_remove){
       row <- as.numeric(input_btn_remove)
       model <- md_model_draft()
-      if (!is.null(model[[field]]) && length(model[[field]]) > 0 && !is.na(row) && row >= 1 && row <= length(model[[field]])) {
-        model[[field]] <- model[[field]][-row]
-      } else {
-        model[[field]] <- list()
+      if(is.null(object_field)){
+        if (!is.null(model[[field]]) && length(model[[field]]) > 0 && !is.na(row) && row >= 1 && row <= length(model[[field]])) {
+          model[[field]] <- model[[field]][-row]
+        } else {
+          model[[field]] <- list()
+        }
+        if(length(model[[field]])==0) model[[field]] = list()
+      }else{
+        if (!is.null(model[[field]][[object_field]]) && length(model[[field]][[object_field]]) > 0 && !is.na(row) && row >= 1 && row <= length(model[[field]][[object_field]])) {
+          model[[field]][[object_field]] <- model[[field]][[object_field]][-row]
+        } else {
+          model[[field]][[object_field]] <- list()
+        }
+        if(length(model[[field]][[object_field]])==0) model[[field]][[object_field]] = list()
       }
-      if(length(model[[field]])==0) model[[field]] = list()
       check_model(type = md_model_type(), model = model)
     }
     
@@ -589,7 +880,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     
     output$meta_editor_entry_selector_wrapper <- renderUI({
       req(length(md_model())>0)
-      selectizeInput(ns("meta_editor_entry_selector"),
+      selectInput(ns("meta_editor_entry_selector"),
                      label = sprintf("Edit %s entry", md_model_type()),
                      multiple = F,
                      choices = {
@@ -624,7 +915,8 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
                          }
                        )
                      },
-                     selected = if(md_model_draft_mode() == "edition" & length(md_model_draft()$identifiers)>0) md_model_draft()$identifiers[[1]] else NULL
+                     selected = if(md_model_draft_mode() == "edition" & length(md_model_draft()$identifiers)>0) md_model_draft()$identifiers[[1]] else NULL,
+                     selectize = FALSE
       )
     })
     
@@ -697,7 +989,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     output$entity_identifiers_table <- DT::renderDT(server = FALSE, {
       render_field_elements_table(
         field = "identifiers", 
-        is_named_list = TRUE, 
+        field_model = "kvp",
         btn_remove_id = ns("entity_identifier_button_remove")
       )
     })
@@ -706,7 +998,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     output$entity_titles_table <- DT::renderDT(server = FALSE, {
       render_field_elements_table(
         field = "titles",
-        is_named_list = TRUE,
+        field_model = "kvp",
         btn_remove_id = ns("entity_title_button_remove")
       )
     })
@@ -715,7 +1007,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     output$entity_descriptions_table <- DT::renderDT(server = FALSE, {
       render_field_elements_table(
         field = "descriptions",
-        is_named_list = TRUE,
+        field_model = "kvp",
         btn_remove_id = ns("entity_description_button_remove")
       )
     })
@@ -725,7 +1017,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       if(is.null(ref_contacts())){
         textInput(ns("entity_contact"), "Contact",value = "", width = NULL, placeholder = "Contact")
       }else{
-        selectizeInput(ns("entity_contact"),
+        selectInput(ns("entity_contact"),
                        label="Contact",
                        multiple = F,
                        choices = {
@@ -744,14 +1036,15 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
                            })
                          )
                        },
-                       selected = NULL
+                       selected = NULL,
+                       selectize = FALSE
         )
       }
     })
     output$entity_contacts_table <- DT::renderDT(server = FALSE, {
       render_field_elements_table(
         field = "contacts",
-        is_named_list = FALSE,
+        field_model = "kvp",
         field_key = "role", field_value = "identifiers", field_value_list = TRUE,
         btn_remove_id = ns("entity_contact_button_remove")
       )
@@ -842,7 +1135,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     output$entity_dates_table <- DT::renderDT(server = FALSE, {
       render_field_elements_table(
         field = "dates",
-        is_named_list = FALSE,
+        field_model = "kvp",
         field_key = "key", field_value = "value",
         btn_remove_id = ns("entity_date_button_remove")
       )
@@ -852,7 +1145,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     output$entity_types_table <- DT::renderDT(server = FALSE, {
       render_field_elements_table(
         field = "types",
-        is_named_list = TRUE,
+        field_model = "kvp",
         btn_remove_id = ns("entity_type_button_remove")
       )
     })
@@ -914,30 +1207,33 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     output$entity_right_wrapper <- renderUI({
       switch(input$entity_right_type,
         "license" = {
-          selectizeInput(ns("entity_right"),
+          selectInput(ns("entity_right"),
                          label="License",
                          multiple = F,
                          choices = {
                            licenses = zen4R::get_licenses()
                            setNames(licenses$id, nm = licenses$title)
                          },
-                         selected = "cc-by-4.0"
+                         selected = "cc-by-4.0",
+                         selectize = FALSE
           )
         },
         "useConstraint" = {
-          selectizeInput(ns("entity_right"),
+          selectInput(ns("entity_right"),
                          label="Use constraint",
                          multiple = F,
                          choices = geometa::ISORestriction$values(),
-                         selected = NULL
+                         selected = NULL,
+                         selectize = FALSE
           )
         },
         "accessConstraint" = {
-          selectizeInput(ns("entity_right"),
+          selectInput(ns("entity_right"),
                          label="Access constraint",
                          multiple = F,
                          choices = geometa::ISORestriction$values(),
-                         selected = NULL
+                         selected = NULL,
+                         selectize = FALSE
           )
         },
         "otherConstraint" = {
@@ -1025,6 +1321,53 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         DTOutput(ns("entity_processes_table"))
       }else{NULL}
     })
+    #entity -> Data
+    output$entity_data_type_entry <- renderUI({
+      if(input$entity_data_type == "source"){
+        tagList(
+          fluidRow(
+            column(4,textInput(ns("entity_data_source_name"), "Source name",value = NULL, width = NULL)),
+            column(6,textInput(ns("entity_data_source_uri"), "Source path/URL",value = NULL, width = NULL)),
+            column(1,
+                   actionButton(ns("entity_data_source_button_add"), title="Add source",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;")
+            )
+          ),
+          hr(),
+          uiOutput(ns("entity_data_sources_table_wrapper"))
+        )
+      }else if(input$entity_data_type == "dir"){
+        fluidRow(
+          column(12,textInput(ns("entity_data_dir"), "Directory",value = NULL, width = NULL)),
+        )
+      }
+    })
+    output$entity_data_sources_table <- DT::renderDT(server = FALSE, {
+      render_field_elements_table(
+        field = "data",
+        object_field = "source",
+        field_model = "attributes",
+        btn_remove_id = ns("entity_data_source_button_remove")
+      )
+    })
+    output$entity_data_sources_table_wrapper <-renderUI({
+      if(length(md_model_draft()$data$source)>0){
+        DTOutput(ns("entity_data_sources_table"))
+      }else{NULL}
+    })
+    output$entity_data_parameters_table <- DT::renderDT(server = FALSE, {
+      render_field_elements_table(
+        field = "data",
+        object_field = "parameters",
+        field_model = "kvp",
+        list_elements = c("name", "fieldname", "regexp", "defaultvalue"),
+        btn_remove_id = ns("entity_data_parameter_button_remove")
+      )
+    })
+    output$entity_data_parameters_table_wrapper <-renderUI({
+      if(length(md_model_draft()$data$parameters)>0){
+        DTOutput(ns("entity_data_parameters_table"))
+      }else{NULL}
+    })
     
     
     #contact
@@ -1032,7 +1375,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     output$contact_identifiers_table <- DT::renderDT(server = FALSE, {
       render_field_elements_table(
         field = "identifiers",
-        is_named_list = TRUE,
+        field_model = "kvp",
         btn_remove_id = ns("contact_identifier_button_remove")
       )
     })
@@ -1069,7 +1412,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         }
         md_model(meta_elements)
         md_model_draft_mode("edition")#triggers twice the render model
-        updateSelectizeInput(inputId = "meta_editor_entry_selector", selected = if(length(md_model_draft()$identifiers)>0) md_model_draft()$identifiers[[1]] else NULL)
+        updateSelectInput(inputId = "meta_editor_entry_selector", selected = if(length(md_model_draft()$identifiers)>0) md_model_draft()$identifiers[[1]] else NULL)
       }
       
     })
@@ -1095,7 +1438,9 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       md_model_bbox(NULL)
       md_model_type("entity")
       INFO(sprintf("Select editor for type '%s'", md_model_type()))
-      md_model_draft( eval(parse(text = sprintf("geoflow::geoflow_%s$new()", md_model_type()))) )
+      entity = geoflow::geoflow_entity$new()
+      entity$data = geoflow::geoflow_data$new()
+      md_model_draft( entity )
       md_model_draft_idx(1L)
     })
     observeEvent(input$load_entity_table, {
@@ -1154,7 +1499,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       md_model_type("entity")
       md_model(entities)
       md_model_draft_mode("edition")#triggers twice the render model
-      updateSelectizeInput(inputId = "meta_editor_entry_selector", selected = NULL)
+      updateSelectInput(inputId = "meta_editor_entry_selector", selected = NULL)
       
       shiny::removeModal()
     })
@@ -1177,7 +1522,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       md_model_type("entity")
       md_model(entities)
       md_model_draft_mode("edition")#triggers twice the render model
-      updateSelectizeInput(inputId = "meta_editor_entry_selector", selected = NULL)
+      updateSelectInput(inputId = "meta_editor_entry_selector", selected = NULL)
       
       shiny::removeModal()
       
@@ -1203,7 +1548,8 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       md_model_bbox(NULL)
       md_model_type("contact")
       INFO(sprintf("Select editor for type '%s'", md_model_type()))
-      md_model_draft( eval(parse(text = sprintf("geoflow::geoflow_%s$new()", md_model_type()))) )
+      contact = geoflow::geoflow_contact$new()
+      md_model_draft( contact )
       md_model_draft_idx(1L)
     })
     observeEvent(input$load_contact_table, {
@@ -1262,7 +1608,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       md_model_type("contact")
       md_model(contacts)
       md_model_draft_mode("edition")#triggers twice the render model
-      updateSelectizeInput(inputId = "meta_editor_entry_selector", selected = NULL)
+      updateSelectInput(inputId = "meta_editor_entry_selector", selected = NULL)
 
       shiny::removeModal()
     })
@@ -1285,7 +1631,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       md_model_type("contact")
       md_model(contacts)
       md_model_draft_mode("edition")#triggers twice the render model
-      updateSelectizeInput(inputId = "meta_editor_entry_selector", selected = NULL)
+      updateSelectInput(inputId = "meta_editor_entry_selector", selected = NULL)
       
       shiny::removeModal()
       
@@ -1649,7 +1995,48 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       entity$provenance = NULL
       md_model_draft(entity$clone(deep = T))
     })
-    
+    #events entity -> Data
+    observeEvent(input$entity_data_source_button_add,{
+      entity = md_model_draft()
+      edata = geoflow_data$new() 
+      if(!is.null(entity$data)){
+        edata = entity$data
+      }
+      source = input$entity_data_source_name
+      if(!is.null(input$entity_data_source_uri)) if(nzchar(input$entity_data_source_uri)){
+        attr(source, "uri") <- input$entity_data_source_uri
+      }
+      if(!is.null(source)) if(nzchar(source)){
+        edata$addSource(source)
+        entity$setData(edata)
+        print(entity$data)
+        md_model_draft(entity$clone(deep = T))
+      }
+    })
+    observeEvent(input$entity_data_source_button_remove,{
+      handle_field_element_remove_event(field = "data", object_field = "source", input_btn_remove = input$entity_data_source_button_remove)
+    })
+    observeEvent(input$entity_data_parameter_button_add,{
+      entity = md_model_draft()
+      edata = geoflow_data$new() 
+      if(!is.null(entity$data)){
+        edata = entity$data
+      }
+      fieldname = input$entity_data_parameter_fieldname
+      alias = input$entity_data_parameter_alias
+      if(!nzchar(alias)) alias = fieldname
+      regexp = input$entity_data_parameter_regexp
+      defaultValue = input$entity_data_parameter_defaultvalue
+      if(nzchar(fieldname) & nzchar(regexp) & nzchar(defaultValue)){
+        edata$setParameter(alias, fieldname, regexp, defaultValue)
+        entity$setData(edata)
+        print(entity$data)
+        md_model_draft(entity$clone(deep = T))
+      }
+    })
+    observeEvent(input$entity_data_parameter_button_remove,{
+      handle_field_element_remove_event(field = "data", object_field = "parameters", input_btn_remove = input$entity_data_parameter_button_remove)
+    })
     #contact specific form events
     #----------------------------
     observeEvent(input$contact_identifier_button_add,{
