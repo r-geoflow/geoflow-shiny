@@ -25,6 +25,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     md_model_subject_draft <- reactiveVal(NULL)
     md_model_bbox <- reactiveVal(NULL)
     cache_vocabs <- reactiveVal(list())
+    cloud_overwriting_danger <- reactiveVal(FALSE)
     #model specific reactives
     active_contact_form_tab <- reactiveVal("contact_identifiers")
     active_entity_form_tab <- reactiveVal("entity_identifiers")
@@ -640,7 +641,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
                )
                entity$data$setSourceType(input$entity_data_sourcetype)
                #=> data -> data characteristics
-               if(nzchar(input$entity_data_spatialrepresentationtype)) entry$data$setSpatialRepresentationType(input$entity_data_spatialrepresentationtype)
+               if(nzchar(input$entity_data_spatialrepresentationtype)) entity$data$setSpatialRepresentationType(input$entity_data_spatialrepresentationtype)
                if(nzchar(input$entity_data_featuretype)) entity$data$setFeatureType(input$entity_data_featuretype)
                #=> data -> upload fields
                if(nzchar(input$entity_data_uploadtype)) entity$data$setUploadType(input$entity_data_uploadtype)
@@ -778,6 +779,29 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       check_model(type = md_model_type(), model = model)
     }
     
+    #loadCloudTree
+    loadCloudTree = function(id, leavesOnly = FALSE){
+      output[[id]] <- jsTreeR::renderJstree({
+        jsTreeR::jstree(
+          nodes = list(
+            build_tree_data_dir(
+              auth_api = AUTH_API, 
+              root = appConfig$data_dir_remote,
+              mime_types = c(".csv", ".xlsx", ".xls")
+            )
+          ),
+          types = list(
+            file = list(icon = "jstree-file"),
+            folder = list(icon = "jstree-folder")
+          ),
+          selectLeavesOnly = leavesOnly,
+          checkboxes = FALSE,
+          multiple = FALSE,
+          search = TRUE
+        )
+      })
+    }
+    
     #UIs
     
     #metadata editor info
@@ -871,7 +895,8 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
             tabPanel(
               title = "Table view",
               rhandsontable::rHandsontableOutput(ns("meta_table")),hr(),
-              bs4Dash::actionButton(inputId = ns(paste0("download_",md_model_type(),"s")), label = "Download (CSV)")
+              bs4Dash::actionButton(inputId = ns(paste0("download_",md_model_type(),"_table")), label = "Download"),
+              if(appConfig$auth){bs4Dash::actionButton(inputId = ns(paste0("upload_", md_model_type(),"_table")), label = "Save to cloud")}else{""}
             )
           )
         )
@@ -1450,8 +1475,10 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
           if(appConfig$auth){
             withSpinner(
               tagList(
-                jsTreeR::jstreeOutput(ns("entities_load_tree")),
-                actionButton(ns("entities_load_tree_select"), label = "Select", style = "float:right")
+                jsTreeR::jstreeOutput(ns("entities_load_tree_leavesonly")),
+                actionButton(ns("entities_load_tree_leavesonly_select"), label = "Select", status = "primary", style = "float:right"),
+                actionButton(ns("entities_load_tree_leavesonly_cancel"), label = "Cancel", style = "float:right")
+                
               )   
             )
           }else{
@@ -1460,31 +1487,19 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
               actionButton(ns("entities_local_file_select"), label = "Select", style = "float:right")
             )
           },
-          easyClose = TRUE, footer = NULL 
+          easyClose = FALSE, footer = NULL 
         )
       )
     })
-    output$entities_load_tree <- jsTreeR::renderJstree({
-      jsTreeR::jstree(
-        list(
-          build_tree_data_dir(
-            auth_api = AUTH_API, 
-            root = appConfig$data_dir_remote,
-            mime_types = c(".csv", ".xlsx", ".xls")
-          )
-        ),
-        types = list(
-          file = list(icon = "jstree-file"),
-          folder = list(icon = "jstree-folder")
-        ),
-        selectLeavesOnly = TRUE,
-        checkboxes = FALSE,
-        multiple = FALSE,
-        search = TRUE
-      )
+    
+    loadCloudTree(id = "entities_load_tree", leavesOnly = FALSE)
+    loadCloudTree(id = "entities_load_tree_leavesonly", leavesOnly = TRUE)
+    
+    observeEvent(input$entities_load_tree_leavesonly_cancel,{
+      shiny::removeModal()
     })
-    observeEvent(input$entities_load_tree_select,{
-      selected_resource = input$entities_load_tree_selected
+    observeEvent(input$entities_load_tree_leavesonly_select,{
+      selected_resource = input$entities_load_tree_leavesonly_selected
       
       config = list()
       config$profile$id = "load_ocs_entities"
@@ -1534,6 +1549,71 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       md_model_draft_valid(NULL)
       md_model_draft_validation_report(NULL)
     })
+    observeEvent(input$upload_entity_table, {
+      #method only available for Cloud interaction
+      cloud_overwriting_danger(FALSE)
+      req(appConfig$auth)
+      shiny::showModal(
+        shiny::modalDialog(
+          title = "Upload entities to the cloud",
+          #withSpinner(
+            tagList(
+              textInput(ns("entity_table_filename"), label = "File name", value = "new_entities.csv", width = NULL),
+              hr(),
+              jsTreeR::jstreeOutput(ns("entities_load_tree")),
+              actionButton(ns("entities_load_tree_upload"), label = "Upload", status = "primary", style = "float:right"),
+              actionButton(ns("entities_load_tree_cancel"), label = "Cancel", style = "float:right")
+              
+            ),
+          #),
+          easyClose = FALSE, footer = uiOutput(ns("overwriting_file_danger")) 
+        )
+      )
+    })
+    observe({
+      if(length(input$entities_load_tree_selected)>0){
+        selected_resource = input$entities_load_tree_selected[[1]]
+        if(selected_resource$type == "file"){
+          shiny::updateTextInput(inputId = "entity_table_filename", value = basename(selected_resource$data))
+          cloud_overwriting_danger(TRUE)
+        }else if(selected_resource$type == "folder"){
+          files = AUTH_API$listFiles(relPath = selected_resource$data)
+          if(input$entity_table_filename %in% files$name){
+            cloud_overwriting_danger(TRUE)
+          }else{
+            cloud_overwriting_danger(FALSE)
+          }
+        }
+      }
+    })
+    observeEvent(input$entities_load_tree_cancel,{
+      shiny::removeModal()
+      cloud_overwriting_danger(FALSE)
+    })
+    observeEvent(input$entities_load_tree_upload,{
+      selected_resource = input$entities_load_tree_selected[[1]]
+      
+      metatbl = do.call("rbind", lapply(md_model(), function(x){x$asDataFrame()}))
+      switch(mime::guess_type(input$entity_table_filename),
+             "text/csv" = {
+               readr::write_csv(metatbl, file.path(tempdir(), input$entity_table_filename))
+             },
+             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" = {
+               writexl::write_xlsx(metatbl, file.path(tempdir(), input$entity_table_filename))
+             }
+      )
+      uploaded = AUTH_API$uploadFile(
+        filename = file.path(tempdir(), input$entity_table_filename),
+        relPath = if(selected_resource$type == "folder"){
+          selected_resource$data
+        }else if(selected_resource$type == "file"){
+          dirname(selected_resource$data)
+        }
+      )
+      shiny::removeModal()
+      loadCloudTree(id = "entities_load_tree", leavesOnly = FALSE)
+      cloud_overwriting_danger(FALSE)
+    })
     
     #contacts
     observeEvent(input$create_contact_table, {
@@ -1559,8 +1639,10 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
           if(appConfig$auth){
             withSpinner(
               tagList(
-                jsTreeR::jstreeOutput(ns("contacts_load_tree")),
-                actionButton(ns("contacts_load_tree_select"), label = "Select", style = "float:right")
+                jsTreeR::jstreeOutput(ns("contacts_load_tree_leavesonly")),
+                actionButton(ns("entities_load_tree_leavesonly_select"), label = "Select", status = "primary", style = "float:right"),
+                actionButton(ns("entities_load_tree_leavesonly_cancel"), label = "Cancel", style = "float:right")
+                
               )   
             )
           }else{
@@ -1569,31 +1651,19 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
               actionButton(ns("contacts_local_file_select"), label = "Select", style = "float:right")
             )
           },
-          easyClose = TRUE, footer = NULL 
+          easyClose = FALSE, footer = NULL 
         )
       )
     })
-    output$contacts_load_tree <- jsTreeR::renderJstree({
-      jsTreeR::jstree(
-        list(
-          build_tree_data_dir(
-            auth_api = AUTH_API, 
-            root = appConfig$data_dir_remote,
-            mime_types = c(".csv", ".xlsx", ".xls")
-          )
-        ),
-        types = list(
-          file = list(icon = "jstree-file"),
-          folder = list(icon = "jstree-folder")
-        ),
-        selectLeavesOnly = TRUE,
-        checkboxes = FALSE,
-        multiple = FALSE,
-        search = TRUE
-      )
+    
+    loadCloudTree(id = "contacts_load_tree", leavesOnly = FALSE)
+    loadCloudTree(id = "contacts_load_tree_leavesonly", leavesOnly = TRUE)
+    
+    observeEvent(input$contacts_load_tree_leavesonly_select,{
+      shiny::removeModal()
     })
-    observeEvent(input$contacts_load_tree_select,{
-      selected_resource = input$contacts_load_tree_selected
+    observeEvent(input$contacts_load_tree_leavesonly_select,{
+      selected_resource = input$contacts_load_tree_leavesonly_selected
       
       config = list()
       config$profile$id = "load_ocs_contacts"
@@ -1643,6 +1713,73 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       md_model_draft_valid(NULL)
       md_model_draft_validation_report(NULL)
     })
+    observeEvent(input$upload_contact_table, {
+      #method only available for Cloud interaction
+      cloud_overwriting_danger(FALSE)
+      req(appConfig$auth)
+      shiny::showModal(
+        shiny::modalDialog(
+          title = "Upload contacts to the cloud",
+          withSpinner(
+            tagList(
+              textInput(ns("contact_table_filename"), label = "File name", value = "new_contacts.csv", width = NULL),
+              hr(),
+              jsTreeR::jstreeOutput(ns("contacts_load_tree")),
+              actionButton(ns("contacts_load_tree_upload"), label = "Upload", status = "primary", style = "float:right"),
+              actionButton(ns("contacts_load_tree_cancel"), label = "Cancel", style = "float:right")
+              
+            )
+          ),
+          easyClose = FALSE, footer = uiOutput(ns("overwriting_file_danger")) 
+        )
+      )
+    })
+    observe({
+      if(length(input$contacts_load_tree_selected)>0){
+        selected_resource = input$contacts_load_tree_selected[[1]]
+        if(selected_resource$type == "file"){
+          shiny::updateTextInput(inputId = "contact_table_filename", value = basename(selected_resource$data))
+          cloud_overwriting_danger(TRUE)
+        }else if(selected_resource$type == "folder"){
+          files = AUTH_API$listFiles(relPath = selected_resource$data)
+          if(input$contact_table_filename %in% files$name){
+            cloud_overwriting_danger(TRUE)
+          }else{
+            cloud_overwriting_danger(FALSE)
+          }
+        }
+      }
+    })
+    observeEvent(input$contacts_load_tree_cancel,{
+      shiny::removeModal()
+      jsTreeR::jstreeDestroy(session = session, id = ns("contacts_load_tree"))
+      cloud_overwriting_danger(FALSE)
+    })
+    observeEvent(input$contacts_load_tree_upload,{
+      selected_resource = input$contacts_load_tree_selected[[1]]
+      
+      metatbl = do.call("rbind", lapply(md_model(), function(x){x$asDataFrame()}))
+      switch(mime::guess_type(input$contact_table_filename),
+             "text/csv" = {
+               readr::write_csv(metatbl, file.path(tempdir(), input$contact_table_filename))
+             },
+             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" = {
+               writexl::write_xlsx(metatbl, file.path(tempdir(), input$contact_table_filename))
+             }
+      )
+      uploaded = AUTH_API$uploadFile(
+        filename = file.path(tempdir(), input$contact_table_filename),
+        relPath = if(selected_resource$type == "folder"){
+          selected_resource$data
+        }else if(selected_resource$type == "file"){
+          dirname(selected_resource$data)
+        }
+      )
+      shiny::removeModal()
+      loadCloudTree(id = "contacts_load_tree", leavesOnly = FALSE)
+      cloud_overwriting_danger(FALSE)
+    })
+    
     
     #dictionary
     observeEvent(input$create_dictionary_table, {
@@ -2058,6 +2195,21 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       if(length(contact$identifiers)==0) contact$identifiers = list()
       check_model(type = md_model_type(), model = contact)
     })
+    
+    #Miscs
+    output$overwriting_file_danger <- renderUI({
+      if(cloud_overwriting_danger()){
+        bs4Dash::callout(
+          "Careful, you are going to overwrite a file on the cloud!",
+          title = "Danger",
+          status = "danger",
+          width = 12
+        )
+      }else{
+        NULL
+      }
+    })
+    
   })
   
 }

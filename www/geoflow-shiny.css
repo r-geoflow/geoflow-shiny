@@ -50,7 +50,9 @@ div.datatables {
 .modal-dialog {
   width: 100% !important;
 }
-
+.modal-footer {
+  display: block !important;
+}
 .software-parameter-info {
   vertical-align: middle;
   color: #cbcbcb;
