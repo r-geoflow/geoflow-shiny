@@ -895,7 +895,14 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
             tabPanel(
               title = "Table view",
               rhandsontable::rHandsontableOutput(ns("meta_table")),hr(),
-              bs4Dash::actionButton(inputId = ns(paste0("download_",md_model_type(),"_table")), label = "Download"),
+              downloadButton(
+                outputId = ns(paste0("download_",md_model_type(),"_table_csv")), label = "Download as CSV",
+                icon = icon("file-csv", class = "fa-lg", style = "color:#476ec5")
+              ),
+              downloadButton(
+                outputId = ns(paste0("download_",md_model_type(),"_table_excel")), label = "Download as Excel",
+                icon = icon("file-excel", class = "fa-lg", style = "color:#217346;")
+              ),
               if(appConfig$auth){bs4Dash::actionButton(inputId = ns(paste0("upload_", md_model_type(),"_table")), label = "Save to cloud")}else{""}
             )
           )
@@ -1549,6 +1556,24 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       md_model_draft_valid(NULL)
       md_model_draft_validation_report(NULL)
     })
+    output$download_entity_table_csv <- downloadHandler(
+      filename = function() {
+        "new_entities.csv"
+      },
+      content = function(file) {
+        metatbl = do.call("rbind", lapply(md_model(), function(x){x$asDataFrame()}))
+        readr::write_csv(metatbl, file)
+      }
+    )
+    output$download_entity_table_excel <- downloadHandler(
+      filename = function() {
+        "new_entities.xlsx"
+      },
+      content = function(file) {
+        metatbl = do.call("rbind", lapply(md_model(), function(x){x$asDataFrame()}))
+        writexl::write_xlsx(metatbl, file)
+      }
+    )
     observeEvent(input$upload_entity_table, {
       #method only available for Cloud interaction
       cloud_overwriting_danger(FALSE)
@@ -1713,6 +1738,24 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       md_model_draft_valid(NULL)
       md_model_draft_validation_report(NULL)
     })
+    output$download_contact_table_csv <- downloadHandler(
+      filename = function() {
+        "new_contacts.csv"
+      },
+      content = function(file) {
+        metatbl = do.call("rbind", lapply(md_model(), function(x){x$asDataFrame()}))
+        readr::write_csv(metatbl, file)
+      }
+    )
+    output$download_contact_table_excel <- downloadHandler(
+      filename = function() {
+        "new_contacts.xlsx"
+      },
+      content = function(file) {
+        metatbl = do.call("rbind", lapply(md_model(), function(x){x$asDataFrame()}))
+        writexl::write_xlsx(metatbl, file)
+      }
+    )
     observeEvent(input$upload_contact_table, {
       #method only available for Cloud interaction
       cloud_overwriting_danger(FALSE)

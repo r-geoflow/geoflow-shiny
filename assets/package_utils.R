@@ -67,7 +67,9 @@ loadAppPackages <- function(){
   require(DT)
   require(tibble)
   require(rhandsontable)
+  require(readr)
   require(readxl)
+  require(writexl)
   require(gsheet)
   
   #dbi
