@@ -595,7 +595,127 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
             )
           )
         ),
-        "dictionary" = "COMING SOON"
+        "featuretype" =  bs4Dash::tabsetPanel(
+          width = 3,
+          id = ns("dictionary_form"),
+          type = "pills", vertical = T,
+          tabPanel(
+            value = "dictionary_featuretype",
+            title = "Identifier",
+            fluidRow(
+              column(12,
+                textInput(
+                  inputId = ns("featuretype_identifier"),
+                  label = "Identifier",
+                  value = if(!is.null(model)) model$id else NULL,
+                  width = NULL,
+                  placeholder = "Identifier"
+                )
+              )
+            )
+          ),
+          tabPanel(
+            value = "dictionary_members",
+            title = "Members",
+            fluidRow(
+              column(6,
+                textInput(
+                  inputId = ns("featuremember_code"),
+                  label = "Code",
+                  value = NULL,
+                  width = NULL,
+                  placeholder = "Code"
+                )       
+              ),
+              column(6,
+               textInput(
+                 inputId = ns("featuremember_name"),
+                 label = "Name",
+                 value = NULL,
+                 width = NULL,
+                 placeholder = "Name"
+               )                      
+              )
+            ),
+            fluidRow(
+              column(4,
+                     selectInput(
+                       inputId = ns("featuremember_type"),
+                       label="Type",
+                       multiple = F,
+                       choices = {
+                         fm_types = c("attribute", "variable",
+                                      "gml:PointPropertyType", "gml:MultiPointPropertyType",
+                                      "gml:LineStringPropertyType", "gml:MultiLineStringPropertyType",
+                                      "gml:PolygonPropertyType", "gml:MultiPolygonPropertyType")
+                         setNames(
+                           fm_types, 
+                           nm = c("Attribute", "Variable",
+                                  "Geometry - Point", "Geometry - MultiPoint",
+                                  "Geometry - LineString", "Geometry - MultiLineString",
+                                  "Geometry - Polygon", "Geometry - MultiPolygon")
+                         )
+                       },
+                       selected = "attribute",
+                       selectize = FALSE
+                     )
+              ),
+              column(2,
+                selectInput(
+                  inputId = ns("featuremember_minoccurs"),
+                  label = "Min occurs",
+                  multiple = F,
+                  choices = {
+                    setNames(c(0,1), nm = c("0","1"))
+                  },
+                  selected = 0,
+                  selectize = FALSE
+                )       
+              ),
+              column(2,
+                     selectInput(
+                       inputId = ns("featuremember_maxoccurs"),
+                       label = "Max occurs",
+                       multiple = F,
+                       choices = {
+                         setNames(c(1,Inf), nm = c("1","Inf"))
+                       },
+                       selected = 1,
+                       selectize = FALSE
+                     )       
+              ),
+              column(4,
+                     textInput(inputId = ns("featuremember_measurementunit"), label = "Unit", value = NULL, width = NULL, placeholder = "Measurement unit (for variable)")     
+              )
+            ),
+            fluidRow(
+              column(6,
+                     textInput(
+                       inputId = ns("featuremember_def"),
+                       label = "Definition",
+                       value = NULL,
+                       width = NULL,
+                       placeholder = "Definition"
+                     )       
+              ),  
+              column(6,
+                textInput(inputId = ns("featuremember_definitionsource"), label = "Definition source", value = NULL, width = NULL, placeholder = "Definition source")           
+              )
+            ),
+            fluidRow(
+              column(5,
+                textInput(inputId = ns("featuremember_registerid"), label = "Register ID", value = NULL, width = NULL, placeholder = "Register function name")
+              ),
+              column(5,
+                textInput(inputId = ns("featuremember_registerscript"), label = "Register Script", value = NULL, width = NULL, placeholder = "Register script")
+              ),
+              column(2,
+                actionButton(ns("featuretype_member_button_add"), title="Add type",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;")
+              )
+            ),
+            DTOutput(ns("featuretype_members_table"))
+          )
+        )
       )
       
     }
@@ -657,6 +777,12 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
                #parameters managed through observer
                
                md_model_draft(entity$clone(deep = T))
+             },
+             "featuretype" = {
+               featuretype = model
+               if(nzchar(input$featuretype_identifier)) featuretype$id = input$featuretype_identifier
+               #members manager through observer
+               md_model_draft(featuretype$clone(deep = T))
              }
       )
       
@@ -665,23 +791,36 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
                               "contact" = geoflow_validator_contacts$new(source = md_model_draft()$asDataFrame()),
                               "entity" = geoflow_validator_entities$new(source = md_model_draft()$asDataFrame())
       )
-      qa_errors = meta_validator$validate_content()
-      print(qa_errors)
-      valid = FALSE
-      if(nrow(qa_errors)==0){
-        INFO(paste0("No validation errors with the ", type,". Saving data to geoflow pivot model"))
-        valid = TRUE
-      }else{
-        if(nrow(qa_errors[qa_errors$type == "ERROR",]>0)){
-          ERROR(paste0("Validation errors with the ", type,". Aborting saving the data to geoflow pivot model"))
-          valid = FALSE
-        }else{
-          WARN(paste0("Validation warnings with the ", type,". Saving data to geoflow pivot model"))
+      if(!is.null(meta_validator)){
+        qa_errors = meta_validator$validate_content()
+        print(qa_errors)
+        valid = FALSE
+        if(nrow(qa_errors)==0){
+          INFO(paste0("No validation errors with the ", type,". Saving data to geoflow pivot model"))
           valid = TRUE
+        }else{
+          if(nrow(qa_errors[qa_errors$type == "ERROR",]>0)){
+            ERROR(paste0("Validation errors with the ", type,". Aborting saving the data to geoflow pivot model"))
+            valid = FALSE
+          }else{
+            WARN(paste0("Validation warnings with the ", type,". Saving data to geoflow pivot model"))
+            valid = TRUE
+          }
         }
+        md_model_draft_valid(valid)
+        md_model_draft_validation_report(qa_errors)
+      }else{
+        md_model_draft_valid(TRUE)
+        md_model_draft_validation_report(
+          data.frame(
+            row = character(0),
+            col = character(0),
+            type = character(0),
+            message = character(0),
+            stringsAsFactors = F
+          )
+        )
       }
-      md_model_draft_valid(valid)
-      md_model_draft_validation_report(qa_errors)
     }
     
     #render_field_elements_table
@@ -848,7 +987,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
           color = "primary",
           icon = icon("table-list"),
           footer = shiny::tagList(
-            bs4Dash::actionButton(inputId = ns("create_dictionary_table"), label = "Create table"), #TODO
+            bs4Dash::actionButton(inputId = ns("create_dictionary_table"), label = "Create table"),
             bs4Dash::actionButton(inputId = ns("load_dictionary_table"), label = "Load table"), #TODO
             bs4Dash::actionButton(inputId = ns("create_dictionary"), label = "Create dictionary")
           )
@@ -943,11 +1082,23 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
                            }else{
                              c()
                            }
-                           
+                         },
+                         "featuretype" = {
+                           if(length(md_model())>0){
+                             sapply(md_model(), function(x){if(!is.null(x$id)) x$id else "?"})
+                           }else{
+                             c()
+                           }
                          }
                        )
                      },
-                     selected = if(md_model_draft_mode() == "edition" & length(md_model_draft()$identifiers)>0) md_model_draft()$identifiers[[1]] else NULL,
+                     selected = {
+                       switch(md_model_type(),
+                        "contact" = if(md_model_draft_mode() == "edition" & length(md_model_draft()$identifiers)>0) md_model_draft()$identifiers[[1]] else NULL,
+                        "entity" = if(md_model_draft_mode() == "edition" & length(md_model_draft()$identifiers)>0) md_model_draft()$identifiers[[1]] else NULL,
+                        "featuretype" = if(md_model_draft_mode() == "edition" & !is.null(md_model_draft()$id)) md_model_draft()$id else NULL
+                       )
+                     },
                      selectize = FALSE
       )
     })
@@ -975,14 +1126,14 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         metatbl = switch(md_model_type(),
           "contact" = geoflow_contact$new()$asDataFrame(),
           "entity" = geoflow_entity$new()$asDataFrame(),
-          "dictionary" = data.frame(todo = NA)
+          "featuretype" = geoflow_featuretype$new()$asDataFrame()
         )
       }else{
         INFO("Convert md_model to dataframe")
         metatbl = do.call("rbind", lapply(md_model(), function(x){x$asDataFrame()}))
         INFO("Conversion done!")
       }
-      
+      print(metatbl)
       out_tbl <- rhandsontable::rhandsontable(
         metatbl, 
         readOnly = TRUE
@@ -1412,6 +1563,19 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       )
     })
     
+    #dictionary/featuretype
+    #featuretype -> members
+    output$featuretype_members_table <- DT::renderDT(server = FALSE, {
+      print("testing")
+      render_field_elements_table(
+        field = "members",
+        field_model = "kvp",
+        field_key = "code", field_value = "name",
+        btn_remove_id = ns("featuretype_member_button_remove")
+      )
+    })
+    
+    
     #EVENTS
     #core - check_metadata
     observeEvent(input$check_model,{
@@ -1444,14 +1608,29 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         }
         md_model(meta_elements)
         md_model_draft_mode("edition")#triggers twice the render model
-        updateSelectInput(inputId = "meta_editor_entry_selector", selected = if(length(md_model_draft()$identifiers)>0) md_model_draft()$identifiers[[1]] else NULL)
+        updateSelectInput(
+          inputId = "meta_editor_entry_selector", 
+          selected = {
+            switch(md_model_type(),
+              "contact" = if(length(md_model_draft()$identifiers)>0) md_model_draft()$identifiers[[1]] else NULL,
+              "entity" = if(length(md_model_draft()$identifiers)>0) md_model_draft()$identifiers[[1]] else NULL,
+              "featuretype" = if(!is.null(md_model_draft()$id)) md_model_draft()$id else NULL
+            )
+          })
       }
       
     })
     
     #core - select entry (meta_editor_entry_selector)
     observeEvent(input$meta_editor_entry_selector,{
-      has_entry = sapply(md_model(), function(x){ input$meta_editor_entry_selector %in% c(x$identifiers,"?") })
+      has_entry = sapply(md_model(), function(x){ 
+        if(md_model_type() %in% c("contact","entity")){
+          input$meta_editor_entry_selector %in% c(x$identifiers,"?") 
+        }else{
+          input$meta_editor_entry_selector %in% c(x$id,"?") 
+        }
+        
+      })
       selected_entry = md_model()[has_entry][[1]]
       md_model_draft_idx(which(has_entry))
       md_model_draft(selected_entry$clone(deep = TRUE))
@@ -1480,14 +1659,11 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         shiny::modalDialog(
           title = "Load list of entities",
           if(appConfig$auth){
-            withSpinner(
-              tagList(
-                jsTreeR::jstreeOutput(ns("entities_load_tree_leavesonly")),
-                actionButton(ns("entities_load_tree_leavesonly_select"), label = "Select", status = "primary", style = "float:right"),
-                actionButton(ns("entities_load_tree_leavesonly_cancel"), label = "Cancel", style = "float:right")
-                
-              )   
-            )
+            tagList(
+              jsTreeR::jstreeOutput(ns("entities_load_tree_leavesonly")),
+              actionButton(ns("entities_load_tree_leavesonly_select"), label = "Select", status = "primary", style = "float:right"),
+              actionButton(ns("entities_load_tree_leavesonly_cancel"), label = "Cancel", style = "float:right")
+            )   
           }else{
             tagList(
               fileInput(ns("entities_local_file"), label = "File",multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = "Choose file"),
@@ -1524,6 +1700,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       updateSelectInput(inputId = "meta_editor_entry_selector", selected = NULL)
       
       shiny::removeModal()
+      loadCloudTree(id = "entities_load_tree_leavesonly", leavesOnly = TRUE)
     })
     observeEvent(input$entities_local_file_select,{
       req(!is.null(input$entities_local_file))
@@ -1581,16 +1758,13 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       shiny::showModal(
         shiny::modalDialog(
           title = "Upload entities to the cloud",
-          #withSpinner(
-            tagList(
-              textInput(ns("entity_table_filename"), label = "File name", value = "new_entities.csv", width = NULL),
-              hr(),
-              jsTreeR::jstreeOutput(ns("entities_load_tree")),
-              actionButton(ns("entities_load_tree_upload"), label = "Upload", status = "primary", style = "float:right"),
-              actionButton(ns("entities_load_tree_cancel"), label = "Cancel", style = "float:right")
-              
-            ),
-          #),
+          tagList(
+            textInput(ns("entity_table_filename"), label = "File name", value = "new_entities.csv", width = NULL),
+            hr(),
+            jsTreeR::jstreeOutput(ns("entities_load_tree")),
+            actionButton(ns("entities_load_tree_upload"), label = "Upload", status = "primary", style = "float:right"),
+            actionButton(ns("entities_load_tree_cancel"), label = "Cancel", style = "float:right")
+          ),
           easyClose = FALSE, footer = uiOutput(ns("overwriting_file_danger")) 
         )
       )
@@ -1662,14 +1836,11 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         shiny::modalDialog(
           title = "Load list of contacts",
           if(appConfig$auth){
-            withSpinner(
-              tagList(
-                jsTreeR::jstreeOutput(ns("contacts_load_tree_leavesonly")),
-                actionButton(ns("entities_load_tree_leavesonly_select"), label = "Select", status = "primary", style = "float:right"),
-                actionButton(ns("entities_load_tree_leavesonly_cancel"), label = "Cancel", style = "float:right")
-                
-              )   
-            )
+            tagList(
+              jsTreeR::jstreeOutput(ns("contacts_load_tree_leavesonly")),
+              actionButton(ns("entities_load_tree_leavesonly_select"), label = "Select", status = "primary", style = "float:right"),
+              actionButton(ns("entities_load_tree_leavesonly_cancel"), label = "Cancel", style = "float:right")
+            )   
           }else{
             tagList(
               fileInput(ns("contacts_local_file"), label = "File",multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = "Choose file"),
@@ -1706,6 +1877,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       updateSelectInput(inputId = "meta_editor_entry_selector", selected = NULL)
 
       shiny::removeModal()
+      loadCloudTree(id = "contacts_load_tree_leavesonly", leavesOnly = TRUE)
     })
     observeEvent(input$contacts_local_file_select,{
       req(!is.null(input$contacts_local_file))
@@ -1763,15 +1935,12 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       shiny::showModal(
         shiny::modalDialog(
           title = "Upload contacts to the cloud",
-          withSpinner(
-            tagList(
-              textInput(ns("contact_table_filename"), label = "File name", value = "new_contacts.csv", width = NULL),
-              hr(),
-              jsTreeR::jstreeOutput(ns("contacts_load_tree")),
-              actionButton(ns("contacts_load_tree_upload"), label = "Upload", status = "primary", style = "float:right"),
-              actionButton(ns("contacts_load_tree_cancel"), label = "Cancel", style = "float:right")
-              
-            )
+          tagList(
+            textInput(ns("contact_table_filename"), label = "File name", value = "new_contacts.csv", width = NULL),
+            hr(),
+            jsTreeR::jstreeOutput(ns("contacts_load_tree")),
+            actionButton(ns("contacts_load_tree_upload"), label = "Upload", status = "primary", style = "float:right"),
+            actionButton(ns("contacts_load_tree_cancel"), label = "Cancel", style = "float:right")
           ),
           easyClose = FALSE, footer = uiOutput(ns("overwriting_file_danger")) 
         )
@@ -1826,17 +1995,170 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     
     #dictionary
     observeEvent(input$create_dictionary_table, {
-      md_model_type("dictionary")
+      md_model(list())
+      md_model_type("featuretype")
       INFO(sprintf("Select editor for type '%s'", md_model_type()))
       md_model_draft( eval(parse(text = sprintf("geoflow::geoflow_%s$new()", md_model_type()))) )
       md_model_draft_idx(1L)
+    })
+    observeEvent(input$load_dictionary_table, {
+      shiny::showModal(
+        shiny::modalDialog(
+          title = "Load dictionary",
+          if(appConfig$auth){
+            tagList(
+              jsTreeR::jstreeOutput(ns("featuretypes_load_tree_leavesonly")),
+              actionButton(ns("featuretypes_load_tree_leavesonly_select"), label = "Select", status = "primary", style = "float:right"),
+              actionButton(ns("featuretypes_load_tree_leavesonly_cancel"), label = "Cancel", style = "float:right")
+            )   
+          }else{
+            tagList(
+              fileInput(ns("featuretypes_local_file"), label = "File",multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = "Choose file"),
+              actionButton(ns("featuretypes_local_file_select"), label = "Select", style = "float:right")
+            )
+          },
+          easyClose = FALSE, footer = NULL 
+        )
+      )
+    })
+    
+    loadCloudTree(id = "featuretypes_load_tree", leavesOnly = FALSE)
+    loadCloudTree(id = "featuretypes_load_tree_leavesonly", leavesOnly = TRUE)
+    
+    observeEvent(input$featuretypes_load_tree_leavesonly_cancel,{
+      shiny::removeModal()
+    })
+    observeEvent(input$featuretypes_load_tree_leavesonly_select,{
+      selected_resource = input$featuretypes_load_tree_leavesonly_selected
+      
+      config = list()
+      config$profile$id = "load_ocs_featuretypes"
+      config$software$input$ocs = AUTH_API
+      config = geoflow::add_config_utils(config)
+      dictionary_handler = geoflow::geoflow_handler$new(yaml = system.file("metadata/dictionary", "dictionary_handler_ocs.yml", package = "geoflow"))
+      dict = dictionary_handler$fun(
+        handler = dictionary_handler,
+        source = selected_resource[[1]]$data,
+        config = config
+      )
+      md_model_type("featuretype")
+      md_model(dict$featuretypes)
+      md_model_draft_mode("edition")#triggers twice the render model
+      updateSelectInput(inputId = "meta_editor_entry_selector", selected = NULL)
+      
+      shiny::removeModal()
+      loadCloudTree(id = "featuretypes_load_tree_leavesonly", leavesOnly = TRUE)
+    })
+    observeEvent(input$featuretypes_local_file_select,{
+      req(!is.null(input$featuretypes_local_file))
+      
+      config = list()
+      config$profile$id = "load_local_featuretypes"
+      config = geoflow::add_config_utils(config)
+      dictionary_handler = switch(mime::guess_type(input$featuretypes_local_file$datapath),
+                              "text/csv" = geoflow::geoflow_handler$new(yaml = system.file("metadata/entity", "dictionary_handler_csv.yml", package = "geoflow")),
+                              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" = geoflow::geoflow_handler$new(yaml = system.file("metadata/entity", "dictionary_handler_excel.yml", package = "geoflow")),
+                              "application/vn.ms-excel" = geoflow::geoflow_handler$new(yaml = system.file("metadata/entity", "dictionary_handler_excel.yml", package = "geoflow"))
+      )
+      dict = dictionary_handler$fun(
+        handler = dictionary_handler,
+        source = input$featuretypes_local_file$datapath,
+        config = config
+      )
+      md_model_type("featuretype")
+      md_model(dict$featuretypes)
+      md_model_draft_mode("edition")#triggers twice the render model
+      updateSelectInput(inputId = "meta_editor_entry_selector", selected = NULL)
+      
+      shiny::removeModal()
+      
     })
     observeEvent(input$create_dictionary,{
       md_model_draft( eval(parse(text = sprintf("geoflow::geoflow_%s$new()", md_model_type()))) )
       md_model_draft_idx(length(md_model())+1)
       md_model_draft_mode("creation")
     })
-    #TODO save dictionary
+    output$download_featuretype_table_csv <- downloadHandler(
+      filename = function() {
+        "new_dictionary.csv"
+      },
+      content = function(file) {
+        metatbl = do.call("rbind", lapply(md_model(), function(x){x$asDataFrame()}))
+        readr::write_csv(metatbl, file)
+      }
+    )
+    output$download_featuretype_table_excel <- downloadHandler(
+      filename = function() {
+        "new_dictionary.xlsx"
+      },
+      content = function(file) {
+        metatbl = do.call("rbind", lapply(md_model(), function(x){x$asDataFrame()}))
+        writexl::write_xlsx(metatbl, file)
+      }
+    )
+    observeEvent(input$upload_featuretype_table, {
+      #method only available for Cloud interaction
+      cloud_overwriting_danger(FALSE)
+      req(appConfig$auth)
+      shiny::showModal(
+        shiny::modalDialog(
+          title = "Upload dictionary to the cloud",
+          tagList(
+            textInput(ns("featuretype_table_filename"), label = "File name", value = "new_dictionary.csv", width = NULL),
+            hr(),
+            jsTreeR::jstreeOutput(ns("featuretypes_load_tree")),
+            actionButton(ns("featuretypes_load_tree_upload"), label = "Upload", status = "primary", style = "float:right"),
+            actionButton(ns("featuretypes_load_tree_cancel"), label = "Cancel", style = "float:right")
+          ),
+          easyClose = FALSE, footer = uiOutput(ns("overwriting_file_danger")) 
+        )
+      )
+    })
+    observe({
+      if(length(input$featuretypes_load_tree_selected)>0){
+        selected_resource = input$featuretypes_load_tree_selected[[1]]
+        if(selected_resource$type == "file"){
+          shiny::updateTextInput(inputId = "featuretype_table_filename", value = basename(selected_resource$data))
+          cloud_overwriting_danger(TRUE)
+        }else if(selected_resource$type == "folder"){
+          files = AUTH_API$listFiles(relPath = selected_resource$data)
+          if(input$featuretype_table_filename %in% files$name){
+            cloud_overwriting_danger(TRUE)
+          }else{
+            cloud_overwriting_danger(FALSE)
+          }
+        }
+      }
+    })
+    observeEvent(input$featuretypes_load_tree_cancel,{
+      shiny::removeModal()
+      jsTreeR::jstreeDestroy(session = session, id = ns("featuretypes_load_tree"))
+      cloud_overwriting_danger(FALSE)
+    })
+    observeEvent(input$featuretypes_load_tree_upload,{
+      selected_resource = input$featuretypes_load_tree_selected[[1]]
+      
+      metatbl = do.call("rbind", lapply(md_model(), function(x){x$asDataFrame()}))
+      switch(mime::guess_type(input$featuretype_table_filename),
+             "text/csv" = {
+               readr::write_csv(metatbl, file.path(tempdir(), input$featuretype_table_filename))
+             },
+             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" = {
+               writexl::write_xlsx(metatbl, file.path(tempdir(), input$featuretype_table_filename))
+             }
+      )
+      uploaded = AUTH_API$uploadFile(
+        filename = file.path(tempdir(), input$featuretype_table_filename),
+        relPath = if(selected_resource$type == "folder"){
+          selected_resource$data
+        }else if(selected_resource$type == "file"){
+          dirname(selected_resource$data)
+        }
+      )
+      shiny::removeModal()
+      loadCloudTree(id = "featuretypes_load_tree", leavesOnly = FALSE)
+      cloud_overwriting_danger(FALSE)
+    })
     
     #SPECIFIC FORM EVENTS
     #entity specific form events
@@ -1883,12 +2205,10 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         shiny::modalDialog(
           title = "Load list of contacts",
           if(appConfig$auth){
-            withSpinner(
-              tagList(
-                jsTreeR::jstreeOutput(ns("entity_contacts_load_tree")),
-                actionButton(ns("entity_contacts_load_tree_select"), label = "Select", style = "float:right")
-              )   
-            )
+            tagList(
+              jsTreeR::jstreeOutput(ns("entity_contacts_load_tree")),
+              actionButton(ns("entity_contacts_load_tree_select"), label = "Select", style = "float:right")
+            )   
           }else{
             tagList(
               fileInput(ns("entity_contacts_local_file"), label = "File",multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = "Choose file"),
@@ -2237,6 +2557,29 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       }
       if(length(contact$identifiers)==0) contact$identifiers = list()
       check_model(type = md_model_type(), model = contact)
+    })
+    #dictionary/featuretype specific form events
+    #-------------------------------------------
+    #events featuretype -> member
+    observeEvent(input$featuretype_member_button_add,{
+      ft = md_model_draft()
+      fm = geoflow::geoflow_featuremember$new(
+        type = input$featuremember_type,
+        code = input$featuremember_code,
+        name = input$featuremember_name,
+        def = input$featuremember_definition,
+        defSource = input$featuremember_definitionsource,
+        minOccurs = input$featuremember_minoccurs,
+        maxOccurs = input$featuremember_maxoccurs,
+        uom = input$featuremember_measurementunit,
+        registerId = input$featuremember_registerid,
+        registerScript = input$featuremember_registerscript
+      )
+      ft$addMember(fm)
+      check_model(type = md_model_type(), model = ft)
+    })
+    observeEvent(input$featuretype_member_button_remove,{
+      handle_field_element_remove_event(field = "members", input_btn_remove = input$featuretype_member_button_remove)  
     })
     
     #Miscs
