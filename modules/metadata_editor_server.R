@@ -1838,8 +1838,8 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
           if(appConfig$auth){
             tagList(
               jsTreeR::jstreeOutput(ns("contacts_load_tree_leavesonly")),
-              actionButton(ns("entities_load_tree_leavesonly_select"), label = "Select", status = "primary", style = "float:right"),
-              actionButton(ns("entities_load_tree_leavesonly_cancel"), label = "Cancel", style = "float:right")
+              actionButton(ns("contacts_load_tree_leavesonly_select"), label = "Select", status = "primary", style = "float:right"),
+              actionButton(ns("contacts_load_tree_leavesonly_cancel"), label = "Cancel", style = "float:right")
             )   
           }else{
             tagList(
@@ -1855,7 +1855,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     loadCloudTree(id = "contacts_load_tree", leavesOnly = FALSE)
     loadCloudTree(id = "contacts_load_tree_leavesonly", leavesOnly = TRUE)
     
-    observeEvent(input$contacts_load_tree_leavesonly_select,{
+    observeEvent(input$contacts_load_tree_leavesonly_cancel,{
       shiny::removeModal()
     })
     observeEvent(input$contacts_load_tree_leavesonly_select,{
