@@ -46,42 +46,42 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
           type = "pills", vertical = T,
           tabPanel(
             value = "contact_identifiers",
-            title = "Identifier(s)",
+            title = i18n()$t("MD_EDITOR_C_IDENTIFIERS"),
             fluidRow(
               column(3, selectInput(ns("contact_identifier_type"),
-                                       label="Key",
+                                       label= i18n()$t("MD_EDITOR_KEY"),
                                        multiple = F,
                                        choices = contact_tpl$getAllowedKeyValuesFor("Identifier"),
                                        selected = "id",
                                        selectize = FALSE
               )),
-              column(6,textInput(ns("contact_identifier"), "Identifier",value = "", width = NULL, placeholder = "Identifier")),
+              column(6,textInput(ns("contact_identifier"), i18n()$t("MD_EDITOR_C_IDENTIFIER"),value = "", width = NULL, placeholder = i18n()$t("MD_EDITOR_C_IDENTIFIER"))),
               column(3,
-                     actionButton(ns("contact_identifier_button_add"), title="Add identifier",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;")
+                     actionButton(ns("contact_identifier_button_add"), title=i18n()$t("MD_EDITOR_C_IDENTIFIER_ADD"),size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;")
               )
             ),
             DTOutput(ns("contact_identifiers_table"))
           ),
           tabPanel(
             value = "contact_details",
-            title = "Details",
-            fluidRow(column(6, tags$b("Organization name")), column(6, textInput(ns("contact_org"), label = NULL, value = if(!is.null(model)) model$organizationName else "", width = NULL, placeholder = "Organization name"))),
-            fluidRow(column(6, tags$b("First name")), column(6, textInput(ns("contact_firstname"), label = NULL, value = if(!is.null(model)) model$firstName else "", width = NULL, placeholder = "First name"))),
-            fluidRow(column(6, tags$b("Last name")), column(6, textInput(ns("contact_lastname"), label = NULL, value = if(!is.null(model)) model$lastName else "", width = NULL, placeholder = "Last name"))),
-            fluidRow(column(6, tags$b("Position name")), column(6, textInput(ns("contact_positionname"), label = NULL, value = if(!is.null(model)) model$positionName else "", width = NULL, placeholder = "Position name"))),
-            fluidRow(column(6, tags$b("Postal address")), column(6, textInput(ns("contact_postaladdress"), label = NULL, value = if(!is.null(model)) model$postalAddress else "", width = NULL, placeholder = "Postal address"))),
-            fluidRow(column(6, tags$b("Postal code")), column(6, textInput(ns("contact_postalcode"), label = NULL, value = if(!is.null(model)) model$postalCode else "", width = NULL, placeholder = "Postal code"))),
-            fluidRow(column(6, tags$b("City")), column(6, textInput(ns("contact_city"), label = NULL, value = if(!is.null(model)) model$city else "", width = NULL, placeholder = "City"))),
-            fluidRow(column(6, tags$b("Country")), column(6, textInput(ns("contact_country"), label = NULL, value = if(!is.null(model)) model$country else "", width = NULL, placeholder = "Country")))
+            title = i18n()$t("MD_EDITOR_C_DETAILS"),
+            fluidRow(column(6, tags$b(i18n()$t("MD_EDITOR_C_ORGNAME"))), column(6, textInput(ns("contact_org"), label = NULL, value = if(!is.null(model)) model$organizationName else "", width = NULL, placeholder = i18n()$t("MD_EDITOR_C_ORGNAME")))),
+            fluidRow(column(6, tags$b(i18n()$t("MD_EDITOR_C_FIRSTNAME"))), column(6, textInput(ns("contact_firstname"), label = NULL, value = if(!is.null(model)) model$firstName else "", width = NULL, placeholder = i18n()$t("MD_EDITOR_C_FIRSTNAME")))),
+            fluidRow(column(6, tags$b(i18n()$t("MD_EDITOR_C_LASTNAME"))), column(6, textInput(ns("contact_lastname"), label = NULL, value = if(!is.null(model)) model$lastName else "", width = NULL, placeholder = i18n()$t("MD_EDITOR_C_LASTNAME")))),
+            fluidRow(column(6, tags$b(i18n()$t("MD_EDITOR_C_POSITIONNAME"))), column(6, textInput(ns("contact_positionname"), label = NULL, value = if(!is.null(model)) model$positionName else "", width = NULL, placeholder = i18n()$t("MD_EDITOR_C_POSITIONNAME")))),
+            fluidRow(column(6, tags$b(i18n()$t("MD_EDITOR_C_POSTALADDRESS"))), column(6, textInput(ns("contact_postaladdress"), label = NULL, value = if(!is.null(model)) model$postalAddress else "", width = NULL, placeholder = i18n()$t("MD_EDITOR_C_POSTALADDRESS")))),
+            fluidRow(column(6, tags$b(i18n()$t("MD_EDITOR_C_POSTALCODE"))), column(6, textInput(ns("contact_postalcode"), label = NULL, value = if(!is.null(model)) model$postalCode else "", width = NULL, placeholder = i18n()$t("MD_EDITOR_C_POSTALCODE")))),
+            fluidRow(column(6, tags$b(i18n()$t("MD_EDITOR_C_CITY"))), column(6, textInput(ns("contact_city"), label = NULL, value = if(!is.null(model)) model$city else "", width = NULL, placeholder = i18n()$t("MD_EDITOR_C_CITY")))),
+            fluidRow(column(6, tags$b(i18n()$t("MD_EDITOR_C_COUNTRY"))), column(6, textInput(ns("contact_country"), label = NULL, value = if(!is.null(model)) model$country else "", width = NULL, placeholder = i18n()$t("MD_EDITOR_C_COUNTRY"))))
           ),
           tabPanel(
             value = "contact_info",
-            title = "Information",
-            fluidRow(column(6, tags$b("Email")), column(6, textInput(ns("contact_email"), label = NULL, value = if(!is.null(model)) model$email else "", width = NULL, placeholder = "Email"))),
-            fluidRow(column(6, tags$b("Phone number")), column(6, textInput(ns("contact_voice"), label = NULL, value = if(!is.null(model)) model$voice else "", width = NULL, placeholder = "Phone number"))),
-            fluidRow(column(6, tags$b("Facsimile")), column(6, textInput(ns("contact_facsimile"), label = NULL, value = if(!is.null(model)) model$facsimile else "", width = NULL, placeholder = "Facsimile"))),
-            fluidRow(column(6, tags$b("Website URL")), column(6, textInput(ns("contact_websiteurl"), label = NULL, value = if(!is.null(model)) model$websiteUrl else "", width = NULL, placeholder = "Website URL"))),
-            fluidRow(column(6, tags$b("Website name")), column(6, textInput(ns("contact_websitename"), label = NULL, value = if(!is.null(model)) model$websiteName else "", width = NULL, placeholder = "Website name")))
+            title = i18n()$t("MD_EDITOR_C_INFO"),
+            fluidRow(column(6, tags$b(i18n()$t("MD_EDITOR_C_EMAIL"))), column(6, textInput(ns("contact_email"), label = NULL, value = if(!is.null(model)) model$email else "", width = NULL, placeholder = i18n()$t("MD_EDITOR_C_EMAIL")))),
+            fluidRow(column(6, tags$b(i18n()$t("MD_EDITOR_C_PHONENUMBER"))), column(6, textInput(ns("contact_voice"), label = NULL, value = if(!is.null(model)) model$voice else "", width = NULL, placeholder = i18n()$t("MD_EDITOR_C_PHONENUMBER")))),
+            fluidRow(column(6, tags$b(i18n()$t("MD_EDITOR_C_FACSIMILE"))), column(6, textInput(ns("contact_facsimile"), label = NULL, value = if(!is.null(model)) model$facsimile else "", width = NULL, placeholder = i18n()$t("MD_EDITOR_C_FACSIMILE")))),
+            fluidRow(column(6, tags$b(i18n()$t("MD_EDITOR_C_WEBSITE_URL"))), column(6, textInput(ns("contact_websiteurl"), label = NULL, value = if(!is.null(model)) model$websiteUrl else "", width = NULL, placeholder = i18n()$t("MD_EDITOR_C_WEBSITE_URL")))),
+            fluidRow(column(6, tags$b(i18n()$t("MD_EDITOR_C_WEBSITE_NAME"))), column(6, textInput(ns("contact_websitename"), label = NULL, value = if(!is.null(model)) model$websiteName else "", width = NULL, placeholder = i18n()$t("MD_EDITOR_C_WEBSITE_NAME"))))
           )
         ),
         "entity" = bs4Dash::tabsetPanel(
@@ -90,75 +90,75 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
           type = "pills", vertical = T,
           tabPanel(
             value = "entity_identifiers",
-            title = "Identifier",
+            title = i18n()$t("MD_EDITOR_E_IDENTIFIERS"),
             fluidRow(
               column(3, selectInput(ns("entity_identifier_type"),
-                                       label="Key",
+                                       label = i18n()$t("MD_EDITOR_KEY"),
                                        multiple = F,
                                        choices = entity_tpl$getAllowedKeyValuesFor("Identifier"),
                                        selected = "id",
                                        selectize = FALSE
               )),
-              column(6,textInput(ns("entity_identifier"), "Identifier",value = "", width = NULL, placeholder = "Identifier")),
+              column(6,textInput(ns("entity_identifier"), i18n()$t("MD_EDITOR_E_IDENTIFIER"), value = "", width = NULL, placeholder = i18n()$t("MD_EDITOR_E_IDENTIFIER"))),
               column(3,
-                     actionButton(ns("entity_identifier_button_add"), title="Add identifier",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;")
+                     actionButton(ns("entity_identifier_button_add"), title = i18n()$t("MD_EDITOR_E_IDENTIFIER_ADD"),size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;")
               )
             ),
             DTOutput(ns("entity_identifiers_table"))
           ),
           tabPanel(
             value = "entity_titles",
-            title = "Title",
+            title = i18n()$t("MD_EDITOR_E_TITLE"),
             fluidRow(
               column(3, selectInput(ns("entity_title_type"),
-                                       label="Key",
+                                       label = i18n()$t("MD_EDITOR_KEY"),
                                        multiple = F,
                                        choices = entity_tpl$getAllowedKeyValuesFor("Title"),
                                        selected = "id",
                                        selectize = FALSE
               )),
-              column(7,textInput(ns("entity_title"), "Title",value = "", width = NULL, placeholder = "Title")),
+              column(7,textInput(ns("entity_title"), i18n()$t("MD_EDITOR_E_TITLE"),value = "", width = NULL, placeholder = i18n()$t("MD_EDITOR_E_TITLE"))),
               column(2,
-                     actionButton(ns("entity_title_button_add"), title="Add title",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;")
+                     actionButton(ns("entity_title_button_add"), title=i18n()$t("MD_EDITOR_E_TITLE_ADD"),size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;")
               )
             ),
             DTOutput(ns("entity_titles_table"))
           ),
           tabPanel(
             value = "entity_descriptions",
-            title = "Description",
+            title = i18n()$t("MD_EDITOR_E_DESCRIPTION"),
             fluidRow(
               column(3, selectInput(ns("entity_description_type"),
-                                       label="Key",
+                                       label = i18n()$t("MD_EDITOR_KEY"),
                                        multiple = F,
                                        choices = entity_tpl$getAllowedKeyValuesFor("Description"),
                                        selected = "id",
                                        selectize = FALSE
               )),
-              column(7,textAreaInput(ns("entity_description"), "Description",value = "", width = NULL, placeholder = "Description")),
+              column(7,textAreaInput(ns("entity_description"), i18n()$t("MD_EDITOR_E_DESCRIPTION"),value = "", width = NULL, placeholder = i18n()$t("MD_EDITOR_E_DESCRIPTION"))),
               column(2,
-                     actionButton(ns("entity_description_button_add"), title="Add description",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;")
+                     actionButton(ns("entity_description_button_add"), title=i18n()$t("MD_EDITOR_E_DESCRIPTION_ADD"),size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;")
               )
             ),
             DTOutput(ns("entity_descriptions_table"))
           ),
           tabPanel(
             value = "entity_subjects",
-            title = "Subject",
+            title = i18n()$t("MD_EDITOR_E_SUBJECTS"),
             fluidRow(
               column(3, selectInput(ns("entity_subject_type"),
-                                       label="Key",
+                                       label = i18n()$t("MD_EDITOR_KEY"),
                                        multiple = F,
                                        choices = c(geometa::ISOKeywordType$values(), "taxonomy"),
                                        selected = "theme",
                                        selectize = FALSE
               )),
               column(6, selectInput(ns("entity_vocabulary_server"),
-                                       label="Vocabulary server",
+                                       label = i18n()$t("MD_EDITOR_E_VOCABULARY"),
                                        multiple = F,
                                        choices = {
                                          vocabs = list_vocabularies()
-                                         setNames(c(vocabs$id, "custom"), nm = c(vocabs$def, "Custom"))
+                                         setNames(c(vocabs$id, "custom"), nm = c(vocabs$def, i18n()$t("MD_EDITOR_E_VOCABULARY_CUSTOM")))
                                         },
                                        selected = "custom",
                                        selectize = FALSE
@@ -173,23 +173,22 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
             ),
             fluidRow(
               column(3,
-                     actionButton(ns("entity_subject_button_add"), title="Add subject",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;"),
-                     actionButton(ns("entity_subject_button_clear"), title="Clear subject",size="sm",label="",icon=icon("trash"),class = "btn-warning", style = "margin-top:35px;")
+                     actionButton(ns("entity_subject_button_add"), title = i18n()$t("MD_EDITOR_E_SUBJECT_ADD"),size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;"),
               )
             ),
-            uiOutput(ns("entity_subjects_table_wrapper"))
+            DTOutput(ns("entity_subjects_table"))
           ),
           tabPanel(
             value = "entity_contacts",
-            title = "Creator",
+            title = i18n()$t("MD_EDITOR_E_CONTACTS"),
             fluidRow(
               column(3,
-                     actionButton(ns("entity_contact_load"), title = "Load contacts", size = "sm", label="", icon=icon("users"))
+                     actionButton(ns("entity_contact_load"), title = i18n()$t("MD_EDITOR_E_CONTACTS_LOAD"), size = "sm", label="", icon=icon("users"))
               )
             ),
             fluidRow(
               column(3, selectInput(ns("entity_contact_type"),
-                                       label="Role",
+                                       label = i18n()$t("MD_EDITOR_E_CONTACT"),
                                        multiple = F,
                                        choices = entity_tpl$getAllowedKeyValuesFor("Creator"),
                                        selected = "id",
@@ -197,34 +196,34 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
               )),
               column(7,uiOutput(ns("entity_contact_wrapper"))),
               column(2,
-                     actionButton(ns("entity_contact_button_add"), title="Add contact",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;"))
+                     actionButton(ns("entity_contact_button_add"), title = i18n()$t("MD_EDITOR_E_CONTACT_ADD"),size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;"))
             ),
             DTOutput(ns("entity_contacts_table"))
           ),
           tabPanel(
             value = "entity_dates",
-            title = "Date",
+            title = i18n()$t("MD_EDITOR_E_DATES"),
             fluidRow(
               column(3, selectInput(ns("entity_date_type"),
-                                       label="Date type",
+                                       label = i18n()$t("MD_EDITOR_E_DATETYPE"),
                                        multiple = F,
                                        choices = entity_tpl$getAllowedKeyValuesFor("Date"),
                                        selected = "creation",
                                        selectize = FALSE
               )),
-              column(7,dateInput(ns("entity_date"), "Date",value = Sys.Date(), width = NULL)),
+              column(7,dateInput(ns("entity_date"), i18n()$t("MD_EDITOR_E_DATE"),value = Sys.Date(), width = NULL)),
               column(2,
-                     actionButton(ns("entity_date_button_add"), title="Add date",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;")
+                     actionButton(ns("entity_date_button_add"), title = i18n()$t("MD_EDITOR_E_DATE_ADD"),size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;")
               )
             ),
             DTOutput(ns("entity_dates_table"))
           ),
           tabPanel(
             value = "entity_types",
-            title = "Type",
+            title = i18n()$t("MD_EDITOR_E_TYPE"),
             fluidRow(
               column(3, selectInput(ns("entity_resource_type"),
-                                       label="Key",
+                                       label = i18n()$t("MD_EDITOR_KEY"),
                                        multiple = F,
                                        choices = entity_tpl$getAllowedKeyValuesFor("Type"),
                                        selected = "generic",
@@ -232,17 +231,17 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
               )),
               column(7,textInput(ns("entity_resource"), "Type",value = "dataset", width = NULL, placeholder = "Type")),
               column(2,
-                     actionButton(ns("entity_type_button_add"), title="Add type",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;")
+                     actionButton(ns("entity_type_button_add"), title=i18n()$t("MD_EDITOR_E_TYPE_ADD"),size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;")
               )
             ),
             DTOutput(ns("entity_types_table"))
           ),
           tabPanel(
             value = "entity_languages",
-            title = "Language",
+            title = i18n()$t("MD_EDITOR_E_LANGUAGE"),
             fluidRow(
               column(6, selectInput(ns("entity_language"),
-                                       label="Language",
+                                       label = i18n()$t("MD_EDITOR_E_LANGUAGE"),
                                        multiple = F,
                                        choices = {
                                          languages = geometa::ISOLanguage$values(labels = T)
@@ -255,10 +254,10 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
           ),
           tabPanel(
             value = "entity_spatialcoverages",
-            title = "SpatialCoverage",
+            title = i18n()$t("MD_EDITOR_E_SPATIALCOVERAGE"),
             fluidRow(
               column(6, selectInput(ns("entity_srid"),
-                                       label="SRID",
+                                       label = "SRID",
                                        multiple = F,
                                        choices = {
                                          setNames(c(4326), nm = c("WGS 84 (EPSG:4326)"))
@@ -277,46 +276,45 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
           ),
           tabPanel(
             value = "entity_temporalcoverages",
-            title = "TemporalCoverage",
+            title = i18n()$t("MD_EDITOR_E_TEMPORALCOVERAGE"),
             fluidRow(
               fluidRow(
-                column(12, dateRangeInput(ns("entity_temporalcoverage"), label = "Temporal coverage"))
+                column(12, dateRangeInput(ns("entity_temporalcoverage"), label = i18n()$t("MD_EDITOR_E_TEMPORALCOVERAGE")))
               )
             )
           ),
           tabPanel(
             value = "entity_relations",
-            title = "Relation",
+            title = i18n()$t("MD_EDITOR_E_RELATIONS"),
             fluidRow(
               column(3, selectInput(ns("entity_relation_type"),
-                                       label="Key",
+                                       label = i18n()$t("MD_EDITOR_KEY"),
                                        multiple = F,
                                        choices = entity_tpl$getAllowedKeyValuesFor("Relation"),
                                        selected = "id",
                                        selectize = FALSE
               )),
-              column(7,textInput(ns("entity_relation_name"), "Name",value = "", width = NULL, placeholder = "Name"))
+              column(7,textInput(ns("entity_relation_name"), i18n()$t("MD_EDITOR_NAME"),value = "", width = NULL, placeholder = i18n()$t("MD_EDITOR_NAME")))
             ),
             fluidRow(
               column(3),
-              column(7,textAreaInput(ns("entity_relation_description"), "Description",value = "", width = NULL, placeholder = "Description"))
+              column(7,textAreaInput(ns("entity_relation_description"), i18n()$t("MD_EDITOR_DESCRIPTION"),value = "", width = NULL, placeholder = i18n()$t("MD_EDITOR_DESCRIPTION")))
             ),
             fluidRow(
               column(3),
-              column(7, textInput(ns("entity_relation_link"), "Link", value = "", width = NULL, placeholder = "Link")),
+              column(7, textInput(ns("entity_relation_link"), i18n()$t("MD_EDITOR_URI"), value = "", width = NULL, placeholder = i18n()$t("MD_EDITOR_URI"))),
               column(2,
-                     actionButton(ns("entity_relation_button_add"), title="Add relation",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;"),
-                     actionButton(ns("entity_relation_button_clear"), title="Clear relation",size="sm",label="",icon=icon("trash"),class = "btn-warning", style = "margin-top:35px;")
+                     actionButton(ns("entity_relation_button_add"), title=i18n()$t("MD_EDITOR_E_RELATION_ADD"),size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;")
               )
             ),
-            uiOutput(ns("entity_relations_table_wrapper"))
+            DTOutput(ns("entity_relations_table"))
           ),
           tabPanel(
             value = "entity_rights",
-            title = "Rights",
+            title = i18n()$t("MD_EDITOR_E_RIGHTS"),
             fluidRow(
               column(3, selectInput(ns("entity_right_type"),
-                                       label = "Right type",
+                                       label = i18n()$t("MD_EDITOR_E_RIGHTTYPE"),
                                        multiple = F,
                                        choices = entity_tpl$getAllowedKeyValuesFor("Rights"),
                                        selected = "license",
@@ -324,27 +322,25 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
               )),
               column(7, uiOutput(ns("entity_right_wrapper"))),
               column(2,
-                     actionButton(ns("entity_right_button_add"), title="Add right",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;"),
-                     actionButton(ns("entity_right_button_clear"), title="Clear right",size="sm",label="",icon=icon("trash"),class = "btn-warning", style = "margin-top:35px;")
+                     actionButton(ns("entity_right_button_add"), title = i18n()$t("MD_EDITOR_E_RIGHT_ADD"),size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;")
               )
             ),
-            uiOutput(ns("entity_rights_table_wrapper"))
+            DTOutput(ns("entity_rights_table"))
           ),
           tabPanel(
             value = "entity_formats",
-            title = "Format",
+            title = i18n()$t("MD_EDITOR_E_FORMATS"),
             fluidRow(
               column(3, selectInput(ns("entity_format_type"),
-                                       label="Format type",
+                                       label = i18n()$t("MD_EDITOR_E_FORMATTYPE"),
                                        multiple = F,
                                        choices = entity_tpl$getAllowedKeyValuesFor("Format"),
                                        selected = "id",
                                        selectize = FALSE
               )),
               column(7,selectInput(ns("entity_format_name"),
-                                      label="Format",
+                                      label = i18n()$t("MD_EDITOR_E_FORMAT"),
                                       multiple = F,
-                                      
                                       choices = as.character(mime::mimemap),
                                       selected = NULL,
                                       selectize = FALSE
@@ -352,46 +348,44 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
             ),
             fluidRow(
               column(3),
-              column(7,textAreaInput(ns("entity_format_description"), "Description",value = "", width = NULL, placeholder = "Description"))
+              column(7,textAreaInput(ns("entity_format_description"), i18n()$t("MD_EDITOR_DESCRIPTION"),value = "", width = NULL, placeholder = i18n()$t("MD_EDITOR_DESCRIPTION")))
             ),
             fluidRow(
               column(3),
-              column(7, textInput(ns("entity_format_link"), "Link", value = "", width = NULL, placeholder = "Link")),
+              column(7, textInput(ns("entity_format_link"), i18n()$t("MD_EDITOR_URI"), value = "", width = NULL, placeholder = i18n()$t("MD_EDITOR_URI"))),
               column(2,
-                     actionButton(ns("entity_format_button_add"), title="Add format",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;"),
-                     actionButton(ns("entity_format_button_clear"), title="Clear format",size="sm",label="",icon=icon("trash"),class = "btn-warning", style = "margin-top:35px;")
+                     actionButton(ns("entity_format_button_add"), title = i18n()$t("MD_EDITOR_E_FORMAT_ADD"),size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;")
               )
             ),
-            uiOutput(ns("entity_formats_table_wrapper"))
+            DTOutput(ns("entity_formats_table"))
           ),
           tabPanel(
             value = "entity_provenances",
-            title = "Provenance",
+            title = i18n()$t("MD_EDITOR_E_PROV"),
             fluidRow(
-              column(12, textInput(ns("entity_prov_statement"), "Statement", value = "", width = NULL, placeholder = "Statement")),
+              column(12, textInput(ns("entity_prov_statement"), i18n()$t("MD_EDITOR_E_PROV_STATEMENT"), value = "", width = NULL, placeholder = i18n()$t("MD_EDITOR_E_PROV_STATEMENT"))),
             ),
             hr(),
             fluidRow(
-              column(5, textInput(ns("entity_prov_process_rationale"), "Process rationale", value = "", width = NULL, placeholder = "Process rationale")),
-              column(5, textAreaInput(ns("entity_prov_process_description"), "Process description", value = "", width = NULL, placeholder = "Process description")),
+              column(5, textInput(ns("entity_prov_process_rationale"), i18n()$t("MD_EDITOR_E_PROV_PROCESS_RATIONALE"), value = "", width = NULL, placeholder = i18n()$t("MD_EDITOR_E_PROV_PROCESS_RATIONALE"))),
+              column(5, textAreaInput(ns("entity_prov_process_description"), i18n()$t("MD_EDITOR_E_PROV_PROCESS_DESCRIPTION"), value = "", width = NULL, placeholder = i18n()$t("MD_EDITOR_E_PROV_PROCESS_DESCRIPTION"))),
               column(2,
-                     actionButton(ns("entity_prov_process_button_add"), title="Add process",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;"),
-                     actionButton(ns("entity_prov_process_button_clear"), title="Clear processes",size="sm",label="",icon=icon("trash"),class = "btn-warning", style = "margin-top:35px;")
+                     actionButton(ns("entity_prov_process_button_add"), title = i18n()$t("MD_EDITOR_E_PROV_PROCESS_ADD"),size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;"),
               )
             ),
-            uiOutput(ns("entity_processes_table_wrapper"))
+            DTOutput(ns("entity_processes_table"))
           ),
           tabPanel(
             value = "entity_datasets",
-            title = "Data",
+            title = i18n()$t("MD_EDITOR_E_DATA"),
             fluidRow(
               bs4Dash::accordion(
                 id = "entity_data_blocks",
                 bs4Dash::accordionItem(
-                  title = tags$span(icon("download"), " ", "Data access"),
+                  title = tags$span(icon("download"), " ", i18n()$t("MD_EDITOR_E_DATA_ACCESS")),
                   fluidRow(
                     column(4, selectInput(ns("entity_data_access"),
-                                          label="Access",
+                                          label= i18n()$t("MD_EDITOR_E_DATA_ACCESS"),
                                           multiple = F,
                                           choices = {
                                             geoflow::list_data_accessors()$id
@@ -400,19 +394,19 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
                                           selectize = FALSE
                     )),
                     column(4, selectInput(ns("entity_data_type"),
-                                          label="Mode",
+                                          label = i18n()$t("MD_EDITOR_E_DATA_ACCESS_MODE"),
                                           multiple = F,
                                           choices = {
                                             setNames(
                                               c("source", "dir"),
-                                              nm = c("File(s)", "Directory")
+                                              nm = c(i18n()$t("MD_EDITOR_E_DATA_ACCESS_MODE_FILE"), i18n()$t("MD_EDITOR_E_DATA_ACCESS_MODE_DIR"))
                                             )
                                           },
                                           selected = "source",
                                           selectize = FALSE
                     )),
                     column(4, selectInput(ns("entity_data_sourcetype"),
-                                          label="Source type",
+                                          label = i18n()$t("MD_EDITOR_E_DATA_SOURCETYPE"),
                                           multiple = F,
                                           choices = {
                                             geoflow::geoflow_data$new()$getAllowedSourceTypes()
@@ -427,19 +421,19 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
                   fluidRow(
                     column(12, textAreaInput(
                       ns("entity_data_sourcesql"),
-                      label = "Source SQL",
+                      label = i18n()$t("MD_EDITOR_E_DATA_SOURCESQL"),
                       value = if(!is.null(model)) model$data$sourceSql else NULL,
                       width = NULL,
-                      placeholder = "Source SQL"
+                      placeholder = i18n()$t("MD_EDITOR_E_DATA_SOURCESQL")
                     ))
                   )
                 ),
                 bs4Dash::accordionItem(
-                  title = tags$span(icon("table-list"), " ", "Data characteristics"),
+                  title = tags$span(icon("table-list"), " ", i18n()$t("MD_EDITOR_E_DATA_CHARACTERISTICS")),
                   icon = icon("table-list"),
                   fluidRow(
                     column(6, selectInput(ns("entity_data_spatialrepresentationtype"),
-                                          label="Spatial Representation type",
+                                          label = i18n()$t("MD_EDITOR_E_DATA_SRT"),
                                           multiple = F,
                                           choices = {
                                             c("vector","grid")
@@ -585,11 +579,6 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
                   title = tags$span(icon("upload"), icon("cloud"), " ", "Upload configuration - Cloud settings"),
                   fluidRow(
                   )
-                ),
-                bs4Dash::accordionItem(
-                  title = "Dictionary settings",
-                  fluidRow(
-                  )
                 )
               )
             )
@@ -721,7 +710,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     }
     
     #check_model
-    check_model = function(type, model){
+    check_model = function(type, model, validate = TRUE){
       INFO(sprintf("Check %s validity", type))
       req(!is.null(type))
       INFO("Copying view to model")
@@ -745,6 +734,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
              },
              "entity" = {
                entity = model
+               print(model$subjects)
                #main dc fields managed through observers
                #data simple fields
                #=> data -> data access fields
@@ -791,7 +781,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
                               "contact" = geoflow_validator_contacts$new(source = md_model_draft()$asDataFrame()),
                               "entity" = geoflow_validator_entities$new(source = md_model_draft()$asDataFrame())
       )
-      if(!is.null(meta_validator)){
+      if(!is.null(meta_validator) & validate){
         qa_errors = meta_validator$validate_content()
         print(qa_errors)
         valid = FALSE
@@ -825,23 +815,26 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     
     #render_field_elements_table
     render_field_elements_table = function(field, object_field = NULL, field_model = c("kvp","attributes"), list_elements = list(),
-                                           field_key = NULL, field_value = NULL, field_value_list = FALSE, 
+                                           field_key = NULL, field_value = NULL, field_value_object_field = NULL, field_value_list = FALSE, field_value_list_strategy = c("first","collapse"),
+                                           field_other_props = c(),
                                            btn_remove_id){
       objs <- md_model_draft()[[field]]
       if(!is.null(object_field)) objs <- objs[[object_field]]
       if (is.null(objs) || length(objs) == 0) {
         tbl <- tibble::tibble(key = character(0), value = character(0), delete = character(0))
+        names(tbl) <- c(i18n()$t("MD_EDITOR_KEY"),i18n()$t("MD_EDITOR_VALUE"),i18n()$t("MD_EDITOR_ACTIONS"))
       } else {
         tbl <- switch(field_model,
           "kvp" = {
             is_named_list = !is.null(names(objs))
             if(is_named_list){
               if(length(list_elements)==0){
-                do.call(rbind, lapply(names(objs), function(objname) {
+                out_tbl = do.call(rbind, lapply(names(objs), function(objname) {
                   tibble::tibble(key = objname, value = objs[[objname]])
                 }))
+                names(out_tbl) <- c(i18n()$t("MD_EDITOR_KEY"),i18n()$t("MD_EDITOR_VALUE"))
+                out_tbl
               }else{
-                print(names(objs))
                 do.call(rbind, lapply(names(objs), function(objname){
                   tibble::as_tibble(
                     do.call(cbind, lapply(list_elements, function(x){
@@ -853,19 +846,42 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
                 }))
               }
             }else{
-              do.call("rbind", lapply(objs, function(obj){
-                data.frame(key = obj[[field_key]], value = if(field_value_list) obj[[field_value]][[1]] else obj[[field_value]])
+              out_tbl = do.call("rbind", lapply(objs, function(obj){
+                r_tbl = tibble::tibble(key = obj[[field_key]])
+                names(r_tbl)[length(names(r_tbl))] <- i18n()$t("MD_EDITOR_KEY")
+                if(length(field_other_props)>0) for(field_other_prop in field_other_props){
+                  r_tbl[[field_other_prop]]  = if(!is.null(obj[[field_other_prop]])) obj[[field_other_prop]] else "-"
+                  names(r_tbl)[length(names(r_tbl))] <- i18n()$t(paste0("MD_EDITOR_", toupper(field_other_prop)))
+                }
+                r_tbl$value = if(field_value_list) {
+                  print(obj[[field_value]])
+                  switch(field_value_list_strategy,
+                    "first" = if(!is.null(field_value_object_field)) obj[[field_value]][[1]][[field_value_object_field]] else obj[[field_value]][[1]],
+                    "collapse" = if(!is.null(field_value_object_field)){
+                      paste(sapply(obj[[field_value]], function(x){x[[field_value_object_field]]}), collapse=",")
+                    }else{
+                      paste(obj[[field_value]], collapse=",")
+                    }
+                  )
+                }else{
+                  obj[[field_value]]
+                }
+                names(r_tbl)[length(names(r_tbl))] <- i18n()$t("MD_EDITOR_VALUE")
+                r_tbl
               }))
+              out_tbl
             }
           },
           "attributes" = {
-            do.call("rbind", lapply(objs, function(obj){
+            out_tbl = do.call("rbind", lapply(objs, function(obj){
               data.frame(
                 name = obj,
                 description = if(!is.null(attr(obj, "description"))) attr(obj, "description") else "-",
                 uri = if(!is.null(attr(obj, "uri"))) attr(obj, "uri") else "-"
               )
             }))
+            names(out_tbl) <- c(i18n()$t("MD_EDITOR_NAME"),i18n()$t("MD_EDITOR_DESCRIPTION"),i18n()$t("MD_EDITOR_URI"))
+            out_tbl
           }
         )
         tbl$delete <- sprintf(
@@ -874,7 +890,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       </button>', seq_len(length(objs))
         )
       }
-      names(tbl)[length(names(tbl))] <- "Actions"
+      names(tbl)[length(names(tbl))] <- i18n()$t("MD_EDITOR_ACTIONS")
       if(nrow(tbl)>0) DT::datatable(
         tbl,
         escape = FALSE,
@@ -915,7 +931,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         }
         if(length(model[[field]][[object_field]])==0) model[[field]][[object_field]] = list()
       }
-      check_model(type = md_model_type(), model = model)
+      check_model(type = md_model_type(), model = model, validate = FALSE)
     }
     
     #loadCloudTree
@@ -947,7 +963,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     output$metadata_editor_info <- renderText({
       session$userData$module("metadata-editor")
       updateModuleUrl(session, "metadata-editor")
-      text <- i18n()$t("METADATA_EDITOR_TITLE")
+      text <- i18n()$t("MD_EDITOR_HEADER")
       pageLoaded(TRUE)
       text
     })
@@ -957,39 +973,38 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       fluidRow(
         bs4Dash::bs4ValueBox(
           width = 4,
-          value = h4("Contacts"), 
-          subtitle = "Create contacts to attach to datasets", 
+          value = h4(i18n()$t("MD_EDITOR_C")), 
+          subtitle = i18n()$t("MD_EDITOR_C_SUBTITLE"), 
           color = "primary",
           icon = icon("users"),
           footer = shiny::tagList(
-            bs4Dash::actionButton(inputId = ns("create_contact_table"), label = "Create table"),
-            bs4Dash::actionButton(inputId = ns("load_contact_table"), label = "Load table"),
-            bs4Dash::actionButton(inputId = ns("create_contact"), label = "Create contact")
-            
+            bs4Dash::actionButton(inputId = ns("create_contact_table"), label = i18n()$t("MD_EDITOR_TABLE_CREATE")),
+            bs4Dash::actionButton(inputId = ns("load_contact_table"), label = i18n()$t("MD_EDITOR_TABLE_LOAD")),
+            bs4Dash::actionButton(inputId = ns("create_contact"), label = i18n()$t("MD_EDITOR_C_CREATE"))
           )
         ),
         bs4Dash::bs4ValueBox(
           width = 4,
-          value = h4("Entities"), 
-          subtitle = "Create entities to describe datasets", 
+          value = h4(i18n()$t("MD_EDITOR_E")), 
+          subtitle = i18n()$t("MD_EDITOR_E_SUBTITLE"), 
           color = "primary",
           icon = icon("table"),
           footer = shiny::tagList(
-            bs4Dash::actionButton(inputId = ns("create_entity_table"), label = "Create table"),
-            bs4Dash::actionButton(inputId = ns("load_entity_table"), label = "Load table"), #TODO
-            bs4Dash::actionButton(inputId = ns("create_entity"), label = "Create entity")
+            bs4Dash::actionButton(inputId = ns("create_entity_table"), label = i18n()$t("MD_EDITOR_TABLE_CREATE")),
+            bs4Dash::actionButton(inputId = ns("load_entity_table"), label = i18n()$t("MD_EDITOR_TABLE_LOAD")),
+            bs4Dash::actionButton(inputId = ns("create_entity"), label = i18n()$t("MD_EDITOR_E_CREATE"))
           )
         ),
         bs4Dash::bs4ValueBox(
           width = 4,
-          value = h4("Dictionary"), 
-          subtitle = "Create a data dictionary", 
+          value = h4(i18n()$t("MD_EDITOR_D")), 
+          subtitle = i18n()$t("MD_EDITOR_D_SUBTITLE"),
           color = "primary",
           icon = icon("table-list"),
           footer = shiny::tagList(
-            bs4Dash::actionButton(inputId = ns("create_dictionary_table"), label = "Create table"),
-            bs4Dash::actionButton(inputId = ns("load_dictionary_table"), label = "Load table"), #TODO
-            bs4Dash::actionButton(inputId = ns("create_dictionary"), label = "Create dictionary")
+            bs4Dash::actionButton(inputId = ns("create_dictionary_table"), label = i18n()$t("MD_EDITOR_TABLE_CREATE")),
+            bs4Dash::actionButton(inputId = ns("load_dictionary_table"), label = i18n()$t("MD_EDITOR_TABLE_LOAD")),
+            bs4Dash::actionButton(inputId = ns("create_dictionary"), label = i18n()$t("MD_EDITOR_D_CREATE"))
           )
         )
       )
@@ -1228,7 +1243,8 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       render_field_elements_table(
         field = "contacts",
         field_model = "kvp",
-        field_key = "role", field_value = "identifiers", field_value_list = TRUE,
+        field_key = "role", field_value = "identifiers", 
+        field_value_list = TRUE, field_value_list_strategy = "first",
         btn_remove_id = ns("entity_contact_button_remove")
       )
     })
@@ -1296,23 +1312,14 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       }else{NULL}  
     })
     output$entity_subjects_table <- DT::renderDT(server = FALSE, {
-      req(!is.null(md_model_draft()))
-      DT::datatable(
-        do.call("rbind", lapply(md_model_draft()$subjects, function(subj){
-          data.frame(key = subj$key, title = if(!is.null(subj$name)) subj$name else "-", keywords = paste0(sapply(subj$keywords, function(kwd){kwd$name}),collapse=","))
-        })), 
-        escape = FALSE,
-        rownames = FALSE,
-        options = list(
-          dom = 't',
-          ordering=F
-        )
+      render_field_elements_table(
+        field = "subjects", 
+        field_model = "kvp",
+        field_key = "key", field_value = "keywords", field_value_object_field = "name",
+        field_value_list = TRUE, field_value_list_strategy = "collapse",
+        field_other_props = "name",
+        btn_remove_id = ns("entity_subject_button_remove")
       )
-    })
-    output$entity_subjects_table_wrapper <-renderUI({
-      if(length(md_model_draft()$subjects) > 0){
-        DTOutput(ns("entity_subjects_table"))
-      }else{NULL}  
     })
     #entity -> Date
     output$entity_dates_table <- DT::renderDT(server = FALSE, {
@@ -1363,35 +1370,20 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     #entity -> TemporalCoverage
     #entity -> Relation
     output$entity_relations_table <- DT::renderDT(server = FALSE, {
-      DT::datatable(
-        do.call("rbind", lapply(md_model_draft()$relations, function(rel){
-          data.frame(
-            key = rel$key, 
-            name = rel$name, 
-            description = if(!is.null(rel$description)) rel$description else "", 
-            link = rel$link
-          )
-          
-        })), 
-        escape = FALSE,
-        rownames = FALSE,
-        options = list(
-          dom = 't',
-          ordering=F
-        )
+      render_field_elements_table(
+        field = "relations",
+        field_model = "kvp",
+        field_key = "key", field_value = "link", 
+        field_other_props = c("name", "description"),
+        btn_remove_id = ns("entity_relation_button_remove")
       )
-    })
-    output$entity_relations_table_wrapper <-renderUI({
-      if(length(md_model_draft()$relations)>0){
-        DTOutput(ns("entity_relations_table"))
-      }else{NULL}
     })
     #entity -> Rights
     output$entity_right_wrapper <- renderUI({
       switch(input$entity_right_type,
         "license" = {
           selectInput(ns("entity_right"),
-                         label="License",
+                         label = i18n()$t("MD_EDITOR_E_RIGHT_LICENSE"),
                          multiple = F,
                          choices = {
                            licenses = zen4R::get_licenses()
@@ -1403,7 +1395,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         },
         "useConstraint" = {
           selectInput(ns("entity_right"),
-                         label="Use constraint",
+                         label = i18n()$t("MD_EDITOR_E_RIGHT_USECONSTRAINT"),
                          multiple = F,
                          choices = geometa::ISORestriction$values(),
                          selected = NULL,
@@ -1412,7 +1404,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         },
         "accessConstraint" = {
           selectInput(ns("entity_right"),
-                         label="Access constraint",
+                         label = i18n()$t("MD_EDITOR_E_RIGHT_ACCESSCONSTRAINT"),
                          multiple = F,
                          choices = geometa::ISORestriction$values(),
                          selected = NULL,
@@ -1420,89 +1412,81 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
           )
         },
         "otherConstraint" = {
-          textInput(ns("entity_right"), "Other constraint",value = "", width = NULL, placeholder = "Other constraint")
+          textInput(ns("entity_right"), 
+                    i18n()$t("MD_EDITOR_E_RIGHT_OTHERCONSTRAINT"),
+                    value = "", width = NULL, 
+                    placeholder = i18n()$t("MD_EDITOR_E_RIGHT_OTHERCONSTRAINT"))
         },
         "use" = {
-          textInput(ns("entity_right"), "Use limitation",value = "", width = NULL, placeholder = "Use limitation")
+          textInput(ns("entity_right"),
+                    i18n()$t("MD_EDITOR_E_RIGHT_USELIMITATION"),
+                    value = "", width = NULL, 
+                    placeholder = i18n()$t("MD_EDITOR_E_RIGHT_USELIMITATION"))
         },
         "useLimitation" = {
-          textInput(ns("entity_right"), "Use limitation",value = "", width = NULL, placeholder = "Use limitation")
+          textInput(ns("entity_right"),
+                    i18n()$t("MD_EDITOR_E_RIGHT_USELIMITATION"),
+                    value = "", width = NULL, 
+                    placeholder = i18n()$t("MD_EDITOR_E_RIGHT_USELIMITATION"))
         },
         "accessRight" = {
-          textInput(ns("entity_right"), "Access right",value = "", width = NULL, placeholder = "Access right")
+          textInput(ns("entity_right"),
+                    i18n()$t("MD_EDITOR_E_RIGHT_ACCESSRIGHT"),
+                    value = "", width = NULL, 
+                    placeholder = i18n()$t("MD_EDITOR_E_RIGHT_ACCESSRIGHT"))
         },
         "accessConditions" = {
-          textInput(ns("entity_right"), "Access conditions",value = "", width = NULL, placeholder = "Access conditions")
+          textInput(ns("entity_right"),
+                    i18n()$t("MD_EDITOR_E_RIGHT_ACCESSCONDITIONS"),
+                    value = "", width = NULL, 
+                    placeholder = i18n()$t("MD_EDITOR_E_RIGHT_ACCESSCONDITIONS"))
+        },
+        "termsOfUse" = {
+          textInput(ns("entity_right"),
+                    i18n()$t("MD_EDITOR_E_RIGHT_TERMSOFUSE"),
+                    value = "", width = NULL, 
+                    placeholder = i18n()$t("MD_EDITOR_E_RIGHT_TERMSOFUSE"))
+        },
+        "disclaimer" = {
+          textInput(ns("entity_right"),
+                    i18n()$t("MD_EDITOR_E_RIGHT_DISCLAIMER"),
+                    value = "", width = NULL, 
+                    placeholder = i18n()$t("MD_EDITOR_E_RIGHT_DISCLAIMER"))
+        },
+        "citation" = {
+          textInput(ns("entity_right"),
+                    i18n()$t("MD_EDITOR_E_RIGHT_CITATION"),
+                    value = "", width = NULL, 
+                    placeholder = i18n()$t("MD_EDITOR_E_RIGHT_CITATION"))
         }
       )
     })
     output$entity_rights_table <- DT::renderDT(server = FALSE, {
-      DT::datatable(
-        do.call("rbind", lapply(md_model_draft()$rights, function(right){
-          data.frame(
-            key = right$key, 
-            name = right$values[[1]]
-          )
-        })), 
-        escape = FALSE,
-        rownames = FALSE,
-        options = list(
-          dom = 't',
-          ordering=F
-        )
+      render_field_elements_table(
+        field = "rights",
+        field_model = "kvp",
+        field_key = "key", field_value = "values", field_value_list_strategy = "collapse", 
+        btn_remove_id = ns("entity_right_button_remove")
       )
-    })
-    output$entity_rights_table_wrapper <-renderUI({
-      if(length(md_model_draft()$rights)>0){
-        DTOutput(ns("entity_rights_table"))
-      }else{NULL}
     })
     #entity -> Format
     output$entity_formats_table <- DT::renderDT(server = FALSE, {
-      DT::datatable(
-        do.call("rbind", lapply(md_model_draft()$formats, function(format){
-          data.frame(
-            key = format$key, 
-            name = format$name, 
-            description = if(!is.null(format$description)) format$description else "", 
-            uri = if(!is.null(format$uri)) format$uri else ""
-          )
-        })), 
-        escape = FALSE,
-        rownames = FALSE,
-        options = list(
-          dom = 't',
-          ordering=F
-        )
+      render_field_elements_table(
+        field = "formats",
+        field_model = "kvp",
+        field_key = "key", field_value = "name",
+        field_other_props = c("description", "uri"),
+        btn_remove_id = ns("entity_format_button_remove")
       )
-    })
-    output$entity_formats_table_wrapper <-renderUI({
-      if(length(md_model_draft()$formats)>0){
-        DTOutput(ns("entity_formats_table"))
-      }else{NULL}
     })
     #entity -> Provenance
     output$entity_processes_table <- DT::renderDT(server = FALSE, {
-      req(!is.null(md_model_draft()$provenance))
-      DT::datatable(
-        do.call("rbind", lapply(md_model_draft()$provenance$processes, function(process){
-          data.frame(
-            rationale = process$rationale, 
-            description = process$description
-          )
-        })), 
-        escape = FALSE,
-        rownames = FALSE,
-        options = list(
-          dom = 't',
-          ordering=F
-        )
+      render_field_elements_table(
+        field = "provenance", object_field = "processes",
+        field_model = "kvp",
+        field_key = "rationale", field_value = "description", field_value_list_strategy = "collapse", 
+        btn_remove_id = ns("entity_prov_process_button_remove")
       )
-    })
-    output$entity_processes_table_wrapper <-renderUI({
-      if(length(md_model_draft()$provenance$processes)>0){
-        DTOutput(ns("entity_processes_table"))
-      }else{NULL}
     })
     #entity -> Data
     output$entity_data_type_entry <- renderUI({
@@ -2317,7 +2301,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       md_model_subject_selection(vocab)
     })
     observe({
-      req(input$entity_vocabulary_server != "custom")
+      req(!is.null(md_model_subject_selection()))
       if(is.null(md_model_subject_draft())){
         md_model_subject_draft(geoflow_subject$new())
       }
@@ -2329,6 +2313,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       kwds = kwds[kwds != ""]
       subj$keywords = lapply(kwds, function(x){geoflow_keyword$new(name = x)})
       md_model_subject_draft(subj)
+      print("this is printed, why")
       print(subj)
     })
     observeEvent(input$entity_subject_button_add,{
@@ -2343,11 +2328,10 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       }
       md_model_draft(entity$clone(deep = T))
     })
-    observeEvent(input$entity_subject_button_clear,{
-      INFO("Clear subjects from entity")
-      entity = md_model_draft()
-      entity$subjects = list()
-      md_model_draft(entity$clone(deep = T))
+    observeEvent(input$entity_subject_button_remove,{
+      md_model_subject_draft(NULL)
+      md_model_subject_selection(NULL)
+      handle_field_element_remove_event(field = "subjects", input_btn_remove = input$entity_subject_button_remove)  
     })
     #events entity -> Date
     observeEvent(input$entity_date_button_add,{
@@ -2439,10 +2423,8 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       entity$addRelation(rel)
       md_model_draft(entity$clone(deep = T))
     })
-    observeEvent(input$entity_relation_button_clear,{
-      entity = md_model_draft()
-      entity$relations = list()
-      md_model_draft(entity$clone(deep = T))
+    observeEvent(input$entity_relation_button_remove,{
+      handle_field_element_remove_event(field = "relations", input_btn_remove = input$entity_relation_button_remove)
     })
     #events entity -> Rights
     observeEvent(input$entity_right_button_add,{
@@ -2453,10 +2435,8 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       entity$addRight(right)
       md_model_draft(entity$clone(deep = T))
     })
-    observeEvent(input$entity_format_button_clear,{
-      entity = md_model_draft()
-      entity$rights = list()
-      md_model_draft(entity$clone(deep = T))
+    observeEvent(input$entity_right_button_remove,{
+      handle_field_element_remove_event(field = "rights", input_btn_remove = input$entity_right_button_remove)
     })
     #events entity -> Format
     observeEvent(input$entity_format_button_add,{
@@ -2469,10 +2449,8 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       entity$addFormat(form)
       md_model_draft(entity$clone(deep = T))
     })
-    observeEvent(input$entity_format_button_clear,{
-      entity = md_model_draft()
-      entity$formats = list()
-      md_model_draft(entity$clone(deep = T))
+    observeEvent(input$entity_format_button_remove,{
+      handle_field_element_remove_event(field = "formats", input_btn_remove = input$entity_format_button_remove)
     })
     
     #events entity -> Provenance
@@ -2490,10 +2468,8 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       entity$setProvenance(prov)
       md_model_draft(entity$clone(deep = T))
     })
-    observeEvent(input$entity_prov_process_button_clear,{
-      entity = md_model_draft()
-      entity$provenance = NULL
-      md_model_draft(entity$clone(deep = T))
+    observeEvent(input$entity_prov_process_button_remove,{
+      handle_field_element_remove_event(field = "provenance", object_field = "processes", input_btn_remove = input$entity_prov_process_button_remove)
     })
     #events entity -> Data
     observeEvent(input$entity_data_source_button_add,{
