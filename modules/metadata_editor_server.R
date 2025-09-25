@@ -382,7 +382,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
               bs4Dash::accordion(
                 id = "entity_data_blocks",
                 bs4Dash::accordionItem(
-                  title = tags$span(icon("download"), " ", i18n()$t("MD_EDITOR_E_DATA_ACCESS")),
+                  title = tags$span(icon("download"), " ", i18n()$t("MD_EDITOR_E_DATA_ACCESS_INFORMATION")),
                   fluidRow(
                     column(4, selectInput(ns("entity_data_access"),
                                           label= i18n()$t("MD_EDITOR_E_DATA_ACCESS"),
@@ -442,7 +442,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
                                           selectize = FALSE
                     )),
                     column(4, textInput(ns("entity_data_featuretype"),
-                                          label="Feature type",
+                                          label = i18n()$t("MD_EDITOR_E_DATA_FT"),
                                           width = NULL,
                                           value = if(!is.null(model)) model$data$featureType else NULL,
                                           placeholder = "Feature type"
@@ -450,10 +450,10 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
                   )
                 ),
                 bs4Dash::accordionItem(
-                  title = tags$span(icon("upload"), " ", "Upload configuration"),
+                  title = tags$span(icon("upload"), " ", i18n()$t("MD_EDITOR_E_DATA_UPLOAD_CONFIGURATION")),
                   fluidRow(
                     column(4, selectInput(ns("entity_data_upload"),
-                                          label="Upload?",
+                                          label = i18n()$t("MD_EDITOR_E_DATA_UPLOAD"),
                                           multiple = F,
                                           choices = {
                                             c(TRUE,FALSE)
@@ -462,7 +462,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
                                           selectize = FALSE
                     )),
                     column(4, selectInput(ns("entity_data_uploadtype"),
-                                          label="Upload type",
+                                          label = i18n()$t("MD_EDITOR_E_DATA_UPLOAD_TYPE"),
                                           multiple = F,
                                           choices = {
                                             geoflow::geoflow_data$new()$getAllowedUploadTypes()
@@ -475,67 +475,67 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
                   fluidRow(
                     column(6, textInput(
                       ns("entity_data_uploadsource"),
-                      label = "Upload source",
+                      label = i18n()$t("MD_EDITOR_E_DATA_UPLOAD_SOURCE"),
                       value = if(!is.null(model) & !is.null(model$data$uploadSource)) model$data$uploadSource[[1]] else NULL,
                       width = NULL,
-                      placeholder = "Source to upload"
+                      placeholder = i18n()$t("MD_EDITOR_E_DATA_UPLOAD_SOURCE")
                     ))
                   )
                 ),
                 bs4Dash::accordionItem(
-                  title = tags$span(icon("upload"), icon("globe"), " ", "Upload configuration - GeoServer settings"),
-                  h6("Layer identification"),
+                  title = tags$span(icon("upload"), icon("globe"), " ", paste0(i18n()$t("MD_EDITOR_E_DATA_UPLOAD_CONFIGURATION"), " - GeoServer")),
+                  h6(i18n()$t("MD_EDITOR_E_DATA_LAYER_IDENTIFICATION")),
                   fluidRow(
                     column(6,textInput(ns("entity_data_layername"),
-                                       label = "Name",
+                                       label = i18n()$t("MD_EDITOR_NAME"),
                                        value = if(!is.null(model)) model$data$layername else NULL,
                                        width = NULL,
-                                       placeholder = "Name"
+                                       placeholder = i18n()$t("MD_EDITOR_NAME")
                     )),
                     column(6,textInput(ns("entity_data_layeruri"),
-                                       label = "URI",
+                                       label = i18n()$t("MD_EDITOR_URI"),
                                        value = if(!is.null(model)) model$data$layeruri else NULL,
                                        width = NULL,
-                                       placeholder = "URI"
+                                       placeholder = i18n()$t("MD_EDITOR_URI")
                     ))
                   ),
                   fluidRow(
                     column(12,textInput(ns("entity_data_layertitle"),
-                                        label = "Title",
+                                        label = i18n()$t("MD_EDITOR_TITLE"),
                                         value = if(!is.null(model)) model$data$layertitle else NULL,
                                         width = NULL,
-                                        placeholder = "Title"
+                                        placeholder = i18n()$t("MD_EDITOR_TITLE")
                     ))
                   ),
                   fluidRow(
                     column(12,textAreaInput(
                       ns("entity_data_layerdesc"),
-                      label = "Description",
+                      label = i18n()$t("MD_EDITOR_DESCRIPTION"),
                       value = if(!is.null(model)) model$data$layerdesc else NULL,
                       width = NULL,
-                      placeholder = "Description"
+                      placeholder = i18n()$t("MD_EDITOR_DESCRIPTION")
                     ))
                   ),
                   h6("SQL View layer settings"),
                   fluidRow(
                     column(12, textAreaInput(
                       ns("entity_data_sql"),
-                      label = "SQL (for Geoserver SQL views)",
+                      label = i18n()$t("MD_EDITOR_E_DATA_VIEWSQL"),
                       value = if(!is.null(model)) model$data$sql else NULL,
                       width = NULL,
-                      placeholder = "SQL (for Geoserver SQL views)"
+                      placeholder = i18n()$t("MD_EDITOR_E_DATA_VIEWSQL")
                     ))
                   ),
                   fluidRow(
                     column(6, textInput(
                       ns("entity_data_geometry_field"),
-                      label = "Geometry field",
+                      label = i18n()$t("MD_EDITOR_E_DATA_GEOMETRY_FIELD"),
                       value = if(!is.null(model)) model$data$geometryField else NULL,
                       width = NULL,
-                      placeholder = "Geometry field"
+                      placeholder = i18n()$t("MD_EDITOR_E_DATA_GEOMETRY_FIELD")
                     )),
                     column(6, selectInput(ns("entity_data_geometry_type"),
-                      label="Geometry type",
+                      label = i18n()$t("MD_EDITOR_E_DATA_GEOMETRY_TYPE"),
                       multiple = F,
                       choices = {
                         c("Geometry", "GeometryCollection", "Point","MultiPoint","LineString","MultiLineString","Polygon","MultiPolygon")
@@ -546,37 +546,37 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
                   ),
                   fluidRow(
                     column(3, textInput(ns("entity_data_parameter_fieldname"),
-                      label = "Parameter fieldname",
+                      label = i18n()$t("MD_EDITOR_E_DATA_PARAMETER_FIELDNAME"),
                       value = NULL,
                       width = NULL,
-                      placeholder = "Parameter fieldname"
+                      placeholder = i18n()$t("MD_EDITOR_E_DATA_PARAMETER_FIELDNAME")
                     )),
                     column(3, textInput(ns("entity_data_parameter_alias"),
-                      label = "Parameter alias (optional)",
+                      label = i18n()$t("MD_EDITOR_E_DATA_PARAMETER_ALIAS"),
                       value = NULL,
                       width = NULL,
-                      placeholder = "Parameter alias"
+                      placeholder = i18n()$t("MD_EDITOR_E_DATA_PARAMETER_ALIAS")
                     )),
                     column(3, textInput(ns("entity_data_parameter_regexp"),
-                      label = "Parameter control (regexp)",
+                      label = i18n()$t("MD_EDITOR_E_DATA_PARAMETER_REGEXP"),
                       value = NULL,
                       width = NULL,
-                      placeholder = "Parameter control (regexp)"
+                      placeholder = i18n()$t("MD_EDITOR_E_DATA_PARAMETER_REGEXP")
                     )),
                     column(2, textInput(ns("entity_data_parameter_defaultvalue"),
-                      label = "Default value",
+                      label = i18n()$t("MD_EDITOR_E_DATA_PARAMETER_DEFAULTVALUE"),
                       value = NULL,
                       width = NULL,
-                      placeholder = "Default value"
+                      placeholder = i18n()$t("MD_EDITOR_E_DATA_PARAMETER_DEFAULTVALUE")
                     )),
                     column(1,
-                           actionButton(ns("entity_data_parameter_button_add"), title="Add parameter",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;")
+                           actionButton(ns("entity_data_parameter_button_add"), title = i18n()$t("MD_EDITOR_E_DATA_PARAMETER_ADD"),size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;")
                     )
                   ),
                   uiOutput(ns("entity_data_parameters_table_wrapper"))
                 ),
                 bs4Dash::accordionItem(
-                  title = tags$span(icon("upload"), icon("cloud"), " ", "Upload configuration - Cloud settings"),
+                  title = tags$span(icon("upload"), icon("cloud"), " ", paste0(i18n()$t("MD_EDITOR_E_DATA_UPLOAD_CONFIGURATION")," - Cloud")),
                   fluidRow(
                   )
                 )
@@ -590,7 +590,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
           type = "pills", vertical = T,
           tabPanel(
             value = "dictionary_featuretype",
-            title = "Identifier",
+            title = i18n()$t("MD_EDITOR_IDENTIFIER"),
             fluidRow(
               column(12,
                 textInput(
@@ -598,31 +598,31 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
                   label = "Identifier",
                   value = if(!is.null(model)) model$id else NULL,
                   width = NULL,
-                  placeholder = "Identifier"
+                  placeholder = i18n()$t("MD_EDITOR_IDENTIFIER")
                 )
               )
             )
           ),
           tabPanel(
             value = "dictionary_members",
-            title = "Members",
+            title = i18n()$t("MD_EDITOR_D_MEMBERS"),
             fluidRow(
               column(6,
                 textInput(
                   inputId = ns("featuremember_code"),
-                  label = "Code",
+                  label = i18n()$t("MD_EDITOR_CODE"),
                   value = NULL,
                   width = NULL,
-                  placeholder = "Code"
+                  placeholder = i18n()$t("MD_EDITOR_CODE")
                 )       
               ),
               column(6,
                textInput(
                  inputId = ns("featuremember_name"),
-                 label = "Name",
+                 label = i18n()$t("MD_EDITOR_NAME"),
                  value = NULL,
                  width = NULL,
-                 placeholder = "Name"
+                 placeholder = i18n()$t("MD_EDITOR_NAME")
                )                      
               )
             ),
@@ -630,7 +630,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
               column(4,
                      selectInput(
                        inputId = ns("featuremember_type"),
-                       label="Type",
+                       label= i18n()$t("MD_EDITOR_TYPE"),
                        multiple = F,
                        choices = {
                          fm_types = c("attribute", "variable",
@@ -639,10 +639,10 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
                                       "gml:PolygonPropertyType", "gml:MultiPolygonPropertyType")
                          setNames(
                            fm_types, 
-                           nm = c("Attribute", "Variable",
-                                  "Geometry - Point", "Geometry - MultiPoint",
-                                  "Geometry - LineString", "Geometry - MultiLineString",
-                                  "Geometry - Polygon", "Geometry - MultiPolygon")
+                           nm = c(i18n()$t("MD_EDITOR_D_ATTRIBUTE"), i18n()$t("MD_EDITOR_D_VARIABLE"),
+                                  i18n()$t("MD_EDITOR_D_GEOM_POINT"), i18n()$t("MD_EDITOR_D_GEOM_MULTIPOINT"),
+                                  i18n()$t("MD_EDITOR_D_GEOM_LINESTRING"), i18n()$t("MD_EDITOR_D_GEOM_MULTILINESTRING"),
+                                  i18n()$t("MD_EDITOR_D_GEOM_POLYGON"), i18n()$t("MD_EDITOR_D_GEOM_MULTIPOLYGON"))
                          )
                        },
                        selected = "attribute",
@@ -652,7 +652,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
               column(2,
                 selectInput(
                   inputId = ns("featuremember_minoccurs"),
-                  label = "Min occurs",
+                  label = i18n()$t("MD_EDITOR_D_MINOCCURS"),
                   multiple = F,
                   choices = {
                     setNames(c(0,1), nm = c("0","1"))
@@ -664,7 +664,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
               column(2,
                      selectInput(
                        inputId = ns("featuremember_maxoccurs"),
-                       label = "Max occurs",
+                       label = i18n()$t("MD_EDITOR_D_MAXOCCURS"),
                        multiple = F,
                        choices = {
                          setNames(c(1,Inf), nm = c("1","Inf"))
@@ -674,32 +674,50 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
                      )       
               ),
               column(4,
-                     textInput(inputId = ns("featuremember_measurementunit"), label = "Unit", value = NULL, width = NULL, placeholder = "Measurement unit (for variable)")     
+                     textInput(inputId = ns("featuremember_measurementunit"), label = "Unit", value = NULL, width = NULL, placeholder = i18n()$t("MD_EDITOR_D_MEASUREMENTUNIT"))     
               )
             ),
             fluidRow(
               column(6,
                      textInput(
                        inputId = ns("featuremember_def"),
-                       label = "Definition",
+                       label = i18n()$t("MD_EDITOR_D_DEFINITION"),
                        value = NULL,
                        width = NULL,
-                       placeholder = "Definition"
+                       placeholder = i18n()$t("MD_EDITOR_D_DEFINITION")
                      )       
               ),  
               column(6,
-                textInput(inputId = ns("featuremember_definitionsource"), label = "Definition source", value = NULL, width = NULL, placeholder = "Definition source")           
+                textInput(
+                  inputId = ns("featuremember_definitionsource"), 
+                  label = i18n()$t("MD_EDITOR_D_DEFINITION_SOURCE"), 
+                  value = NULL, 
+                  width = NULL, 
+                  placeholder = i18n()$t("MD_EDITOR_D_DEFINITION_SOURCE")
+                )           
               )
             ),
             fluidRow(
               column(5,
-                textInput(inputId = ns("featuremember_registerid"), label = "Register ID", value = NULL, width = NULL, placeholder = "Register function name")
+                textInput(
+                  inputId = ns("featuremember_registerid"), 
+                  label = i18n()$t("MD_EDITOR_D_REGISTER_FUNCTION"), 
+                  value = NULL, 
+                  width = NULL, 
+                  placeholder = i18n()$t("MD_EDITOR_D_REGISTER_FUNCTION")
+                )
               ),
               column(5,
-                textInput(inputId = ns("featuremember_registerscript"), label = "Register Script", value = NULL, width = NULL, placeholder = "Register script")
+                textInput(
+                  inputId = ns("featuremember_registerscript"), 
+                  label = i18n()$t("MD_EDITOR_D_REGISTER_SCRIPT"), 
+                  value = NULL, 
+                  width = NULL, 
+                  placeholder = i18n()$t("MD_EDITOR_D_REGISTER_SCRIPT")
+                )
               ),
               column(2,
-                actionButton(ns("featuretype_member_button_add"), title="Add type",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;")
+                actionButton(ns("featuretype_member_button_add"), title = i18n()$t("MD_EDITOR_D_ADD"),size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;")
               )
             ),
             DTOutput(ns("featuretype_members_table"))
@@ -1027,17 +1045,25 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
               icon = icon("pencil"),
               value = paste0("tabbox_", md_model_type(), "_form_editor"),
               title = switch(md_model_draft_mode(),
-                "creation" = paste0("Create new ",md_model_type()),
-                "edition" = paste0("Edit ", md_model_type()," ", md_model_draft_idx())
+                "creation" = switch(md_model_type(),
+                                    "contact" = i18n()$t("MD_EDITOR_C_NEW"),
+                                    "entity" = i18n()$t("MD_EDITOR_E_NEW"),
+                                    "featuretype" = i18n()$t("MD_EDITOR_D_NEW")
+                ),
+                "edition" = paste0(switch(md_model_type(),
+                                          "contact" = i18n()$t("MD_EDITOR_C_EDIT"),
+                                          "entity" = i18n()$t("MD_EDITOR_E_EDIT"),
+                                          "featuretype" = i18n()$t("MD_EDITOR_D_EDIT")
+                                          )," ", md_model_draft_idx())
               ),
               handle_metadata_form(type = md_model_type(), model = if(md_model_draft_mode() == "edition") md_model_draft() else NULL),hr(),
-              bs4Dash::actionButton(inputId = ns("check_model"), label = "Check"),
-              bs4Dash::actionButton(inputId = ns("save_model"), label = "Save", style= if(is.null(valid) || (is.logical(valid) & !valid)) "display:none;" else {NULL}),br(),
+              bs4Dash::actionButton(inputId = ns("check_model"), label = i18n()$t("MD_EDITOR_CHECK")),
+              bs4Dash::actionButton(inputId = ns("save_model"), label = i18n()$t("MD_EDITOR_SAVE"), style= if(is.null(valid) || (is.logical(valid) & !valid)) "display:none;" else {NULL}),br(),
               uiOutput(ns("meta_editor_validation_status"))
             ),
             tabPanel(
               value = paste0("tabbox_", md_model_type(), "_form_validator"),
-              title = "Validation report",
+              title = i18n()$t("MD_EDITOR_VALIDATION_REPORT"),
               uiOutput(ns("validation_issues_table_wrapper"))
             )
           ),
@@ -1047,17 +1073,17 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
             type = "tabs", solidHeader = FALSE, status = "teal",
             maximizable = TRUE,
             tabPanel(
-              title = "Table view",
+              title = i18n()$t("MD_EDITOR_TABLE_VIEW"),
               rhandsontable::rHandsontableOutput(ns("meta_table")),hr(),
               downloadButton(
-                outputId = ns(paste0("download_",md_model_type(),"_table_csv")), label = "Download as CSV",
+                outputId = ns(paste0("download_",md_model_type(),"_table_csv")), label = i18n()$t("MD_EDITOR_TABLE_DOWNLOAD_CSV"),
                 icon = icon("file-csv", class = "fa-lg", style = "color:#476ec5")
               ),
               downloadButton(
-                outputId = ns(paste0("download_",md_model_type(),"_table_excel")), label = "Download as Excel",
+                outputId = ns(paste0("download_",md_model_type(),"_table_excel")), label = i18n()$t("MD_EDITOR_TABLE_DOWNLOAD_EXCEL"),
                 icon = icon("file-excel", class = "fa-lg", style = "color:#217346;")
               ),
-              if(appConfig$auth){bs4Dash::actionButton(inputId = ns(paste0("upload_", md_model_type(),"_table")), label = "Save to cloud")}else{""}
+              if(appConfig$auth){bs4Dash::actionButton(inputId = ns(paste0("upload_", md_model_type(),"_table")), label = i18n()$t("MD_EDITOR_TABLE_UPLOAD_CLOUD"))}else{""}
             )
           )
         )
@@ -1067,7 +1093,10 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     output$meta_editor_entry_selector_wrapper <- renderUI({
       req(length(md_model())>0)
       selectInput(ns("meta_editor_entry_selector"),
-                     label = sprintf("Edit %s entry", md_model_type()),
+                     label = switch(md_model_type(),
+                                    "contact" = i18n()$t("MD_EDITOR_C_EDIT"),
+                                    "entity" =  i18n()$t("MD_EDITOR_E_EDIT"),
+                                    "featuretype" = i18n()$t("MD_EDITOR_D_EDIT")),
                      multiple = F,
                      choices = {
                        switch(md_model_type(),
@@ -1121,12 +1150,12 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     output$meta_editor_validation_status <- renderUI({
       if(!is.null(md_model_draft_valid())) if(!md_model_draft_valid()){
         bs4Dash::bs4Badge(
-          if("ERROR" %in% md_model_draft_validation_report()$type) "Validation errors" else "Validation warnings",
+          if("ERROR" %in% md_model_draft_validation_report()$type) i18n()$t("MD_EDITOR_VALIDATION_ERRORS") else i18n()$t("MD_EDITOR_VALIDATION_WARNINGS"),
           color = if("ERROR" %in% md_model_draft_validation_report()$type) "danger" else "warning"
         )
       }else{
         bs4Dash::bs4Badge(
-          "No validation issues",
+          i18n()$t("MD_EDITOR_NOVALIDATIONISSUES"),
           color = "success"
         )
       }
@@ -1179,7 +1208,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       if(!is.null(md_model_draft_validation_report())){
         DTOutput(ns("validation_issues_table"))
       }else{
-        tags$em("No validation issues")
+        tags$em(i18n()$t("MD_EDITOR_NOVALIDATIONISSUES"))
       }
     })
     #entity
@@ -1213,10 +1242,10 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     #entity -> Contact
     output$entity_contact_wrapper <- renderUI({
       if(is.null(ref_contacts())){
-        textInput(ns("entity_contact"), "Contact",value = "", width = NULL, placeholder = "Contact")
+        textInput(ns("entity_contact"), i18n()$t("MD_EDITOR_C_ONE"),value = "", width = NULL, placeholder = i18n()$t("MD_EDITOR_C_ONE"))
       }else{
         selectInput(ns("entity_contact"),
-                       label="Contact",
+                       label = i18n()$t("MD_EDITOR_C_ONE"),
                        multiple = F,
                        choices = {
                          setNames(
@@ -1277,15 +1306,15 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       req(input$entity_vocabulary_server == "custom")
       shiny::tagList(
         fluidRow(
-          column(4,textInput(ns("custom_vocab_thesaurus_name"), "Thesaurus name",value = NULL, width = NULL, placeholder = "Thesaurus name")),
-          column(4,textInput(ns("custom_vocab_thesaurus_uri"), "Thesaurus URI",value = NULL, width = NULL, placeholder = "Thesaurus URI"))
+          column(4,textInput(ns("custom_vocab_thesaurus_name"), i18n()$t("MD_EDITOR_E_THESAURUS_NAME"),value = NULL, width = NULL, placeholder = i18n()$t("MD_EDITOR_E_THESAURUS_NAME"))),
+          column(4,textInput(ns("custom_vocab_thesaurus_uri"), i18n()$t("MD_EDITOR_E_THESAURUS_URI"),value = NULL, width = NULL, placeholder = i18n()$t("MD_EDITOR_E_THESAURUS_URI")))
         ),
         fluidRow(
-          column(4,textInput(ns("custom_vocab_keyword_name"), "Keyword", value = NULL, width = NULL, placeholder = "Keyword")),
-          column(4,textInput(ns("custom_vocab_keyword_uri"), "Keyword URI", value = NULL, width = NULL, placeholder = "Keyword URI")),
+          column(4,textInput(ns("custom_vocab_keyword_name"), i18n()$t("MD_EDITOR_E_KEYWORD"), value = NULL, width = NULL, placeholder = i18n()$t("MD_EDITOR_E_KEYWORD"))),
+          column(4,textInput(ns("custom_vocab_keyword_uri"), i18n()$t("MD_EDITOR_E_KEYWORD_URI"), value = NULL, width = NULL, placeholder = i18n()$t("MD_EDITOR_E_KEYWORD_URI"))),
           column(4,
-                 actionButton(ns("custom_vocab_keyword_button_add"), title="Add keyword",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;"),
-                 actionButton(ns("custom_vocab_keyword_button_clear"), title="Clear keyword",size="sm",label="",icon=icon("trash"),class = "btn-warning", style = "margin-top:35px;")
+                 actionButton(ns("custom_vocab_keyword_button_add"), title=i18n()$t("MD_EDITOR_E_KEYWORD_ADD"),size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;"),
+                 actionButton(ns("custom_vocab_keyword_button_clear"), title=i18n()$t("MD_EDITOR_E_KEYWORD_CLEAR"),size="sm",label="",icon=icon("trash"),class = "btn-warning", style = "margin-top:35px;")
           )
         ),
         uiOutput(ns("entity_vocabulary_custom_keyword_table_wrapper"))
@@ -1362,7 +1391,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         shiny::textInput(ns("entity_wkt"), label = "WKT", placeholder = "WKT", value = md_model_bbox())
       } else {
         shiny::tagList(
-          tags$em("Draw a rectangle on the map to see the WKT representation."),
+          tags$em(i18n()$t("MD_EDITOR_E_BBOX_HELPTEXT")),
           shiny::textInput(ns("entity_wkt"), label = "WKT", placeholder = "WKT", value = NULL)
         )
       }
@@ -1493,10 +1522,10 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       if(input$entity_data_type == "source"){
         tagList(
           fluidRow(
-            column(4,textInput(ns("entity_data_source_name"), "Source name",value = NULL, width = NULL)),
-            column(6,textInput(ns("entity_data_source_uri"), "Source path/URL",value = NULL, width = NULL)),
+            column(4,textInput(ns("entity_data_source_name"), i18n()$t("MD_EDITOR_E_DATA_SOURCE_NAME"),value = NULL, width = NULL)),
+            column(6,textInput(ns("entity_data_source_uri"), i18n()$t("MD_EDITOR_E_DATA_SOURCE_URL"),value = NULL, width = NULL)),
             column(1,
-                   actionButton(ns("entity_data_source_button_add"), title="Add source",size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;")
+                   actionButton(ns("entity_data_source_button_add"), title=i18n()$t("MD_EDITOR_E_DATA_SOURCE_ADD"),size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;")
             )
           ),
           hr(),
@@ -1504,7 +1533,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         )
       }else if(input$entity_data_type == "dir"){
         fluidRow(
-          column(12,textInput(ns("entity_data_dir"), "Directory",value = NULL, width = NULL)),
+          column(12,textInput(ns("entity_data_dir"), i18n()$t("MD_EDITOR_E_DATA_SOURCE_DIRECTORY"),value = NULL, width = NULL)),
         )
       }
     })
@@ -1641,17 +1670,17 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     observeEvent(input$load_entity_table, {
       shiny::showModal(
         shiny::modalDialog(
-          title = "Load list of entities",
+          title = i18n()$t("MD_EDITOR_LOAD_ENTITIES"),
           if(appConfig$auth){
             tagList(
               jsTreeR::jstreeOutput(ns("entities_load_tree_leavesonly")),
-              actionButton(ns("entities_load_tree_leavesonly_select"), label = "Select", status = "primary", style = "float:right"),
-              actionButton(ns("entities_load_tree_leavesonly_cancel"), label = "Cancel", style = "float:right")
+              actionButton(ns("entities_load_tree_leavesonly_select"), label = i18n()$t("MD_EDITOR_SELECT"), status = "primary", style = "float:right"),
+              actionButton(ns("entities_load_tree_leavesonly_cancel"), label = i18n()$t("MD_EDITOR_CANCEL"), style = "float:right")
             )   
           }else{
             tagList(
-              fileInput(ns("entities_local_file"), label = "File",multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = "Choose file"),
-              actionButton(ns("entities_local_file_select"), label = "Select", style = "float:right")
+              fileInput(ns("entities_local_file"), label = "File",multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = i18n()$t("MD_EDITOR_CHOOSEFILE")),
+              actionButton(ns("entities_local_file_select"), label = i18n()$t("MD_EDITOR_SELECT"), style = "float:right")
             )
           },
           easyClose = FALSE, footer = NULL 
@@ -1741,13 +1770,13 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       req(appConfig$auth)
       shiny::showModal(
         shiny::modalDialog(
-          title = "Upload entities to the cloud",
+          title = i18n()$t("MD_EDITOR_E_CLOUD_UPLOAD"),
           tagList(
-            textInput(ns("entity_table_filename"), label = "File name", value = "new_entities.csv", width = NULL),
+            textInput(ns("entity_table_filename"), label = i18n()$t("MD_EDITOR_FILENAME"), value = "new_entities.csv", width = NULL),
             hr(),
             jsTreeR::jstreeOutput(ns("entities_load_tree")),
-            actionButton(ns("entities_load_tree_upload"), label = "Upload", status = "primary", style = "float:right"),
-            actionButton(ns("entities_load_tree_cancel"), label = "Cancel", style = "float:right")
+            actionButton(ns("entities_load_tree_upload"), label = i18n()$t("MD_EDITOR_UPLOAD"), status = "primary", style = "float:right"),
+            actionButton(ns("entities_load_tree_cancel"), label = i18n()$t("MD_EDITOR_CANCEL"), style = "float:right")
           ),
           easyClose = FALSE, footer = uiOutput(ns("overwriting_file_danger")) 
         )
@@ -1818,17 +1847,17 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     observeEvent(input$load_contact_table, {
       shiny::showModal(
         shiny::modalDialog(
-          title = "Load list of contacts",
+          title = i18n()$t("MD_EDITOR_LOAD_CONTACTS"),
           if(appConfig$auth){
             tagList(
               jsTreeR::jstreeOutput(ns("contacts_load_tree_leavesonly")),
-              actionButton(ns("contacts_load_tree_leavesonly_select"), label = "Select", status = "primary", style = "float:right"),
-              actionButton(ns("contacts_load_tree_leavesonly_cancel"), label = "Cancel", style = "float:right")
+              actionButton(ns("contacts_load_tree_leavesonly_select"), label = i18n()$t("MD_EDITOR_SELECT"), status = "primary", style = "float:right"),
+              actionButton(ns("contacts_load_tree_leavesonly_cancel"), label = i18n()$t("MD_EDITOR_CANCEL"), style = "float:right")
             )   
           }else{
             tagList(
-              fileInput(ns("contacts_local_file"), label = "File",multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = "Choose file"),
-              actionButton(ns("contacts_local_file_select"), label = "Select", style = "float:right")
+              fileInput(ns("contacts_local_file"), label = "File",multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = i18n()$t("MD_EDITOR_CHOOSEFILE")),
+              actionButton(ns("contacts_local_file_select"), label = i18n()$t("MD_EDITOR_SELECT"), style = "float:right")
             )
           },
           easyClose = FALSE, footer = NULL 
@@ -1918,9 +1947,9 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       req(appConfig$auth)
       shiny::showModal(
         shiny::modalDialog(
-          title = "Upload contacts to the cloud",
+          title = i18n()$t("MD_EDITOR_C_CLOUD_UPLOAD"),
           tagList(
-            textInput(ns("contact_table_filename"), label = "File name", value = "new_contacts.csv", width = NULL),
+            textInput(ns("contact_table_filename"), label = i18n()$t("MD_EDITOR_FILENAME"), value = "new_contacts.csv", width = NULL),
             hr(),
             jsTreeR::jstreeOutput(ns("contacts_load_tree")),
             actionButton(ns("contacts_load_tree_upload"), label = "Upload", status = "primary", style = "float:right"),
@@ -1988,17 +2017,17 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     observeEvent(input$load_dictionary_table, {
       shiny::showModal(
         shiny::modalDialog(
-          title = "Load dictionary",
+          title = i18n()$t("MD_EDITOR_LOAD_DICTIONARY"),
           if(appConfig$auth){
             tagList(
               jsTreeR::jstreeOutput(ns("featuretypes_load_tree_leavesonly")),
-              actionButton(ns("featuretypes_load_tree_leavesonly_select"), label = "Select", status = "primary", style = "float:right"),
-              actionButton(ns("featuretypes_load_tree_leavesonly_cancel"), label = "Cancel", style = "float:right")
+              actionButton(ns("featuretypes_load_tree_leavesonly_select"), label = i18n()$t("MD_EDITOR_SELECT"), status = "primary", style = "float:right"),
+              actionButton(ns("featuretypes_load_tree_leavesonly_cancel"), label = i18n()$t("MD_EDITOR_CANCEL"), style = "float:right")
             )   
           }else{
             tagList(
-              fileInput(ns("featuretypes_local_file"), label = "File",multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = "Choose file"),
-              actionButton(ns("featuretypes_local_file_select"), label = "Select", style = "float:right")
+              fileInput(ns("featuretypes_local_file"), label = "File",multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = i18n()$t("MD_EDITOR_CHOOSEFILE")),
+              actionButton(ns("featuretypes_local_file_select"), label = i18n()$t("MD_EDITOR_SELECT"), style = "float:right")
             )
           },
           easyClose = FALSE, footer = NULL 
@@ -2086,13 +2115,13 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       req(appConfig$auth)
       shiny::showModal(
         shiny::modalDialog(
-          title = "Upload dictionary to the cloud",
+          title = i18n()$t("MD_EDITOR_D_CLOUD_UPLOAD"),
           tagList(
-            textInput(ns("featuretype_table_filename"), label = "File name", value = "new_dictionary.csv", width = NULL),
+            textInput(ns("featuretype_table_filename"), label = i18n()$t("MD_EDITOR_FILENAME"), value = "new_dictionary.csv", width = NULL),
             hr(),
             jsTreeR::jstreeOutput(ns("featuretypes_load_tree")),
-            actionButton(ns("featuretypes_load_tree_upload"), label = "Upload", status = "primary", style = "float:right"),
-            actionButton(ns("featuretypes_load_tree_cancel"), label = "Cancel", style = "float:right")
+            actionButton(ns("featuretypes_load_tree_upload"), label = i18n()$t("MD_EDITOR_UPLOAD"), status = "primary", style = "float:right"),
+            actionButton(ns("featuretypes_load_tree_cancel"), label = i18n()$t("MD_EDITOR_CANCEL"), style = "float:right")
           ),
           easyClose = FALSE, footer = uiOutput(ns("overwriting_file_danger")) 
         )
@@ -2187,16 +2216,16 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     observeEvent(input$entity_contact_load,{
       shiny::showModal(
         shiny::modalDialog(
-          title = "Load list of contacts",
+          title = i18n()$t("MD_EDITOR_LOAD_CONTACTS"),
           if(appConfig$auth){
             tagList(
               jsTreeR::jstreeOutput(ns("entity_contacts_load_tree")),
-              actionButton(ns("entity_contacts_load_tree_select"), label = "Select", style = "float:right")
+              actionButton(ns("entity_contacts_load_tree_select"), label = i18n()$t("MD_EDITOR_SELECT"), style = "float:right")
             )   
           }else{
             tagList(
-              fileInput(ns("entity_contacts_local_file"), label = "File",multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = "Choose file"),
-              actionButton(ns("entity_contacts_local_file_select"), label = "Select", style = "float:right")
+              fileInput(ns("entity_contacts_local_file"), label = i18n()$t("MD_EDITOR_FILENAME"),multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = i18n()$t("MD_EDITOR_CHOOSEFILE")),
+              actionButton(ns("entity_contacts_local_file_select"), label = i18n()$t("MD_EDITOR_SELECT"), style = "float:right")
             )
           },
           easyClose = TRUE, footer = NULL 
@@ -2562,8 +2591,8 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     output$overwriting_file_danger <- renderUI({
       if(cloud_overwriting_danger()){
         bs4Dash::callout(
-          "Careful, you are going to overwrite a file on the cloud!",
-          title = "Danger",
+          i18n()$t("MD_EDITOR_D_CLOUD_UPLOAD_OVERWRITE"),
+          title = i18n()$t("MD_EDITOR_DANGER"),
           status = "danger",
           width = 12
         )

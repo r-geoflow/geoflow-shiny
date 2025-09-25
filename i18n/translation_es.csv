@@ -32,8 +32,23 @@ TABLE_LANGUAGE,//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json
 TABLE_NAME,Nombre
 TABLE_LASTMODIFIED,Ultima modificación
 TABLE_ACTIONS,Acciones
+MD_EDITOR_CHECK,Verificar
+MD_EDITOR_SAVE,Guardar
+MD_EDITOR_SELECT,Seleccionar
+MD_EDITOR_CANCEL,Anular
+MD_EDITOR_CHOOSEFILE,Escoger fichero
+MD_EDITOR_FILENAME,Nombre de fichero
+MD_EDITOR_UPLOAD,Cargar
+MD_EDITOR_VALIDATION_REPORT,Informe de validación
+MD_EDITOR_TABLE_VIEW,Vista tabular
+MD_EDITOR_TABLE_DOWNLOAD_CSV,Descargar como CSV
+MD_EDITOR_TABLE_DOWNLOAD_EXCEL,Descargar como Excel
+MD_EDITOR_TABLE_UPLOAD_CLOUD,Guardar en el cloud
 MD_EDITOR_HEADER,<h2>Crear/Editar metadatos</h2>
+MD_EDITOR_IDENTIFIER,Identificador
+MD_EDITOR_TYPE,Tipo
 MD_EDITOR_KEY,Clave
+MD_EDITOR_CODE,Código
 MD_EDITOR_TITLE,Título
 MD_EDITOR_NAME,Nombre
 MD_EDITOR_DESCRIPTION,Descripción
@@ -42,7 +57,11 @@ MD_EDITOR_URI,Vínculo
 MD_EDITOR_ACTIONS,Acciones
 MD_EDITOR_TABLE_CREATE,Crear tabla
 MD_EDITOR_TABLE_LOAD,Cargar tabla
+MD_EDITOR_NOVALIDATIONISSUES,Ningún problema de validación
+MD_EDITOR_C_NEW,Crear nuevo contacto
+MD_EDITOR_C_EDIT,Editar contacto
 MD_EDITOR_C,Contactos
+MD_EDITOR_C_ONE,Contacto
 MD_EDITOR_C_SUBTITLE,Crear contactos a asociar a juegos de datos
 MD_EDITOR_C_CREATE,Crear contacto
 MD_EDITOR_C_IDENTIFIERS,Identificador(es)
@@ -63,6 +82,9 @@ MD_EDITOR_C_PHONENUMBER,Número de teléfono
 MD_EDITOR_C_FACSIMILE,Fax
 MD_EDITOR_C_WEBSITE_URL,Sitio web - URL
 MD_EDITOR_C_WEBSITE_NAME,Sitio web - Nombre
+MD_EDITOR_C_CLOUD_UPLOAD,Cargar contactos en el cloud
+MD_EDITOR_E_NEW,Crear nueva entidad
+MD_EDITOR_E_EDIT,Editar entidad
 MD_EDITOR_E,Entidades
 MD_EDITOR_E_SUBTITLE,Crear entidades para describir juegos de datos
 MD_EDITOR_E_CREATE,Crear entidad
@@ -89,6 +111,13 @@ MD_EDITOR_E_DATE_ADD,Ajouter date
 MD_EDITOR_E_TYPE,Tipo
 MD_EDITOR_E_TYPE_ADD,Añadir tipo
 MD_EDITOR_E_LANGUAGE,Idioma
+MD_EDITOR_E_THESAURUS_NAME,Nombre del Tesauro
+MD_EDITOR_E_THESAURUS_URI,URI del Tesauro
+MD_EDITOR_E_KEYWORD,Palabra clave
+MD_EDITOR_E_KEYWORD_URI,URI de Palabra clave
+MD_EDITOR_E_KEYWORD_ADD,Añadir palabra clave
+MD_EDITOR_E_KEYWORD_CLEAR,Borrar palabra clave
+MD_EDITOR_E_BBOX_HELPTEXT, Dibujar un rectángulo en el mapa para ver la representación WKT.
 MD_EDITOR_E_SPATIALCOVERAGE,Cobertura espacial
 MD_EDITOR_E_TEMPORALCOVERAGE,Cobertura temporal
 MD_EDITOR_E_RELATIONS,Relacion(es)
@@ -119,13 +148,60 @@ MD_EDITOR_E_PROV_PROCESS_DESCRIPTION,Descripción del proceso
 MD_EDITOR_E_PROV_PROCESS_ADD,Añadir proceso
 MD_EDITOR_E_DATA,Datos
 MD_EDITOR_E_DATA_ACCESS,Acceso de datos
+MD_EDITOR_E_DATA_ACCESS_INFORMATION,Acceso et Información de datos
 MD_EDITOR_E_DATA_ACCESS_MODE,Modo
 MD_EDITOR_E_DATA_ACCESS_MODE_FILE,Fichero(s)
 MD_EDITOR_E_DATA_ACCESS_MODE_DIR,Directorio
+MD_EDITOR_E_DATA_SOURCE_NAME,Nombre de la fuente
+MD_EDITOR_E_DATA_SOURCE_URL,CAmino/URL de la fuente
+MD_EDITOR_E_DATA_SOURCE_ADD,Añadir fuente
+MD_EDITOR_E_DATA_SOURCE_DIRECTORY,Directorio
 MD_EDITOR_E_DATA_SOURCETYPE,Tipo de fuente
 MD_EDITOR_E_DATA_SOURCESQL,Fuente SQL
 MD_EDITOR_E_DATA_CHARACTERISTICS,Características de datos
+MD_EDITOR_E_DATA_UPLOAD_CONFIGURATION,Configuración de carga
+MD_EDITOR_E_DATA_LAYER_IDENTIFICATION,Identificación de capa
+MD_EDITOR_E_DATA_VIEWSQL,SQL (para vistas SQL GeoServer)
+MD_EDITOR_E_DATA_GEOMETRY_FIELD,Campo de geometría
+MD_EDITOR_E_DATA_GEOMETRY_TYPE,Tipo de geometría
+MD_EDITOR_E_DATA_PARAMETER_FIELDNAME,Parámetro - nombre
+MD_EDITOR_E_DATA_PARAMETER_ALIAS,Parámetro - alias (opcional)
+MD_EDITOR_E_DATA_PARAMETER_REGEXP,Parámetro - control (regexp)
+MD_EDITOR_E_DATA_PARAMETER_DEFAULTVALUE,Valor por defecto
+MD_EDITOR_E_DATA_PARAMETER_ADD,Añadir parametro
+MD_EDITOR_E_DATA_UPLOAD,Cargar?
+MD_EDITOR_E_DATA_UPLOAD_TYPE,Tipo de carga
+MD_EDITOR_E_DATA_UPLOAD_SOURCE,Fuente de carga
 MD_EDITOR_E_DATA_SRT,Tipo de representación espacial
+MD_EDITOR_E_DATA_FT,Tipo de entidad
+MD_EDITOR_E_CLOUD_UPLOAD,Cargar entidades en la nube
+MD_EDITOR_D_NEW,Crear nuevo diccionario
+MD_EDITOR_D_EDIT,Editar diccionario
 MD_EDITOR_D,Dictionario
 MD_EDITOR_D_SUBTITLE,Crear un dictionario de datos
 MD_EDITOR_D_CREATE,Crear dictionario
+MD_EDITOR_D_MEMBERS,Miembros
+MD_EDITOR_D_ATTRIBUTE,Atríbuto
+MD_EDITOR_D_VARIABLE,Variable
+MD_EDITOR_D_GEOM_POINT,Geometría - Punto
+MD_EDITOR_D_GEOM_MULTIPOINT,Geometría - MultiPunto
+MD_EDITOR_D_GEOM_LINESTRING,Geometría - Línea
+MD_EDITOR_D_GEOM_MULTILINESTRING,Geometría - MultiLínea
+MD_EDITOR_D_GEOM_POLYGON,Geometría - Polígono
+MD_EDITOR_D_GEOM_MULTIPOLYGON,Geometría - MultiPolígono
+MD_EDITOR_D_MINOCCURS,Min occurs
+MD_EDITOR_D_MAXOCCURS,Max occurs
+MD_EDITOR_D_MEASUREMENTUNIT,Unidad de medida
+MD_EDITOR_D_DEFINITION,Definición
+MD_EDITOR_D_DEFINITION_SOURCE,Fuente de definición
+MD_EDITOR_D_REGISTER_FUNCTION,Función de registro
+MD_EDITOR_D_REGISTER_SCRIPT,Script de registro
+MD_EDITOR_D_ADD,Añadir tipo
+MD_EDITOR_D_CLOUD_UPLOAD,Cargar el diccionario en la nube
+MD_EDITOR_D_CLOUD_UPLOAD_OVERWRITE,"Atención, usted va a reemplazar un fichero en la nube!"
+MD_EDITOR_VALIDATION_ERRORS,Errores de validación
+MD_EDITOR_VALIDATION_WARNINGS,Alertas de validación
+MD_EDITOR_LOAD_CONTACTS, Cargar una lista de contactos
+MD_EDITOR_LOAD_ENTITIES, Cargar una lista de entidades
+MD_EDITOR_LOAD_DICTIONARY, Cargar un diccionario
+MD_EDITOR_DANGER,Peligro
