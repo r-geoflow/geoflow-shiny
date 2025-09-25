@@ -13,6 +13,7 @@
     {"package": "shinyauthr", "version": "1.0.0", "repos": "https://cran.r-project.org"},
     {"package": "shinyjs", "version": "2.1.0", "repos": "https://cran.r-project.org"},
     {"package": "shinycssloaders", "version": "1.0.0", "repos": "https://cran.r-project.org"},
+    {"package": "shiny.i18n", "version": "0.3.0", "repos": "https://cran.r-project.org"},
     {"package": "bs4Dash", "version": "2.3.4", "repos": "https://cran.r-project.org"},
     {"package": "jsonlite", "version": "1.8.4", "repos": "https://cran.r-project.org"},
     {"package": "uuid", "version": "1.1-0", "repos": "https://cran.r-project.org"},
