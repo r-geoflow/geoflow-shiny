@@ -165,7 +165,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
               ))
             ),
             fluidRow(
-              style = "height:400px;overflow-y:auto;",
+              style = "height:500px;overflow-y:auto;",
               column(12,
                 uiOutput(ns("entity_vocabulary_custom")),
                 uiOutput(ns("entity_vocabulary_tree_wrapper"))
@@ -267,7 +267,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
               ))
             ),
             fluidRow(
-              style = "height:450px;overflow-y:auto;",
+              style = "height:500px;overflow-y:auto;",
               column(12,
                 leafletOutput(ns("entity_map"), height = "400px"),
                 uiOutput(ns("entity_wkt_wrapper"))
@@ -752,7 +752,6 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
              },
              "entity" = {
                entity = model
-               print(model$subjects)
                #main dc fields managed through observers
                #data simple fields
                #=> data -> data access fields
@@ -872,7 +871,6 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
                   names(r_tbl)[length(names(r_tbl))] <- i18n()$t(paste0("MD_EDITOR_", toupper(field_other_prop)))
                 }
                 r_tbl$value = if(field_value_list) {
-                  print(obj[[field_value]])
                   switch(field_value_list_strategy,
                     "first" = if(!is.null(field_value_object_field)) obj[[field_value]][[1]][[field_value_object_field]] else obj[[field_value]][[1]],
                     "collapse" = if(!is.null(field_value_object_field)){
@@ -1034,7 +1032,6 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       print("render meta editor")
       req(!is.null(md_model_type()))
       valid = md_model_draft_valid()
-      print(valid)
       shiny::tagList(
         fluidRow(
           tabBox(
@@ -1388,11 +1385,26 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     })
     output$entity_wkt_wrapper <- renderUI({
       if (!is.null(md_model_bbox())) {
-        shiny::textInput(ns("entity_wkt"), label = "WKT", placeholder = "WKT", value = md_model_bbox())
+        shiny::tagList(
+          shinyWidgets::textInputIcon(
+            inputId = ns("entity_wkt"), 
+            label = "WKT", placeholder = "WKT", 
+            value = md_model_bbox(),
+            icon = if(is(try(sf::st_as_sfc(input$entity_wkt, crs = input$entity_srid), silent = TRUE), "try-error")){
+              icon("warning", style = "color:orange;", title = i18n()$t("MD_EDITOR_E_WKT_INVALID"))
+            }else{
+              if(sf::st_is_valid(sf::st_as_sfc(input$entity_wkt, crs = input$entity_srid), silent = TRUE)){
+                icon("check", style = "color:green;", title = i18n()$t("MD_EDITOR_E_WKT_VALID")) 
+              }else{
+                icon("warning", style = "color:orange;", title = i18n()$t("MD_EDITOR_E_WKT_INVALID")) 
+              }
+            }
+          )
+        )
       } else {
         shiny::tagList(
           tags$em(i18n()$t("MD_EDITOR_E_BBOX_HELPTEXT")),
-          shiny::textInput(ns("entity_wkt"), label = "WKT", placeholder = "WKT", value = NULL)
+          shinyWidgets::textInputIcon(ns("entity_wkt"), label = "WKT", placeholder = "WKT", value = NULL)
         )
       }
     })
@@ -1646,7 +1658,23 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       })
       selected_entry = md_model()[has_entry][[1]]
       md_model_draft_idx(which(has_entry))
-      md_model_draft(selected_entry$clone(deep = TRUE))
+      entry = selected_entry$clone(deep = TRUE)
+      md_model_draft(entry)
+      if(is(entry, "geoflow_entity")){
+        bbox = entry$spatial_bbox
+        if(!is.null(bbox)){
+          geom = sf::st_polygon(list(
+            rbind(
+              c(bbox$xmin, bbox$ymin),
+              c(bbox$xmin, bbox$ymax),
+              c(bbox$xmax, bbox$ymax),
+              c(bbox$xmax, bbox$ymin),
+              c(bbox$xmin, bbox$ymin))
+          ))
+          geom_wkt = sf::st_as_text(geom)
+          md_model_bbox(geom_wkt)
+        }
+      }
     })
     
     #entities
@@ -2342,8 +2370,6 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       kwds = kwds[kwds != ""]
       subj$keywords = lapply(kwds, function(x){geoflow_keyword$new(name = x)})
       md_model_subject_draft(subj)
-      print("this is printed, why")
-      print(subj)
     })
     observeEvent(input$entity_subject_button_add,{
       INFO("Add subject to entity")
@@ -2410,21 +2436,31 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       # Parse WKT and extract bounding box coordinates
       bbox_polygon <- try(sf::st_as_sfc(input$entity_wkt, crs = input$entity_srid), silent = TRUE) # Convert WKT to sfc object
       if(!is(bbox_polygon, "try-error")){
-        bbox_coords <- sf::st_bbox(bbox_polygon) # Get bounding box (xmin, ymin, xmax, ymax)
-        
-        # Draw bounding box on the map
-        leafletProxy("entity_map") %>%
-          clearShapes() %>% # Clear previous drawings
-          addRectangles(
-            lng1 = bbox_coords["xmin"], lat1 = bbox_coords["ymin"],
-            lng2 = bbox_coords["xmax"], lat2 = bbox_coords["ymax"],
-            color = "blue", fillOpacity = 0.2
-          ) %>%
-          setView(
-            lng = mean(c(bbox_coords["xmin"], bbox_coords["xmax"])),
-            lat = mean(c(bbox_coords["ymin"], bbox_coords["ymax"])),
-            zoom = 2
-          )
+        if(sf::st_is_valid(bbox_polygon)){
+          bbox_coords <- sf::st_bbox(bbox_polygon) # Get bounding box (xmin, ymin, xmax, ymax)
+          md_model_bbox(input$entity_wkt)
+          # Draw bounding box on the map
+          leafletProxy("entity_map") %>%
+            clearShapes() %>% # Clear previous drawings
+            addRectangles(
+              lng1 = bbox_coords["xmin"], lat1 = bbox_coords["ymin"],
+              lng2 = bbox_coords["xmax"], lat2 = bbox_coords["ymax"],
+              color = "blue", fillOpacity = 0.2
+            ) %>%
+            setView(
+              lng = mean(c(bbox_coords["xmin"], bbox_coords["xmax"])),
+              lat = mean(c(bbox_coords["ymin"], bbox_coords["ymax"])),
+              zoom = 2
+            )
+        }else{
+          md_model_bbox(input$entity_wkt)
+          WARN(sprintf("Invalid geometry: %s", input$entity_wkt))
+          leafletProxy("entity_map") %>% clearShapes()
+        }
+      }else{
+        md_model_bbox(input$entity_wkt)
+        WARN(sprintf("Invalid geometry: %s", input$entity_wkt))
+        leafletProxy("entity_map") %>% clearShapes()
       }
     })
     #events entity -> TemporalCoverage
@@ -2514,7 +2550,6 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       if(!is.null(source)) if(nzchar(source)){
         edata$addSource(source)
         entity$setData(edata)
-        print(entity$data)
         md_model_draft(entity$clone(deep = T))
       }
     })
@@ -2535,7 +2570,6 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       if(nzchar(fieldname) & nzchar(regexp) & nzchar(defaultValue)){
         edata$setParameter(alias, fieldname, regexp, defaultValue)
         entity$setData(edata)
-        print(entity$data)
         md_model_draft(entity$clone(deep = T))
       }
     })

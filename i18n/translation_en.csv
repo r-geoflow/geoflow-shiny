@@ -175,6 +175,8 @@ MD_EDITOR_E_DATA_UPLOAD_SOURCE,Upload source
 MD_EDITOR_E_DATA_SRT,Spatial representation type
 MD_EDITOR_E_DATA_FT,Feature type
 MD_EDITOR_E_CLOUD_UPLOAD,Upload entities to the cloud
+MD_EDITOR_E_WKT_VALID,Valid geometry
+MD_EDITOR_E_WKT_INVALID,Invalid geometry
 MD_EDITOR_D_NEW,Create new dictionary
 MD_EDITOR_D_EDIT,Edit dictionary
 MD_EDITOR_D,Dictionary

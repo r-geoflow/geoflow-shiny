@@ -175,6 +175,8 @@ MD_EDITOR_E_DATA_UPLOAD_SOURCE,Fuente de carga
 MD_EDITOR_E_DATA_SRT,Tipo de representación espacial
 MD_EDITOR_E_DATA_FT,Tipo de entidad
 MD_EDITOR_E_CLOUD_UPLOAD,Cargar entidades en la nube
+MD_EDITOR_E_WKT_VALID,Geometría válida
+MD_EDITOR_E_WKT_INVALID,Geometría inválida
 MD_EDITOR_D_NEW,Crear nuevo diccionario
 MD_EDITOR_D_EDIT,Editar diccionario
 MD_EDITOR_D,Dictionario
