@@ -2265,6 +2265,23 @@
       ],
       "Hash": "59a83458750b23d58fe6565872fccb3d"
     },
+    "shinyWidgets": {
+      "Package": "shinyWidgets",
+      "Version": "0.9.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "bslib",
+        "grDevices",
+        "htmltools",
+        "jsonlite",
+        "rlang",
+        "sass",
+        "shiny"
+      ],
+      "Hash": "2356d33ce915ad415b1fe9a476c99a7d"
+    },
     "shinyauthr": {
       "Package": "shinyauthr",
       "Version": "1.0.0",
