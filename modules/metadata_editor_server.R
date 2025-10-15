@@ -41,7 +41,6 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     handle_metadata_form = function(type, model = NULL){
       switch(type,
         "contact" = bs4Dash::tabsetPanel(
-          width = 3,
           id = ns("contact_form"),
           type = "pills", vertical = T,
           tabPanel(
@@ -85,7 +84,6 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
           )
         ),
         "entity" = bs4Dash::tabsetPanel(
-          width = 3,
           id = ns("entity_form"),
           type = "pills", vertical = T,
           tabPanel(
@@ -585,7 +583,6 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
           )
         ),
         "featuretype" =  bs4Dash::tabsetPanel(
-          width = 3,
           id = ns("dictionary_form"),
           type = "pills", vertical = T,
           tabPanel(
@@ -986,12 +983,13 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     
     #meta edition choices (entity, contact, dictionary)
     output$meta_editor_choices <- renderUI({
+      print(md_model_type())
       fluidRow(
         bs4Dash::bs4ValueBox(
           width = 4,
-          value = h4(i18n()$t("MD_EDITOR_C")), 
+          value = h5(i18n()$t("MD_EDITOR_C"), style = "font-weight:bold;"), 
           subtitle = i18n()$t("MD_EDITOR_C_SUBTITLE"), 
-          color = "primary",
+          color = ifelse(is.null(md_model_type()), "white", ifelse(md_model_type()=="contact", "primary", "white")),
           icon = icon("users"),
           footer = shiny::tagList(
             bs4Dash::actionButton(inputId = ns("create_contact_table"), label = i18n()$t("MD_EDITOR_TABLE_CREATE")),
@@ -1001,9 +999,9 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         ),
         bs4Dash::bs4ValueBox(
           width = 4,
-          value = h4(i18n()$t("MD_EDITOR_E")), 
+          value = h5(i18n()$t("MD_EDITOR_E"), style = "font-weight:bold;"), 
           subtitle = i18n()$t("MD_EDITOR_E_SUBTITLE"), 
-          color = "primary",
+          color = ifelse(is.null(md_model_type()), "white", ifelse(md_model_type()=="entity", "primary", "white")),
           icon = icon("table"),
           footer = shiny::tagList(
             bs4Dash::actionButton(inputId = ns("create_entity_table"), label = i18n()$t("MD_EDITOR_TABLE_CREATE")),
@@ -1013,9 +1011,9 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         ),
         bs4Dash::bs4ValueBox(
           width = 4,
-          value = h4(i18n()$t("MD_EDITOR_D")), 
+          value = h5(i18n()$t("MD_EDITOR_D"), style = "font-weight:bold;"), 
           subtitle = i18n()$t("MD_EDITOR_D_SUBTITLE"),
-          color = "primary",
+          color = ifelse(is.null(md_model_type()), "white", ifelse(md_model_type()=="featuretype", "primary", "white")),
           icon = icon("table-list"),
           footer = shiny::tagList(
             bs4Dash::actionButton(inputId = ns("create_dictionary_table"), label = i18n()$t("MD_EDITOR_TABLE_CREATE")),
@@ -1025,6 +1023,26 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         )
       )
       
+    })
+    
+    output$meta_editor_hrcustom <- renderUI({
+      handle_style = function(type){
+        blank_style = ""
+        default_style = "margin:-25px 0px 0px 0px;padding:0px;height:25px;border-bottom:2px solid #007bff;"
+        ifelse(
+          is.null(md_model_type()), blank_style,
+          ifelse(md_model_type() != type, default_style,
+            paste0(default_style, "background:linear-gradient(#007bff, #007bff) no-repeat center/2px 100%")
+          )
+        )
+      }
+      
+      fluidRow(
+        column(width = 4, style = handle_style("contact")),
+        column(width = 4, style = handle_style("entity")),
+        column(width = 4, style = handle_style("featuretype")),
+        style = "margin:0px;"
+      )
     })
     
     #metadata editor
@@ -1728,7 +1746,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       config = list()
       config$profile$id = "load_ocs_entities"
       config$software$input$ocs = AUTH_API
-      config = geoflow::add_config_utils(config)
+      config = geoflow::add_config_logger(config)
       entity_handler = geoflow::geoflow_handler$new(yaml = system.file("metadata/entity", "entity_handler_ocs.yml", package = "geoflow"))
       entities = entity_handler$fun(
         handler = entity_handler,
@@ -1748,7 +1766,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       
       config = list()
       config$profile$id = "load_local_entities"
-      config = geoflow::add_config_utils(config)
+      config = geoflow::add_config_logger(config)
       entity_handler = switch(mime::guess_type(input$entities_local_file$datapath),
                                "text/csv" = geoflow::geoflow_handler$new(yaml = system.file("metadata/entity", "entity_handler_csv.yml", package = "geoflow")),
                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" = geoflow::geoflow_handler$new(yaml = system.file("metadata/entity", "entity_handler_excel.yml", package = "geoflow")),
@@ -1905,7 +1923,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       config = list()
       config$profile$id = "load_ocs_contacts"
       config$software$input$ocs = AUTH_API
-      config = geoflow::add_config_utils(config)
+      config = geoflow::add_config_logger(config)
       contact_handler = geoflow::geoflow_handler$new(yaml = system.file("metadata/contact", "contact_handler_ocs.yml", package = "geoflow"))
       contacts = contact_handler$fun(
         handler = contact_handler,
@@ -1925,7 +1943,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       
       config = list()
       config$profile$id = "load_local_contacts"
-      config = geoflow::add_config_utils(config)
+      config = geoflow::add_config_logger(config)
       contact_handler = switch(mime::guess_type(input$contacts_local_file$datapath),
                                "text/csv" = geoflow::geoflow_handler$new(yaml = system.file("metadata/contact", "contact_handler_csv.yml", package = "geoflow")),
                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" = geoflow::geoflow_handler$new(yaml = system.file("metadata/contact", "contact_handler_excel.yml", package = "geoflow")),
@@ -2075,7 +2093,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       config = list()
       config$profile$id = "load_ocs_featuretypes"
       config$software$input$ocs = AUTH_API
-      config = geoflow::add_config_utils(config)
+      config = geoflow::add_config_logger(config)
       dictionary_handler = geoflow::geoflow_handler$new(yaml = system.file("metadata/dictionary", "dictionary_handler_ocs.yml", package = "geoflow"))
       dict = dictionary_handler$fun(
         handler = dictionary_handler,
@@ -2095,7 +2113,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       
       config = list()
       config$profile$id = "load_local_featuretypes"
-      config = geoflow::add_config_utils(config)
+      config = geoflow::add_config_logger(config)
       dictionary_handler = switch(mime::guess_type(input$featuretypes_local_file$datapath),
                               "text/csv" = geoflow::geoflow_handler$new(yaml = system.file("metadata/entity", "dictionary_handler_csv.yml", package = "geoflow")),
                               "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" = geoflow::geoflow_handler$new(yaml = system.file("metadata/entity", "dictionary_handler_excel.yml", package = "geoflow")),
@@ -2285,7 +2303,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       config = list()
       config$profile$id = "load_ocs_contacts"
       config$software$input$ocs = AUTH_API
-      config = geoflow::add_config_utils(config)
+      config = geoflow::add_config_logger(config)
       contact_handler = geoflow::geoflow_handler$new(yaml = system.file("metadata/contact", "contact_handler_ocs.yml", package = "geoflow"))
       contacts = contact_handler$fun(
         handler = contact_handler,
@@ -2300,7 +2318,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       
       config = list()
       config$profile$id = "load_local_contacts"
-      config = geoflow::add_config_utils(config)
+      config = geoflow::add_config_logger(config)
       contact_handler = switch(mime::guess_type(input$entity_contacts_local_file$datapath),
         "text/csv" = geoflow::geoflow_handler$new(yaml = system.file("metadata/contact", "contact_handler_csv.yml", package = "geoflow")),
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" = geoflow::geoflow_handler$new(yaml = system.file("metadata/contact", "contact_handler_excel.yml", package = "geoflow")),

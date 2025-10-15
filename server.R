@@ -189,19 +189,20 @@ server <- function(input, output, session) {
       bs4Dash::menuItem(
         text = i18n()$t("MENU_ITEM_HOME"),
         tabName = "home",
+        icon = icon("home"),
         selected = TRUE
       ),
       bs4Dash::menuItem(
         text = i18n()$t("MENU_ITEM_CREATE"),
         tabName = "config",
-        bs4Dash::menuSubItem(text = i18n()$t("MENU_SUBITEM_CREATE_METADATA"), tabName = "metadata_editor"),
-        bs4Dash::menuSubItem(text = i18n()$t("MENU_SUBITEM_CREATE_WORKFLOW"), tabName = "config_editor"),
+        bs4Dash::menuSubItem(text = i18n()$t("MENU_SUBITEM_CREATE_METADATA"), tabName = "metadata_editor", icon = icon("file-edit")),
+        bs4Dash::menuSubItem(text = i18n()$t("MENU_SUBITEM_CREATE_WORKFLOW"), tabName = "config_editor", icon = icon("gears")),
         startExpanded = TRUE
       ),
       bs4Dash::menuItem(
         text = i18n()$t("MENU_ITEM_EXECUTE"),
         tabName = "exec",
-        bs4Dash::menuSubItem(text = i18n()$t("MENU_SUBITEM_EXECUTE_WORKFLOW"), tabName = "config_list"),
+        bs4Dash::menuSubItem(text = i18n()$t("MENU_SUBITEM_EXECUTE_WORKFLOW"), tabName = "config_list", icon = icon("play")),
         startExpanded = TRUE
       )
     )

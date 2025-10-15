@@ -1,4 +1,8 @@
-# geoflow-shiny
+# geoflow-shiny <a href="https://github.com/r-geoflow/geoflow"><img src='https://github.com/r-geoflow/geoflow-logos/blob/main/geoflow_square.png?raw=true' align="right" height="139" /></a>
+
+[![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
+[![Build Status](https://github.com/r-geoflow/geoflow-shiny/actions/workflows/docker-build-image.yml/badge.svg?branch=main)](https://github.com/r-geoflow/geoflow-shiny/actions/workflows/docker-build-image.yml)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4704562.svg)](https://doi.org/10.5281/zenodo.4704562)
 
 [geoflow-shiny](https://github.com/r-geoflow/geoflow-shiny) is a Shiny application to faciliate the management and execution of (meta)data workflows based on the [geoflow](https://github.com/r-geoflow/geoflow) R package.
 
