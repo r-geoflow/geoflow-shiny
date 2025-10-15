@@ -39,6 +39,7 @@ MD_EDITOR_CANCEL,Annuler
 MD_EDITOR_CHOOSEFILE,Choisir fichier
 MD_EDITOR_FILENAME,Nom du fichier
 MD_EDITOR_UPLOAD,Charger
+MD_EDITOR_UPLOAD_TOOLTIP,Sélectionner un dossier cible ou un fichier à écraser
 MD_EDITOR_VALIDATION_REPORT,Rapport de validation
 MD_EDITOR_TABLE_VIEW,Vue tabulaire
 MD_EDITOR_TABLE_DOWNLOAD_CSV,Télécharger en CSV

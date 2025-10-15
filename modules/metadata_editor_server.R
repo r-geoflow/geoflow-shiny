@@ -1098,7 +1098,13 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
                 outputId = ns(paste0("download_",md_model_type(),"_table_excel")), label = i18n()$t("MD_EDITOR_TABLE_DOWNLOAD_EXCEL"),
                 icon = icon("file-excel", class = "fa-lg", style = "color:#217346;")
               ),
-              if(appConfig$auth){bs4Dash::actionButton(inputId = ns(paste0("upload_", md_model_type(),"_table")), label = i18n()$t("MD_EDITOR_TABLE_UPLOAD_CLOUD"))}else{""}
+              if(appConfig$auth){
+                bs4Dash::actionButton(
+                  inputId = ns(paste0("upload_", md_model_type(),"_table")), 
+                  label = i18n()$t("MD_EDITOR_TABLE_UPLOAD_CLOUD"),
+                  icon = icon("cloud-arrow-up")
+                )
+              }else{""}
             )
           )
         )
@@ -1810,6 +1816,16 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         writexl::write_xlsx(metatbl, file)
       }
     )
+    
+    output$entities_load_tree_upload_action <- renderUI({
+      if(length(input$entities_load_tree_selected)>0){
+        actionButton(ns("entities_load_tree_upload"), label = i18n()$t("MD_EDITOR_UPLOAD"), status = "primary", style = "float:right")
+      }else{
+        disabled(actionButton(ns("entities_load_tree_upload"), label = i18n()$t("MD_EDITOR_UPLOAD"), 
+                              title = i18n()$t("MD_EDITOR_UPLOAD_TOOLTIP"),
+                              status = "primary", style = "float:right"))
+      }
+    })
     observeEvent(input$upload_entity_table, {
       #method only available for Cloud interaction
       cloud_overwriting_danger(FALSE)
@@ -1821,7 +1837,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
             textInput(ns("entity_table_filename"), label = i18n()$t("MD_EDITOR_FILENAME"), value = "new_entities.csv", width = NULL),
             hr(),
             jsTreeR::jstreeOutput(ns("entities_load_tree")),
-            actionButton(ns("entities_load_tree_upload"), label = i18n()$t("MD_EDITOR_UPLOAD"), status = "primary", style = "float:right"),
+            uiOutput(ns("entities_load_tree_upload_action")),
             actionButton(ns("entities_load_tree_cancel"), label = i18n()$t("MD_EDITOR_CANCEL"), style = "float:right")
           ),
           easyClose = FALSE, footer = uiOutput(ns("overwriting_file_danger")) 
@@ -1849,6 +1865,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       cloud_overwriting_danger(FALSE)
     })
     observeEvent(input$entities_load_tree_upload,{
+      req(length(input$entities_load_tree_selected)>0)
       selected_resource = input$entities_load_tree_selected[[1]]
       
       metatbl = do.call("rbind", lapply(md_model(), function(x){x$asDataFrame()}))
@@ -1987,6 +2004,15 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         writexl::write_xlsx(metatbl, file)
       }
     )
+    output$contacts_load_tree_upload_action <- renderUI({
+      if(length(input$contacts_load_tree_selected)>0){
+        actionButton(ns("contacts_load_tree_upload"), label = i18n()$t("MD_EDITOR_UPLOAD"), status = "primary", style = "float:right")
+      }else{
+        disabled(actionButton(ns("contacts_load_tree_upload"), label = i18n()$t("MD_EDITOR_UPLOAD"), 
+                              title = i18n()$t("MD_EDITOR_UPLOAD_TOOLTIP"),
+                              status = "primary", style = "float:right"))
+      }
+    })
     observeEvent(input$upload_contact_table, {
       #method only available for Cloud interaction
       cloud_overwriting_danger(FALSE)
@@ -1998,7 +2024,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
             textInput(ns("contact_table_filename"), label = i18n()$t("MD_EDITOR_FILENAME"), value = "new_contacts.csv", width = NULL),
             hr(),
             jsTreeR::jstreeOutput(ns("contacts_load_tree")),
-            actionButton(ns("contacts_load_tree_upload"), label = "Upload", status = "primary", style = "float:right"),
+            uiOutput(ns("contacts_load_tree_upload_action")),
             actionButton(ns("contacts_load_tree_cancel"), label = "Cancel", style = "float:right")
           ),
           easyClose = FALSE, footer = uiOutput(ns("overwriting_file_danger")) 
@@ -2027,6 +2053,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       cloud_overwriting_danger(FALSE)
     })
     observeEvent(input$contacts_load_tree_upload,{
+      req(length(input$contacts_load_tree_selected)>0)
       selected_resource = input$contacts_load_tree_selected[[1]]
       
       metatbl = do.call("rbind", lapply(md_model(), function(x){x$asDataFrame()}))
@@ -2155,6 +2182,15 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         writexl::write_xlsx(metatbl, file)
       }
     )
+    output$featuretypes_load_tree_upload_action <- renderUI({
+      if(length(input$featuretypes_load_tree_selected)>0){
+        actionButton(ns("featuretypes_load_tree_upload"), label = i18n()$t("MD_EDITOR_UPLOAD"), status = "primary", style = "float:right")
+      }else{
+        disabled(actionButton(ns("featuretypes_load_tree_upload"), label = i18n()$t("MD_EDITOR_UPLOAD"), 
+                              title = i18n()$t("MD_EDITOR_UPLOAD_TOOLTIP"),
+                              status = "primary", style = "float:right"))
+      }
+    })
     observeEvent(input$upload_featuretype_table, {
       #method only available for Cloud interaction
       cloud_overwriting_danger(FALSE)
@@ -2166,7 +2202,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
             textInput(ns("featuretype_table_filename"), label = i18n()$t("MD_EDITOR_FILENAME"), value = "new_dictionary.csv", width = NULL),
             hr(),
             jsTreeR::jstreeOutput(ns("featuretypes_load_tree")),
-            actionButton(ns("featuretypes_load_tree_upload"), label = i18n()$t("MD_EDITOR_UPLOAD"), status = "primary", style = "float:right"),
+            uiOutput(ns("featuretypes_load_tree_upload_action")),
             actionButton(ns("featuretypes_load_tree_cancel"), label = i18n()$t("MD_EDITOR_CANCEL"), style = "float:right")
           ),
           easyClose = FALSE, footer = uiOutput(ns("overwriting_file_danger")) 
@@ -2175,6 +2211,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     })
     observe({
       if(length(input$featuretypes_load_tree_selected)>0){
+        req(length(input$featuretypes_load_tree_selected)>0)
         selected_resource = input$featuretypes_load_tree_selected[[1]]
         if(selected_resource$type == "file"){
           shiny::updateTextInput(inputId = "featuretype_table_filename", value = basename(selected_resource$data))

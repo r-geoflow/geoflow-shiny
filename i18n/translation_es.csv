@@ -39,6 +39,7 @@ MD_EDITOR_CANCEL,Anular
 MD_EDITOR_CHOOSEFILE,Escoger fichero
 MD_EDITOR_FILENAME,Nombre de fichero
 MD_EDITOR_UPLOAD,Cargar
+MD_EDITOR_UPLOAD_TOOLTIP,Seleccionar una carpeta cible o un fichero a reemplazar
 MD_EDITOR_VALIDATION_REPORT,Informe de validación
 MD_EDITOR_TABLE_VIEW,Vista tabular
 MD_EDITOR_TABLE_DOWNLOAD_CSV,Descargar como CSV
