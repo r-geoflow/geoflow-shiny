@@ -9,6 +9,8 @@ MENU_SUBITEM_CREATE_WORKFLOW,Créer/Editer configuration
 MENU_SUBITEM_EXECUTE_WORKFLOW,Executer flux de travail
 HOME_TITLE,Lancer des flux de travail interactifs avec
 HOME_WORKFLOWS,Flux de travail
+CONFIG_EDITOR_TITLE,<b>geoflow</b> Editeur de configuration
+CONFIG_EDITOR_SUBTITLE,"Créer, éditer et sauvegarder une configuration de flux de travail"
 EXEC_TITLE,<h2>Liste des configurations <b>geoflow</b> <small>Accéder à un flux de travail et l'éxecuter</small></h2><hr>
 EXEC_CONSOLE,Console
 EXEC_WORKFLOW,Flux de travail

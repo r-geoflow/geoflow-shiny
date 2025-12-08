@@ -5,16 +5,10 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
   
   ns <- session$ns
   
-  observeEvent(i18n(),{
-    #update i18n to module session
-    #shiny.i18n::update_lang(i18n()$get_translation_language(), session = session)
-  })
-  
-  output$config_editor_info <- renderText({
+  output$config_editor_info <- renderUI({
     session$userData$module("configuration-editor")
     updateModuleUrl(session, "configuration-editor")
-    text <- "<h2><b>geoflow</b> configuration editor <small>Create, edit and save a <b>geoflow</b> configuration</small></h2><hr>"
-    text
+    tags$h2(HTML(i18n()$t("CONFIG_EDITOR_TITLE")),tags$small(HTML(i18n()$t("CONFIG_EDITOR_SUBTITLE"))))
   })
   
   AUTH_API <- try(get("AUTH_API", envir = GEOFLOW_SHINY_ENV), silent = TRUE)
