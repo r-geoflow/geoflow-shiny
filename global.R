@@ -13,11 +13,14 @@ source("assets/commons.R")
 
 #config
 #---------------------------------------------------------------------------------------
-#config_file = "D:/Documents/DEV/Packages/geoflow-shiny_config_inrae.yml"
 config_file <- "resources/config.yml"
 #test shiny server resource file existence (if mount through docker container)
 shiny_server_config_file <- "/etc/geoflow-shiny/config.yml"
 if(file.exists(shiny_server_config_file)) config_file <- shiny_server_config_file
+#test local environment variable (for local use)
+if(nzchar(Sys.getenv("GEOFLOW_CONFIG"))){
+  if(file.exists(Sys.getenv("GEOFLOW_CONFIG"))) config_file <- Sys.getenv("GEOFLOW_CONFIG")
+}
 if(!file.exists(config_file)) stop(sprintf("No configuration file at '%s'", config_file))
 appConfig <- read_config(config_file)
 
