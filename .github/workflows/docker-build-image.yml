@@ -53,7 +53,12 @@ jobs:
           key: ${{ runner.os }}-buildx-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-buildx-
-
+      - name: Free disk space
+        run: |
+          docker system prune -af || true
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf ~/.ghc
       - name: Build Docker image
         run: |
           docker buildx build \
