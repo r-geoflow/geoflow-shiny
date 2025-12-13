@@ -1058,10 +1058,27 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
             run = if(length(ctrl_actions$list)>0) sapply(ctrl_actions$list, function(x){as.logical(x$run)}) else logical(0)
           )
         )
-        in_action$type = if(length(ctrl_actions$list)>0) geoflow::list_actions()[sapply(in_action$id, function(x){which(x==geoflow::list_actions()$id)}),]$type else character(0)
-        in_action$def = if(length(ctrl_actions$list)>0) geoflow::list_actions()[sapply(in_action$id, function(x){which(x==geoflow::list_actions()$id)}),]$definition else character(0)
+        in_action$type = if(length(ctrl_actions$list)>0) {
+          sapply(in_action$id, function(x){
+            idx = which(x==geoflow::list_actions()$id)
+            if(length(idx)>0){
+              geoflow::list_actions()[idx,]$type
+            }else{
+              character(0)
+            }
+          })
+        }
+        in_action$def = if(length(ctrl_actions$list)>0){
+          sapply(in_action$id, function(x){
+            idx = which(x==geoflow::list_actions()$id)
+            if(length(idx)>0){
+              geoflow::list_actions()[idx,]$definition
+            }else{
+              character(0)
+            }
+          })
+        }
         colnames(in_action)[colnames(in_action) %in% c("id","run","type","def")] <- c("Identifier", "Run?", "Action Type", "Definition")
-        print(in_action)
         in_action
       },
       selection='single', escape=FALSE,rownames=FALSE,
