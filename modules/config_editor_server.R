@@ -89,15 +89,21 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
     #load metadata
     #contacts
     config_contacts <- config$metadata$contacts
-    if(!is.null(names(config_contacts))) config_contacts <- list(config_contacts)
+    if(!is.null(names(config_contacts))) if(!is.list(config_contacts)) config_contacts <- list(config_contacts)
     ctrl_metadata$contacts = do.call("rbind", lapply(config_contacts, function(config_contact){
       addContactSource(handler = config_contact$handler, source = config_contact$source)
     }))
     #entities
     config_entities <- config$metadata$entities
-    if(!is.null(names(config_entities))) config_entities <- list(config_entities)
+    if(!is.null(names(config_entities))) if(!is.list(config_entities)) config_entities <- list(config_entities)
     ctrl_metadata$entities = do.call("rbind", lapply(config_entities, function(config_entity){
       addEntitySource(handler = config_entity$handler, source = config_entity$source)
+    }))
+    #dictionary
+    config_dictionaries <- config$metadata$dictionary
+    if(!is.null(names(config_dictionaries))) if(!is.list(config_dictionaries)) config_dictionaries <- list(config_dictionaries)
+    ctrl_metadata$dictionary = do.call("rbind", lapply(config_dictionaries, function(config_dictionary){
+      addDictionarySource(handler = config_dictionary$handler, source = config_dictionary$source)
     }))
     
     #load software
@@ -534,7 +540,7 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
                         Shiny.bindAll(this.api().table().node()); }'
         ),
         autoWidth = FALSE,
-        columnDefs = list(
+        columnDefs = Filter(Negate(is.null),list(
           list(width = '100px', targets = c(0)),
           list(width = '400px', targets = c(1),
                render = JS("function(data, type, full, meta) {
@@ -549,7 +555,7 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
                            return html;
                         }")),
           if(validate) list(width = '50px', targets = c(2)) else NULL
-        )
+        ))
       )
     )
     if(validate) manageButtonValidateEvents(data, type, uuids)
@@ -559,7 +565,7 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
   observe({
     renderMetadataTable(ctrl_metadata$contacts, "contacts", TRUE)
     renderMetadataTable(ctrl_metadata$entities, "entities", TRUE)
-    renderMetadataTable(ctrl_metadata$dictionnary, "dictionnary", FALSE)
+    renderMetadataTable(ctrl_metadata$dictionary, "dictionary", FALSE)
   })
   
   #contacts
