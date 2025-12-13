@@ -61,6 +61,7 @@ loadAppPackages <- function(){
   require(shinyjs)
   require(shinycssloaders)
   require(bs4Dash)
+  require(shinyWidgets)
   require(shiny.i18n)
   
   #tables
