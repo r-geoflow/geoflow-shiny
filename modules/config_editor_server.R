@@ -576,10 +576,14 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
     form_action <- tolower(title_prefix)
     showModal(modalDialog(title = sprintf("%s contact source", title_prefix),
                           selectInput(ns("contact_form_handler"), "Handler:",choices=geoflow::list_contact_handlers()$id, selected = handler),
-                          textInput(ns("contact_form_source"), "Source", value = source), 
-                          actionButton(ns(sprintf("contact_%s_go", form_action)), title_prefix),
-                          easyClose = TRUE, footer = NULL ))
+                          textInput(ns("contact_form_source"), "Source", value = source),
+                          actionButton(ns("contact_form_cancel"), "Cancel"),
+                          actionButton(ns(sprintf("contact_%s_go", form_action)), title_prefix, style = "float:right"),
+                          easyClose = FALSE, footer = NULL ))
   }
+  observeEvent(input$contact_form_cancel, {
+    removeModal()
+  })
   #contact/add
   observeEvent(input$add_contact,{
     showContactModal(new = TRUE)
@@ -616,7 +620,7 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
           paste("Are you sure to delete",length(input$tbl_contacts_rows_selected),"contact source(s)?" ),
           footer = tagList(
             modalButton("Cancel"),
-            actionButton(ns("contact_delete_go"), "Yes")
+            actionButton(ns("contact_delete_go"), "Yes", style = "float:right")
           ), easyClose = TRUE)
       }else{
         modalDialog(
@@ -640,10 +644,14 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
     form_action <- tolower(title_prefix)
     showModal(modalDialog(title = sprintf("%s entity source", title_prefix),
                           selectInput(ns("entity_form_handler"), "Handler:",choices=geoflow::list_entity_handlers()$id, selected = handler),
-                          textInput(ns("entity_form_source"), "Source", value = source), 
-                          actionButton(ns(sprintf("entity_%s_go", form_action)), title_prefix),
-                          easyClose = TRUE, footer = NULL ))
+                          textInput(ns("entity_form_source"), "Source", value = source),
+                          actionButton(ns("entity_form_cancel"), "Cancel"),
+                          actionButton(ns(sprintf("entity_%s_go", form_action)), title_prefix, style = "float:right"),
+                          easyClose = FALSE, footer = NULL ))
   }
+  observeEvent(input$entity_form_cancel, {
+    removeModal()
+  })
   #entity/add
   observeEvent(input$add_entity,{
     showEntityModal(new = TRUE)
@@ -681,7 +689,7 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
           paste("Are you sure to delete",length(input$tbl_entities_rows_selected),"entity source(s)?" ),
           footer = tagList(
             modalButton("Cancel"),
-            actionButton(ns("entity_delete_go"), "Yes")
+            actionButton(ns("entity_delete_go"), "Yes", style = "float:right")
           ), easyClose = TRUE)
       }else{
         modalDialog(
@@ -704,10 +712,14 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
     form_action <- tolower(title_prefix)
     showModal(modalDialog(title = sprintf("%s dictionary source", title_prefix),
                           selectInput(ns("dictionary_form_handler"), "Handler:",choices=geoflow::list_dictionary_handlers()$id, selected = handler),
-                          textInput(ns("dictionary_form_source"), "Source", value = source), 
-                          actionButton(ns(sprintf("dictionary_%s_go", form_action)), title_prefix),
-                          easyClose = TRUE, footer = NULL ))
+                          textInput(ns("dictionary_form_source"), "Source", value = source),
+                          actionButton(ns("dictionary_form_cancel"), "Cancel"),
+                          actionButton(ns(sprintf("dictionary_%s_go", form_action)), title_prefix, style = "float:right"),
+                          easyClose = FALSE, footer = NULL ))
   }
+  observeEvent(input$dictionary_form_cancel,{
+    removeModal()
+  })
   #dictionary/add
   observeEvent(input$add_dictionary,{
     showDictionaryModal(new = TRUE)
@@ -744,7 +756,7 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
           paste("Are you sure to delete",length(input$tbl_dictionary_rows_selected),"dictionary source(s)?" ),
           footer = tagList(
             modalButton("Cancel"),
-            actionButton(ns("dictionary_delete_go"), "Yes")
+            actionButton(ns("dictionary_delete_go"), "Yes", style = "float:right")
           ), easyClose = TRUE)
       }else{
         modalDialog(
@@ -850,8 +862,9 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
                           selectInput(ns("software_form_type"), "Type:",choices=c("input", "output"), selected = software$type),
                           selectInput(ns("software_form_software_type"), "Type:",choices=geoflow::list_software()$software_type, selected = software$software_type),
                           uiOutput(ns("software_form_details")),
-                          actionButton(ns(sprintf("software_%s_go", form_action)), title_prefix),
-                          easyClose = TRUE, footer = NULL ))
+                          actionButton(ns("software_form_cancel"), "Cancel"),
+                          actionButton(ns(sprintf("software_%s_go", form_action)), title_prefix, style = "float:right"),
+                          easyClose = FALSE, footer = NULL ))
   }
   #software
   getSoftwareFromModal <- function(){
@@ -883,6 +896,9 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
     }
     return(software)
   }
+  observeEvent(input$software_form_cancel,{
+    removeModal()
+  })
   #software/add
   observeEvent(input$add_software,{
     showSoftwareModal(new = TRUE)
@@ -1011,7 +1027,7 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
           paste("Are you sure to delete",length(input$tbl_software_rows_selected),"software?" ),
           footer = tagList(
             modalButton("Cancel"),
-            actionButton(ns("software_delete_go"), "Yes")
+            actionButton(ns("software_delete_go"), "Yes", style = "float:right")
           ), easyClose = TRUE)
       }else{
         modalDialog(
@@ -1106,8 +1122,9 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
                           selectInput(ns("action_form_id"), "Type:",choices=geoflow::list_actions()$id, selected = action$id),
                           selectInput(ns("action_form_run"), "Run:",choices=c(TRUE,FALSE), selected = action$run),
                           uiOutput(ns("action_form_details")),
-                          actionButton(ns(sprintf("action_%s_go", form_action)), title_prefix),
-                          easyClose = TRUE, footer = NULL ))
+                          actionButton(ns("action_form_cancel"), "Cancel"),
+                          actionButton(ns(sprintf("action_%s_go", form_action)), title_prefix, style = "float:right"),
+                          easyClose = FALSE, footer = NULL ))
   }
   #action
   getActionFromModal <- function(){
@@ -1126,6 +1143,9 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
     }
     return(action)
   }
+  observeEvent(input$action_form_cancel, {
+    removeModal()
+  })
   #action/add
   observeEvent(input$add_action,{
     showActionModal(new = TRUE)
@@ -1224,7 +1244,7 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
           paste("Are you sure to delete",length(input$tbl_actions_rows_selected),"action(s)?" ),
           footer = tagList(
             modalButton("Cancel"),
-            actionButton(ns("action_delete_go"), "Yes")
+            actionButton(ns("action_delete_go"), "Yes", style = "float:right")
           ), easyClose = TRUE)
       }else{
         modalDialog(
