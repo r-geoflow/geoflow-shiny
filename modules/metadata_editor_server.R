@@ -1719,8 +1719,8 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       )
     })
     
-    loadCloudTree(id = "entities_load_tree", config = appConfig, auth_api = AUTH_API, leaves_only = FALSE)
-    loadCloudTree(id = "entities_load_tree_leavesonly", config = appConfig, auth_api = AUTH_API, leaves_only = TRUE)
+    loadCloudTree(id = "entities_load_tree", config = appConfig, auth_api = AUTH_API, leaves_only = FALSE, output = output)
+    loadCloudTree(id = "entities_load_tree_leavesonly", config = appConfig, auth_api = AUTH_API, leaves_only = TRUE, output = output)
     
     observeEvent(input$entities_load_tree_leavesonly_cancel,{
       shiny::removeModal()
@@ -1744,7 +1744,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       updateSelectInput(inputId = "meta_editor_entry_selector", selected = NULL)
       
       shiny::removeModal()
-      loadCloudTree(id = "entities_load_tree_leavesonly", config = appConfig, auth_api = AUTH_API, leaves_only = TRUE)
+      loadCloudTree(id = "entities_load_tree_leavesonly", config = appConfig, auth_api = AUTH_API, leaves_only = TRUE, output = output)
     })
     observeEvent(input$entities_local_file_select,{
       req(!is.null(input$entities_local_file))
@@ -1865,7 +1865,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         }
       )
       shiny::removeModal()
-      loadCloudTree(id = "entities_load_tree", config = appConfig, auth_api = AUTH_API, leaves_only = FALSE)
+      loadCloudTree(id = "entities_load_tree", config = appConfig, auth_api = AUTH_API, leaves_only = FALSE, output = output)
       cloud_overwriting_danger(FALSE)
     })
     
@@ -1907,8 +1907,8 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       )
     })
     
-    loadCloudTree(id = "contacts_load_tree", config = appConfig, auth_api = AUTH_API, leaves_only = FALSE)
-    loadCloudTree(id = "contacts_load_tree_leavesonly", config = appConfig, auth_api = AUTH_API, leaves_only = TRUE)
+    loadCloudTree(id = "contacts_load_tree", config = appConfig, auth_api = AUTH_API, leaves_only = FALSE, output = output)
+    loadCloudTree(id = "contacts_load_tree_leavesonly", config = appConfig, auth_api = AUTH_API, leaves_only = TRUE, output = output)
     
     observeEvent(input$contacts_load_tree_leavesonly_cancel,{
       shiny::removeModal()
@@ -1932,7 +1932,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       updateSelectInput(inputId = "meta_editor_entry_selector", selected = NULL)
 
       shiny::removeModal()
-      loadCloudTree(id = "contacts_load_tree_leavesonly", config = appConfig, auth_api = AUTH_API, leaves_only = TRUE)
+      loadCloudTree(id = "contacts_load_tree_leavesonly", config = appConfig, auth_api = AUTH_API, leaves_only = TRUE, output = output)
     })
     observeEvent(input$contacts_local_file_select,{
       req(!is.null(input$contacts_local_file))
@@ -2053,7 +2053,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         }
       )
       shiny::removeModal()
-      loadCloudTree(id = "contacts_load_tree", config = appConfig, auth_api = AUTH_API, leaves_only = FALSE)
+      loadCloudTree(id = "contacts_load_tree", config = appConfig, auth_api = AUTH_API, leaves_only = FALSE, output = output)
       cloud_overwriting_danger(FALSE)
     })
     
@@ -2087,8 +2087,8 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       )
     })
     
-    loadCloudTree(id = "featuretypes_load_tree", config = appConfig, auth_api = AUTH_API, leaves_only = FALSE)
-    loadCloudTree(id = "featuretypes_load_tree_leavesonly", config = appConfig, auth_api = AUTH_API, leaves_only = TRUE)
+    loadCloudTree(id = "featuretypes_load_tree", config = appConfig, auth_api = AUTH_API, leaves_only = FALSE, output = output)
+    loadCloudTree(id = "featuretypes_load_tree_leavesonly", config = appConfig, auth_api = AUTH_API, leaves_only = TRUE, output = output)
     
     observeEvent(input$featuretypes_load_tree_leavesonly_cancel,{
       shiny::removeModal()
@@ -2112,7 +2112,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       updateSelectInput(inputId = "meta_editor_entry_selector", selected = NULL)
       
       shiny::removeModal()
-      loadCloudTree(id = "featuretypes_load_tree_leavesonly", config = appConfig, auth_api = AUTH_API, leaves_only = TRUE)
+      loadCloudTree(id = "featuretypes_load_tree_leavesonly", config = appConfig, auth_api = AUTH_API, leaves_only = TRUE, output = output)
     })
     observeEvent(input$featuretypes_local_file_select,{
       req(!is.null(input$featuretypes_local_file))
@@ -2231,7 +2231,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         }
       )
       shiny::removeModal()
-      loadCloudTree(id = "featuretypes_load_tree", config = appConfig, auth_api = AUTH_API, leaves_only = FALSE)
+      loadCloudTree(id = "featuretypes_load_tree", config = appConfig, auth_api = AUTH_API, leaves_only = FALSE, output = output)
       cloud_overwriting_danger(FALSE)
     })
     

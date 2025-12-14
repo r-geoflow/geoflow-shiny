@@ -25,7 +25,7 @@ build_tree_data_dir = function(auth_api, root, mime_types, folder_basename = FAL
 }
 
 #loadCloudTree
-loadCloudTree = function(id, config, auth_api, leaves_only = FALSE, mime_types = c(".csv", ".xlsx", ".xls")){
+loadCloudTree = function(id, config, auth_api, leaves_only = FALSE, mime_types = c(".csv", ".xlsx", ".xls"), output){
   output[[id]] <- jsTreeR::renderJstree({
     jsTreeR::jstree(
       nodes = list(
