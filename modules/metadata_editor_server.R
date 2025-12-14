@@ -1703,16 +1703,34 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         shiny::modalDialog(
           title = i18n()$t("MD_EDITOR_LOAD_ENTITIES"),
           if(appConfig$auth){
-            tagList(
-              jsTreeR::jstreeOutput(ns("entities_load_tree_leavesonly")),
-              actionButton(ns("entities_load_tree_leavesonly_select"), label = i18n()$t("MD_EDITOR_SELECT"), status = "primary", style = "float:right"),
-              actionButton(ns("entities_load_tree_leavesonly_cancel"), label = i18n()$t("MD_EDITOR_CANCEL"), style = "float:right")
-            )   
+            tabsetPanel(
+              id = "load_entity_tables_modes",
+              tabPanel(i18n()$t("MD_EDITOR_MODE_CLOUD"), 
+                       tagList(
+                         jsTreeR::jstreeOutput(ns("entities_load_tree_leavesonly")),
+                         actionButton(ns("entities_load_tree_leavesonly_select"), label = i18n()$t("MD_EDITOR_SELECT"), status = "primary", style = "float:right"),
+                         actionButton(ns("entities_load_tree_leavesonly_cancel"), label = i18n()$t("MD_EDITOR_CANCEL"), style = "float:right")
+                       )    
+              ),
+              tabPanel(i18n()$t("MD_EDITOR_MODE_LOCAL"), 
+                       tagList(
+                         fileInput(ns("entities_local_file"), label = "File",multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = i18n()$t("MD_EDITOR_CHOOSEFILE")),
+                         actionButton(ns("entities_local_file_select"), label = i18n()$t("MD_EDITOR_SELECT"), status = "primary", style = "float:right"),
+                         actionButton(ns("entities_local_file_cancel"), label = i18n()$t("MD_EDITOR_CANCEL"), style = "float:right")
+                       )
+              )
+            )
+               
           }else{
-            tagList(
-              fileInput(ns("entities_local_file"), label = "File",multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = i18n()$t("MD_EDITOR_CHOOSEFILE")),
-              actionButton(ns("entities_local_file_cancel"), label = i18n()$t("MD_EDITOR_CANCEL")),
-              actionButton(ns("entities_local_file_select"), label = i18n()$t("MD_EDITOR_SELECT"), style = "float:right")
+            tabsetPanel(
+              id = "load_entity_tables_modes",
+              tabPanel(i18n()$t("MD_EDITOR_MODE_LOCAL"),
+                      tagList(
+                        fileInput(ns("entities_local_file"), label = "File",multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = i18n()$t("MD_EDITOR_CHOOSEFILE")),
+                        actionButton(ns("entities_local_file_select"), label = i18n()$t("MD_EDITOR_SELECT"), status = "primary", style = "float:right"),
+                        actionButton(ns("entities_local_file_cancel"), label = i18n()$t("MD_EDITOR_CANCEL"), style = "float:right")
+                      )
+              )
             )
           },
           easyClose = FALSE, footer = NULL 
@@ -1895,16 +1913,33 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         shiny::modalDialog(
           title = i18n()$t("MD_EDITOR_LOAD_CONTACTS"),
           if(appConfig$auth){
-            tagList(
-              jsTreeR::jstreeOutput(ns("contacts_load_tree_leavesonly")),
-              actionButton(ns("contacts_load_tree_leavesonly_select"), label = i18n()$t("MD_EDITOR_SELECT"), status = "primary", style = "float:right"),
-              actionButton(ns("contacts_load_tree_leavesonly_cancel"), label = i18n()$t("MD_EDITOR_CANCEL"), style = "float:right")
-            )   
+            tabsetPanel(
+              id = "load_contact_tables_modes",
+              tabPanel(i18n()$t("MD_EDITOR_MODE_CLOUD"),
+                      tagList(
+                        jsTreeR::jstreeOutput(ns("contacts_load_tree_leavesonly")),
+                        actionButton(ns("contacts_load_tree_leavesonly_select"), label = i18n()$t("MD_EDITOR_SELECT"), status = "primary", style = "float:right"),
+                        actionButton(ns("contacts_load_tree_leavesonly_cancel"), label = i18n()$t("MD_EDITOR_CANCEL"), style = "float:right")
+                      )
+              ),
+              tabPanel(i18n()$t("MD_EDITOR_MODE_LOCAL"),
+                       tagList(
+                         fileInput(ns("contacts_local_file"), label = "File",multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = i18n()$t("MD_EDITOR_CHOOSEFILE")),
+                         actionButton(ns("contacts_local_file_select"), label = i18n()$t("MD_EDITOR_SELECT"), status = "primary", style = "float:right"),
+                         actionButton(ns("contacts_local_file_cancel"), label = i18n()$t("MD_EDITOR_CANCEL"), style = "float:right")
+                       )
+              )
+            )
           }else{
-            tagList(
-              fileInput(ns("contacts_local_file"), label = "File",multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = i18n()$t("MD_EDITOR_CHOOSEFILE")),
-              actionButton(ns("contacts_local_file_cancel"), label = i18n()$t("MD_EDITOR_CANCEL")),
-              actionButton(ns("contacts_local_file_select"), label = i18n()$t("MD_EDITOR_SELECT"), style = "float:right")
+            tabsetPanel(
+              id = "load_contact_tables_modes",
+              tabPanel(i18n()$t("MD_EDITOR_MODE_LOCAL"),
+                       tagList(
+                         fileInput(ns("contacts_local_file"), label = "File",multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = i18n()$t("MD_EDITOR_CHOOSEFILE")),
+                         actionButton(ns("contacts_local_file_select"), label = i18n()$t("MD_EDITOR_SELECT"), status = "primary", style = "float:right"),
+                         actionButton(ns("contacts_local_file_cancel"), label = i18n()$t("MD_EDITOR_CANCEL"), style = "float:right")
+                       )
+              )
             )
           },
           easyClose = FALSE, footer = NULL 
@@ -2079,15 +2114,33 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         shiny::modalDialog(
           title = i18n()$t("MD_EDITOR_LOAD_DICTIONARY"),
           if(appConfig$auth){
-            tagList(
-              jsTreeR::jstreeOutput(ns("featuretypes_load_tree_leavesonly")),
-              actionButton(ns("featuretypes_load_tree_leavesonly_select"), label = i18n()$t("MD_EDITOR_SELECT"), status = "primary", style = "float:right"),
-              actionButton(ns("featuretypes_load_tree_leavesonly_cancel"), label = i18n()$t("MD_EDITOR_CANCEL"), style = "float:right")
-            )   
+            tabsetPanel(
+              id = "load_featuretype_tables_modes",
+              tabPanel(i18n()$t("MD_EDITOR_MODE_CLOUD"),
+                      tagList(
+                        jsTreeR::jstreeOutput(ns("featuretypes_load_tree_leavesonly")),
+                        actionButton(ns("featuretypes_load_tree_leavesonly_select"), label = i18n()$t("MD_EDITOR_SELECT"), status = "primary", style = "float:right"),
+                        actionButton(ns("featuretypes_load_tree_leavesonly_cancel"), label = i18n()$t("MD_EDITOR_CANCEL"), style = "float:right")
+                      )
+              ),
+              tabPanel(i18n()$t("MD_EDITOR_MODE_LOCAL"),
+                       tagList(
+                         fileInput(ns("featuretypes_local_file"), label = "File",multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = i18n()$t("MD_EDITOR_CHOOSEFILE")),
+                         actionButton(ns("featuretypes_local_file_select"), label = i18n()$t("MD_EDITOR_SELECT"), status = "primary", style = "float:right"),
+                         actionButton(ns("featuretypes_local_file_cancel"), label = i18n()$t("MD_EDITOR_CANCEL"), style = "float:right")
+                       )
+              )
+            )
           }else{
-            tagList(
-              fileInput(ns("featuretypes_local_file"), label = "File",multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = i18n()$t("MD_EDITOR_CHOOSEFILE")),
-              actionButton(ns("featuretypes_local_file_select"), label = i18n()$t("MD_EDITOR_SELECT"), style = "float:right")
+            tabsetPanel(
+              id = "load_featuretype_tables_modes",
+              tabPanel(i18n()$t("MD_EDITOR_MODE_LOCAL"),
+                       tagList(
+                         fileInput(ns("featuretypes_local_file"), label = "File",multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = i18n()$t("MD_EDITOR_CHOOSEFILE")),
+                         actionButton(ns("featuretypes_local_file_select"), label = i18n()$t("MD_EDITOR_SELECT"), status = "primary", style = "float:right"),
+                         actionButton(ns("featuretypes_local_file_cancel"), label = i18n()$t("MD_EDITOR_CANCEL"), style = "float:right")
+                       )
+              )
             )
           },
           easyClose = FALSE, footer = NULL 
@@ -2098,6 +2151,9 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     loadCloudTree(id = "featuretypes_load_tree", config = appConfig, auth_api = AUTH_API, leaves_only = FALSE, output = output)
     loadCloudTree(id = "featuretypes_load_tree_leavesonly", config = appConfig, auth_api = AUTH_API, leaves_only = TRUE, output = output)
     
+    observeEvent(input$featuretypes_local_file_cancel, {
+      shiny::removeModal()
+    })
     observeEvent(input$featuretypes_load_tree_leavesonly_cancel,{
       shiny::removeModal()
     })
@@ -2292,39 +2348,49 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         shiny::modalDialog(
           title = i18n()$t("MD_EDITOR_LOAD_CONTACTS"),
           if(appConfig$auth){
-            tagList(
-              jsTreeR::jstreeOutput(ns("entity_contacts_load_tree")),
-              actionButton(ns("entity_contacts_load_tree_select"), label = i18n()$t("MD_EDITOR_SELECT"), style = "float:right")
-            )   
+            tabsetPanel(
+              id = "entity_contact_load_modes",
+              tabPanel(i18n()$t("MD_EDITOR_MODE_CLOUD"),
+                      tagList(
+                        jsTreeR::jstreeOutput(ns("entity_contacts_load_tree")),
+                        actionButton(ns("entity_contacts_load_tree_select"), label = i18n()$t("MD_EDITOR_SELECT"), status = "primary", style = "float:right"),
+                        actionButton(ns("entity_contacts_load_tree_cancel"), label = i18n()$t("MD_EDITOR_CANCEL"), style = "float:right")
+                      )
+              ),
+              tabPanel(i18n()$t("MD_EDITOR_MODE_LOCAL"),
+                       tagList(
+                         fileInput(ns("entity_contacts_local_file"), label = i18n()$t("MD_EDITOR_FILENAME"),multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = i18n()$t("MD_EDITOR_CHOOSEFILE")),
+                         actionButton(ns("entity_contacts_local_file_select"), label = i18n()$t("MD_EDITOR_SELECT"), status = "primary", style = "float:right"),
+                         actionButton(ns("entity_contacts_local_file_cancel"), label = i18n()$t("MD_EDITOR_CANCEL"), style = "float:right")
+                       )
+              )
+            )
           }else{
-            tagList(
-              fileInput(ns("entity_contacts_local_file"), label = i18n()$t("MD_EDITOR_FILENAME"),multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = i18n()$t("MD_EDITOR_CHOOSEFILE")),
-              actionButton(ns("entity_contacts_local_file_select"), label = i18n()$t("MD_EDITOR_SELECT"), style = "float:right")
+            tabsetPanel(
+              id = "entity_contact_load_modes",
+              tabPanel(i18n()$t("MD_EDITOR_MODE_LOCAL"),
+                      tagList(
+                        fileInput(ns("entity_contacts_local_file"), label = i18n()$t("MD_EDITOR_FILENAME"),multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = i18n()$t("MD_EDITOR_CHOOSEFILE")),
+                        actionButton(ns("entity_contacts_local_file_select"), label = i18n()$t("MD_EDITOR_SELECT"), status = "primary", style = "float:right"),
+                        actionButton(ns("entity_contacts_local_file_cancel"), label = i18n()$t("MD_EDITOR_CANCEL"), style = "float:right")
+                      )
+              )
             )
           },
           easyClose = TRUE, footer = NULL 
         )
       )
     })
-    output$entity_contacts_load_tree <- jsTreeR::renderJstree({
-      jsTreeR::jstree(
-        list(
-          build_tree_data_dir(
-            auth_api = AUTH_API, 
-            root = appConfig$data_dir_remote,
-            mime_types = c(".csv", ".xlsx", ".xls")
-          )
-        ),
-        types = list(
-          file = list(icon = "jstree-file"),
-          folder = list(icon = "jstree-folder")
-        ),
-        selectLeavesOnly = TRUE,
-        checkboxes = FALSE,
-        multiple = FALSE,
-        search = TRUE
-      )
+    
+    loadCloudTree(id = "entity_contacts_load_tree", config = appConfig, auth_api = AUTH_API, leaves_only = TRUE, output = output)
+   
+    observeEvent(input$entity_contacts_local_file_cancel, {
+      shiny::removeModal()
     })
+    observeEvent(input$entity_contacts_load_tree_cancel,{
+      shiny::removeModal()
+    })
+    
     observeEvent(input$entity_contacts_load_tree_select,{
       selected_resource = input$entity_contacts_load_tree_selected
       
