@@ -1711,6 +1711,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
           }else{
             tagList(
               fileInput(ns("entities_local_file"), label = "File",multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = i18n()$t("MD_EDITOR_CHOOSEFILE")),
+              actionButton(ns("entities_local_file_cancel"), label = i18n()$t("MD_EDITOR_CANCEL")),
               actionButton(ns("entities_local_file_select"), label = i18n()$t("MD_EDITOR_SELECT"), style = "float:right")
             )
           },
@@ -1722,6 +1723,9 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     loadCloudTree(id = "entities_load_tree", config = appConfig, auth_api = AUTH_API, leaves_only = FALSE, output = output)
     loadCloudTree(id = "entities_load_tree_leavesonly", config = appConfig, auth_api = AUTH_API, leaves_only = TRUE, output = output)
     
+    observeEvent(input$entities_local_file_cancel,{
+      shiny::removeModal()
+    })
     observeEvent(input$entities_load_tree_leavesonly_cancel,{
       shiny::removeModal()
     })
@@ -1899,6 +1903,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
           }else{
             tagList(
               fileInput(ns("contacts_local_file"), label = "File",multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = i18n()$t("MD_EDITOR_CHOOSEFILE")),
+              actionButton(ns("contacts_local_file_cancel"), label = i18n()$t("MD_EDITOR_CANCEL")),
               actionButton(ns("contacts_local_file_select"), label = i18n()$t("MD_EDITOR_SELECT"), style = "float:right")
             )
           },
@@ -1910,6 +1915,9 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     loadCloudTree(id = "contacts_load_tree", config = appConfig, auth_api = AUTH_API, leaves_only = FALSE, output = output)
     loadCloudTree(id = "contacts_load_tree_leavesonly", config = appConfig, auth_api = AUTH_API, leaves_only = TRUE, output = output)
     
+    observeEvent(input$contacts_local_file_cancel, {
+      shiny::removeModal()
+    })
     observeEvent(input$contacts_load_tree_leavesonly_cancel,{
       shiny::removeModal()
     })
@@ -2182,6 +2190,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
             hr(),
             jsTreeR::jstreeOutput(ns("featuretypes_load_tree")),
             uiOutput(ns("featuretypes_load_tree_upload_action")),
+            actionButton(ns("featuretypes_local_file_cancel"), label = i18n()$t("MD_EDITOR_CANCEL")),
             actionButton(ns("featuretypes_load_tree_cancel"), label = i18n()$t("MD_EDITOR_CANCEL"), style = "float:right")
           ),
           easyClose = FALSE, footer = uiOutput(ns("overwriting_file_danger")) 
@@ -2204,6 +2213,9 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
           }
         }
       }
+    })
+    observeEvent(input$featuretypes_local_file_cancel, {
+      shiny::removeModal()
     })
     observeEvent(input$featuretypes_load_tree_cancel,{
       shiny::removeModal()
