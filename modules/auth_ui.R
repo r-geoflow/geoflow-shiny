@@ -16,7 +16,7 @@ authLoginUI <- function (id, config, title = "Please log in", cloud_title = "Clo
           text = shinyauthr:::js_cookie_to_r_code(ns("jscookie"), expire_days = cookie_expiry), 
           functions = c("getcookie","setcookie", "rmcookie")
         ), 
-        shinyjs::extendShinyjs(text = shinyauthr:::js_return_click(ns("password"), ns("auth_button_login")), functions = c()),
+        shinyjs::extendShinyjs(text = shinyauthr:::js_return_click(ns("auth_password"), ns("auth_button_login")), functions = c()),
         shiny::tags$h2(title, class = "text-center", style = "padding-top: 0;"),
         shiny::selectizeInput(
           inputId = ns("auth_provider"), label = cloud_title, 
@@ -43,7 +43,7 @@ authLoginUI <- function (id, config, title = "Please log in", cloud_title = "Clo
         ),
         shiny::textInput(ns("auth_username"), shiny::tagList(shiny::icon("user"), user_title)),
         shiny::passwordInput(ns("auth_password"), shiny::tagList(shiny::icon("unlock-alt"), pass_title)), 
-        shiny::div(style = "text-align: center;", shiny::tags$button(id = ns("auth_button_login"), type = "button", class = paste("btn", login_btn_class, "action-button"), login_title)),
+        shiny::div(style = "text-align: center;", shiny::actionButton(inputId = ns("auth_button_login"), class = login_btn_class, label = login_title)),
         additional_ui,
         shinyjs::hidden(shiny::div(id = ns("error"), shiny::tags$p(error_message, style = "color: red; font-weight: bold; padding-top: 5px;", class = "text-center")))
       )
