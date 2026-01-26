@@ -4,13 +4,7 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
  moduleServer(id, function(input, output, session){
   
   ns <- session$ns
-  
-  output$config_editor_info <- renderUI({
-    session$userData$module("configuration-editor")
-    updateModuleUrl(session, "configuration-editor")
-    tags$h2(HTML(i18n()$t("CONFIG_EDITOR_TITLE")),tags$small(HTML(i18n()$t("CONFIG_EDITOR_SUBTITLE"))))
-  })
-  
+
   AUTH_API <- try(get("AUTH_API", envir = GEOFLOW_SHINY_ENV), silent = TRUE)
   
   #contact handlers
@@ -45,25 +39,6 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
   
   #configuration loader
   #---------------------------------------------------------------------------------------------
-  #loadConfigurationFile
-  loadConfigurationFile <- function(){
-    config <- try(jsonlite::read_json(input$jsonfile$datapath))
-    attr(config, "filepath") <- input$jsonfile$datapath
-    return(config)
-  }
-  #loadConfigurationFileFromUrl
-  loadConfigurationFileFromUrl <- function(file){
-    filepath <- if(appConfig$auth){
-      AUTH_API$downloadFile(relPath = appConfig$data_dir_remote, filename = file, outdir = tempdir())
-    }else{
-      file
-    }
-    config <- try(jsonlite::read_json(filepath))
-    attr(config, "filepath") <- filepath
-    print(filepath)
-    return(config)
-  }
-  
   #loadConfigurationUI
   loadConfigurationUI <- function(config){
     
@@ -116,6 +91,7 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
   
   #controllers
   #------------------------------------------------------------------------------------
+  cloud_overwriting_danger <- reactiveVal(FALSE)
   #ctrl_config
   ctrl_config_file <- reactiveVal(NULL)
   ctrl_config <- reactiveVal(NULL)
@@ -163,122 +139,394 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
     data = NULL
   )
   #------------------------------------------------------------------------------------
-  
-  output$geoflow_config_tabpanel <- renderUI({
+  #config editor choices
+  output$config_editor_choices = renderUI({
+    fluidRow(
+      bs4Dash::bs4ValueBox(
+        width = 6,
+        value = h5(i18n()$t("CFG_EDITOR"), style = "font-weight:bold;"), 
+        subtitle = i18n()$t("CFG_EDITOR_SUBTITLE"), 
+        color = "primary",
+        icon = icon("gears"),
+        footer = shiny::tagList(
+          bs4Dash::actionButton(inputId = ns("create_config"), label = i18n()$t("CFG_EDITOR_CONFIG_CREATE")),
+          bs4Dash::actionButton(inputId = ns("load_config"), label = i18n()$t("CFG_EDITOR_CONFIG_LOAD")),
+          bs4Dash::actionButton(inputId = ns("save_config"), label = i18n()$t("CFG_EDITOR_CONFIG_SAVE"))
+        )
+      )
+    )
+  })
+
+  output$config_editor <- renderUI({
+    req(!is.null(ctrl_config_file()))
     bs4Dash::tabsetPanel(
       id = "geoflow_config_blocks", 
       type = "pills",
       shiny::tabPanel(
         value = "profile",
-        title = "Profile",
-        tags$div(id = "profile",
-                 br(),
-                 uiOutput(ns("profile"))
-        )
+        title = i18n()$t("CFG_EDITOR_PROFILE"),
+        br(),
+        uiOutput(ns("profile"))
       ),
       shiny::tabPanel(
         value = "metadata",
-        title = "Metadata",
+        title = i18n()$t("CFG_EDITOR_METADATA"),
         br(),
-        box(id = "metadata", width = 12,
-            bs4Dash::tabsetPanel(
-              id = "metadata_tabs", 
-              type = "tabs",
-              shiny::tabPanel(
-                value = "contacts",
-                title = "Contacts",
-                shiny::tagList(
-                  br(),
-                  shiny::actionButton(inputId = ns("add_contact"), label = "Add a new contact source", class = "btn-primary"),
-                  shiny::actionButton(inputId = ns("modify_contact"), label = "Modify a contact source", class = "btn-warning"),
-                  shiny::actionButton(inputId = ns("delete_contact"), label = "Delete a contact source", class = "btn-danger"),
-                  DT::DTOutput(ns("tbl_contacts"))
-                )
-              ),
-              shiny::tabPanel(
-                value = "entities",
-                title = "Entities",
-                shiny::tagList(
-                  br(),
-                  shiny::actionButton(inputId = ns("add_entity"), label = "Add a new entity source", class = "btn-primary"),
-                  shiny::actionButton(inputId = ns("modify_entity"), label = "Modify an entity source", class = "btn-warning"),
-                  shiny::actionButton(inputId = ns("delete_entity"), label = "Delete an entity source", class = "btn-danger"),
-                  DT::DTOutput(ns("tbl_entities"))
-                )
-              ),
-              shiny::tabPanel(
-                value = "dictionary",
-                title = "Dictionary",
-                shiny::tagList(
-                  br(),
-                  shiny::actionButton(inputId = ns("add_dictionary"), label = "Add a new dictionary source", class = "btn-primary"),
-                  shiny::actionButton(inputId = ns("modify_dictionary"), label = "Modify an dictionary source", class = "btn-warning"),
-                  shiny::actionButton(inputId = ns("delete_dictionary"), label = "Delete an dictionary source", class = "btn-danger"),
-                  DT::DTOutput(ns("tbl_dictionary"))
-                )
-              )
-              
+        tabBox(
+          width = 12, id = "metadata_tabs",
+          type = "tabs", solidHeader = FALSE, status = "teal",
+          shiny::tabPanel(
+            value = "contacts",
+            title = i18n()$t("CFG_EDITOR_METADATA_C"),
+            shiny::tagList(
+              br(),
+              shiny::actionButton(inputId = ns("add_contact"), label = i18n()$t("CFG_EDITOR_METADATA_C_ADD"), class = "btn-primary"),
+              shiny::actionButton(inputId = ns("modify_contact"), label = i18n()$t("CFG_EDITOR_METADATA_C_MODIFY"), class = "btn-warning"),
+              shiny::actionButton(inputId = ns("delete_contact"), label = i18n()$t("CFG_EDITOR_METADATA_C_DELETE"), class = "btn-danger"),
+              DT::DTOutput(ns("tbl_contacts"))
             )
+          ),
+          shiny::tabPanel(
+            value = "entities",
+            title = i18n()$t("CFG_EDITOR_METADATA_E"),
+            shiny::tagList(
+              br(),
+              shiny::actionButton(inputId = ns("add_entity"), label = i18n()$t("CFG_EDITOR_METADATA_E_ADD"), class = "btn-primary"),
+              shiny::actionButton(inputId = ns("modify_entity"), label = i18n()$t("CFG_EDITOR_METADATA_E_MODIFY"), class = "btn-warning"),
+              shiny::actionButton(inputId = ns("delete_entity"), label = i18n()$t("CFG_EDITOR_METADATA_E_DELETE"), class = "btn-danger"),
+              DT::DTOutput(ns("tbl_entities"))
+            )
+          ),
+          shiny::tabPanel(
+            value = "dictionary",
+            title = i18n()$t("CFG_EDITOR_METADATA_D"),
+            shiny::tagList(
+              br(),
+              shiny::actionButton(inputId = ns("add_dictionary"), label = i18n()$t("CFG_EDITOR_METADATA_D_ADD"), class = "btn-primary"),
+              shiny::actionButton(inputId = ns("modify_dictionary"), label = i18n()$t("CFG_EDITOR_METADATA_D_MODIFY"), class = "btn-warning"),
+              shiny::actionButton(inputId = ns("delete_dictionary"), label = i18n()$t("CFG_EDITOR_METADATA_D_DELETE"), class = "btn-danger"),
+              DT::DTOutput(ns("tbl_dictionary"))
+            )
+          )
         )
       ),
       shiny::tabPanel(
         value = "software",
-        title = "Software",
+        title = i18n()$t("CFG_EDITOR_SOFTWARE"),
         br(),
         box(id = "software", width = 12,
-            shiny::actionButton(inputId = ns("add_software"), label = "Add a new software", class = "btn-primary"),
-            shiny::actionButton(inputId = ns("modify_software"), label = "Modify a software", class = "btn-warning"),
-            shiny::actionButton(inputId = ns("delete_software"), label = "Delete a software", class = "btn-danger"),
+            shiny::actionButton(inputId = ns("add_software"), label = i18n()$t("CFG_EDITOR_SOFTWARE_ADD"), class = "btn-primary"),
+            shiny::actionButton(inputId = ns("modify_software"), label = i18n()$t("CFG_EDITOR_SOFTWARE_MODIFY"), class = "btn-warning"),
+            shiny::actionButton(inputId = ns("delete_software"), label = i18n()$t("CFG_EDITOR_SOFTWARE_DELETE"), class = "btn-danger"),
             DT::DTOutput(ns("tbl_software"))
         )
       ),
       shiny::tabPanel(
         value = "actions",
-        title = "Actions",
+        title = i18n()$t("CFG_EDITOR_ACTIONS"),
         br(),
         box(id = "actions", width = 12,
-            shiny::actionButton(inputId = ns("add_action"), label = "Add a new action", class = "btn-primary"),
-            shiny::actionButton(inputId = ns("modify_action"), label = "Modify an action", class = "btn-warning"),
-            shiny::actionButton(inputId = ns("delete_action"), label = "Delete an action", class = "btn-danger"),
+            shiny::actionButton(inputId = ns("add_action"), label = i18n()$t("CFG_EDITOR_ACTION_ADD"), class = "btn-primary"),
+            shiny::actionButton(inputId = ns("modify_action"), label = i18n()$t("CFG_EDITOR_ACTION_MODIFY"), class = "btn-warning"),
+            shiny::actionButton(inputId = ns("delete_action"), label = i18n()$t("CFG_EDITOR_ACTION_DELETE"), class = "btn-danger"),
             DT::DTOutput(ns("tbl_actions"))
         )
       )
     )
   })
   
+  #create config button event
+  observeEvent(input$create_config,{
+    tmpfile = tempfile(fileext = ".json")
+    ctrl_config_file(tmpfile)
+  })
+  
+  #load config button event
+  observeEvent(input$load_config, {
+    shiny::showModal(
+      shiny::modalDialog(
+        title = i18n()$t("CFG_EDITOR_CONFIG_LOAD"),
+        if(appConfig$auth){
+          tabsetPanel(
+            id = "load_config_modes",
+            tabPanel(i18n()$t("CFG_EDITOR_MODE_CLOUD"),
+                     tagList(
+                       jsTreeR::jstreeOutput(ns("config_load_tree_leavesonly")),
+                       actionButton(ns("config_load_tree_leavesonly_select"), label = i18n()$t("CFG_EDITOR_SELECT"), status = "primary", style = "float:right"),
+                       actionButton(ns("config_load_tree_leavesonly_cancel"), label = i18n()$t("CFG_EDITOR_CANCEL"), style = "float:right")
+                     )
+            ),
+            tabPanel(i18n()$t("CFG_EDITOR_MODE_LOCAL"),
+                     tagList(
+                       fileInput(ns("config_local_file"), label = "File",multiple = FALSE,accept = c(".json",".yml",".yaml"),buttonLabel = i18n()$t("CFG_EDITOR_CHOOSEFILE")),
+                       actionButton(ns("config_local_file_select"), label = i18n()$t("CFG_EDITOR_SELECT"), status = "primary", style = "float:right"),
+                       actionButton(ns("config_local_file_cancel"), label = i18n()$t("CFG_EDITOR_CANCEL"), style = "float:right")
+                     )
+            )
+          )
+        }else{
+          tabsetPanel(
+            id = "load_contact_tables_modes",
+            tabPanel(i18n()$t("CFG_EDITOR_MODE_LOCAL"),
+                     tagList(
+                       fileInput(ns("config_local_file"), label = "File",multiple = FALSE,accept = c(".json",".yml",".yaml"),buttonLabel = i18n()$t("CFG_EDITOR_CHOOSEFILE")),
+                       actionButton(ns("config_local_file_select"), label = i18n()$t("CFG_EDITOR_SELECT"), status = "primary", style = "float:right"),
+                       actionButton(ns("config_local_file_cancel"), label = i18n()$t("CFG_EDITOR_CANCEL"), style = "float:right")
+                     )
+            )
+          )
+        },
+        easyClose = FALSE, footer = NULL 
+      )
+    )
+  })
+  
+  loadCloudTree(id = "config_load_tree_leavesonly", config = appConfig, auth_api = AUTH_API, 
+                mime_types = c(".json", ".yml", ".yaml"), leaves_only = TRUE, output = output)
+  
+  observeEvent(input$config_local_file_cancel, {
+    shiny::removeModal()
+  })
+  observeEvent(input$config_load_tree_leavesonly_cancel,{
+    shiny::removeModal()
+  })
+  observeEvent(input$config_load_tree_leavesonly_select,{
+    selected_resource = input$config_load_tree_leavesonly_selected
+    print(selected_resource)
+    #OCS download selected resource and read it
+    filepath <- AUTH_API$downloadFile(relPath = dirname(selected_resource[[1]]$data), filename = selected_resource[[1]]$text, outdir = tempdir())
+    config <- try(switch(mime::guess_type(filepath),
+                        "application/json" = jsonlite::read_json(filepath),
+                        "application/yaml" = yaml::read_yaml(filepath)
+    ))
+    attr(config, "filepath") <- filepath
+    print(filepath)
+    
+    #load configuration UI
+    ctrl_config_file(attr(config, "filepath"))
+    loadConfigurationUI(config)
+    
+    shiny::removeModal()
+    loadCloudTree(id = "config_load_tree_leavesonly", config = appConfig, auth_api = AUTH_API, 
+                  mime_types = c(".json", ".yml", ".yaml"), leaves_only = TRUE, output = output)
+  })
+  observeEvent(input$config_local_file_select,{
+    req(!is.null(input$config_local_file))
+    
+    #read local resource
+    filepath <- input$config_local_file$datapath
+    config <- try(switch(mime::guess_type(filepath),
+                         "application/json" = jsonlite::read_json(filepath),
+                         "application/yaml" = yaml::read_yaml(filepath)
+    ))
+    attr(config, "filepath") <- filepath
+    #load configuration UI
+    ctrl_config_file(attr(config, "filepath"))
+    loadConfigurationUI(config)
+    
+    shiny::removeModal()
+    
+  })
+  
+  
+  #SAVE
+  #save config button event
+  observeEvent(input$save_config, {
+    cloud_overwriting_danger(FALSE)
+    shiny::showModal(
+      shiny::modalDialog(
+        title = i18n()$t("CFG_EDITOR_CONFIG_SAVE"),
+        if(appConfig$auth){
+          tabsetPanel(
+            id = "save_config_modes",
+            tabPanel(i18n()$t("CFG_EDITOR_MODE_CLOUD"),
+                     tagList(
+                       selectizeInput(inputId = ns("config_filemimetype"), label = i18n()$t("CFG_EDITOR_FORMAT"), choices = c("YAML" = "yaml", "JSON" = "json"), selected = "yaml"),
+                       textInput(ns("config_filename"), label = i18n()$t("CFG_EDITOR_FILENAME"), value = sprintf("new_config.%s", input$config_filemimetype), width = NULL),
+                       hr(),
+                       jsTreeR::jstreeOutput(ns("config_load_tree")),
+                       uiOutput(ns("config_load_tree_upload_action")),
+                       actionButton(ns("config_load_tree_cancel"), label = i18n()$t("CFG_EDITOR_CANCEL"), style = "float:right")
+                     )
+            ),
+            tabPanel(i18n()$t("CFG_EDITOR_MODE_LOCAL"),
+                     tagList(
+                       selectizeInput(inputId = ns("config_local_filemimetype"), label = i18n()$t("CFG_EDITOR_FORMAT"), choices = c("YAML" = "yaml", "JSON" = "json"), selected = "yaml"),
+                       textInput(ns("config_local_filename"), label = i18n()$t("CFG_EDITOR_FILENAME"), value = sprintf("new_config.%s", input$config_local_filemimetype), width = NULL),
+                       hr(),
+                       uiOutput(ns("config_local_save_action")),
+                       actionButton(ns("config_local_save_cancel"), label = i18n()$t("CFG_EDITOR_CANCEL"), style = "float:right")
+                     )
+            )
+          )
+        }else{
+          tabsetPanel(
+            id = "save_config_modes",
+            tabPanel(i18n()$t("CFG_EDITOR_MODE_LOCAL"),
+                     tagList(
+                       selectizeInput(inputId = ns("config_local_filemimetype"), label = i18n()$t("CFG_EDITOR_FORMAT"), choices = c("YAML" = "yaml", "JSON" = "json"), selected = "yaml"),
+                       textInput(ns("config_local_filename"), label = i18n()$t("CFG_EDITOR_FILENAME"), value = sprintf("new_config.%s", input$config_local_filemimetype), width = NULL),
+                       hr(),
+                       uiOutput(ns("config_local_save_action")),
+                       actionButton(ns("config_local_save_cancel"), label = i18n()$t("CFG_EDITOR_CANCEL"), style = "float:right")
+                     )
+            )
+          )
+        },
+        easyClose = FALSE, footer = uiOutput(ns("overwriting_file_danger")) 
+      )
+    )
+  })
+  
+  observeEvent(input$config_filemimetype,{
+    updateTextInput(inputId = "config_filename", value = sprintf("new_config.%s", input$config_filemimetype))
+  })
+  
+  loadCloudTree(id = "config_load_tree", config = appConfig, auth_api = AUTH_API, 
+                mime_types = c(".json", ".yml", ".yaml"), leaves_only = FALSE, output = output)
+  
+  output$config_load_tree_upload_action <- renderUI({
+    if(length(input$config_load_tree_selected)>0){
+      actionButton(ns("config_load_tree_upload"), label = i18n()$t("CFG_EDITOR_UPLOAD"), status = "primary", style = "float:right")
+    }else{
+      disabled(actionButton(ns("config_load_tree_upload"), label = i18n()$t("CFG_EDITOR_UPLOAD"), 
+                            title = i18n()$t("CFG_EDITOR_UPLOAD_TOOLTIP"),
+                            status = "primary", style = "float:right"))
+    }
+  })
+  observe({
+    if(length(input$config_load_tree_selected)>0){
+      selected_resource = input$config_load_tree_selected[[1]]
+      if(selected_resource$type == "file"){
+        shiny::updateTextInput(inputId = "config_filename", value = basename(selected_resource$data))
+        cloud_overwriting_danger(TRUE)
+      }else if(selected_resource$type == "folder"){
+        files = AUTH_API$listFiles(relPath = selected_resource$data)
+        if(input$config_filename %in% files$name){
+          cloud_overwriting_danger(TRUE)
+        }else{
+          cloud_overwriting_danger(FALSE)
+        }
+      }
+    }
+  })
+  observeEvent(input$config_load_tree_cancel,{
+    shiny::removeModal()
+    cloud_overwriting_danger(FALSE)
+  })
+  observeEvent(input$config_load_tree_upload,{
+    req(length(input$config_load_tree_selected)>0)
+    selected_resource = input$config_load_tree_selected[[1]]
+    
+    cfg = getConfiguration()
+    file <- file.path(tempdir(), input$config_filename)
+    switch(mime::guess_type(input$config_filename),
+           "application/json" = {
+             jsonlite::write_json(cfg, file, auto_unbox = TRUE, pretty = TRUE)
+           },
+           "application/yaml" = {
+             yaml::write_yaml(cfg, file)
+           }
+    )
+    uploaded = AUTH_API$uploadFile(
+      filename = file,
+      relPath = if(selected_resource$type == "folder"){
+        selected_resource$data
+      }else if(selected_resource$type == "file"){
+        dirname(selected_resource$data)
+      }
+    )
+    shiny::removeModal()
+    loadCloudTree(id = "config_load_tree", config = appConfig, auth_api = AUTH_API, leaves_only = FALSE, output = output)
+    cloud_overwriting_danger(FALSE)
+  })
+  
+  observeEvent(input$config_local_filemimetype,{
+    updateTextInput(inputId = "config_local_filename", value = sprintf("new_config.%s", input$config_local_filemimetype))
+  })
+  output$config_local_save_action <- renderUI({
+    req(input$config_local_filename)
+    downloadButtonCustom(
+      outputId = ns("config_local_save"), 
+      label = i18n()$t("CFG_EDITOR_SAVE"), icon = NULL,
+      class = "btn btn-primary", style = "float:right"
+    )
+  })
+  output$config_local_save <- downloadHandler(
+    filename = function(){ 
+      print("PIPO")
+      print(input$config_local_filename)
+      input$config_local_filename
+    },
+    content = function(con){
+      cfg = getConfiguration()
+      switch(mime::guess_type(con),
+             "application/json" = {
+               jsonlite::write_json(cfg, con, auto_unbox = TRUE, pretty = TRUE)
+             },
+             "application/yaml" = {
+               yaml::write_yaml(cfg, con)
+             }
+      )
+    }
+  )
+  
+  observeEvent(input$config_local_save_cancel,{
+    shiny::removeModal()
+    cloud_overwriting_danger(FALSE)
+  })
+  
+  
   #PROFILE
   #=====================================================================================
   output$profile <- renderUI({
-    tagList(
-      box(
-        width = 6,
-        bs4Dash::tabsetPanel(
-          id = "profile_execution_main", 
-          type = "tabs",
-          shiny::tabPanel(
-            title = "Execution parameters",
-            textInput(inputId = ns("profile_id"), label = "Workflow identifier", value = ctrl_profile$id),
-            selectizeInput(inputId = ns("profile_mode"), label = "Workflow mode", choices = c("raw", "entity"), selected = ctrl_profile$mode)
-          ),
-          shiny::tabPanel(
-            title = "Execution options",
-            textInput(inputId = ns("profile_option_line_separator"), label = "Metadata line separator", value = ctrl_profile$options$line_separator),
-            selectizeInput(inputId = ns("profile_option_skipDataDownload"), label = "Skip data download", choices = c("FALSE", "TRUE"), selected = ctrl_profile$options$skipDataDownload),
-            selectizeInput(inputId = ns("profile_option_skipEnrichWithData"), label = "Skip enrich with data", choices = c("FALSE", "TRUE"), selected = ctrl_profile$options$skipEnrichWithData),
-            selectizeInput(inputId = ns("profile_option_skipEnrichWithDatatypes"), label = "Skip enrich with data types", choices = c("FALSE", "TRUE"), selected = ctrl_profile$options$skipEnrichWithDatatypes),
-            selectizeInput(inputId = ns("profile_option_skipDynamicBbox"), label = "Skip dynamic BBOX", choices = c("FALSE", "TRUE"), selected = ctrl_profile$options$skipDynamicBbox),
-            selectizeInput(inputId = ns("profile_option_enrichDataStrategy"), label = "Enrich data strategy", choices = c("first", "union"), selected = ctrl_profile$options$enrichDataStrategy)
-          )
+    fluidRow(
+      tabBox(
+        width = 6, id = "profile_settings",
+        type = "tabs", solidHeader = FALSE, status = "teal",
+        shiny::tabPanel(
+          id = "profile_settings_main",
+          title = i18n()$t("CFG_EDITOR_PROFILE_MAIN_SETTINGS"),
+          textInput(inputId = ns("profile_id"), label = i18n()$t("CFG_EDITOR_PROFILE_WORKFLOW_IDENTIFIER"), value = ctrl_profile$id),
+          selectizeInput(inputId = ns("profile_mode"), label = i18n()$t("CFG_EDITOR_PROFILE_WORKFLOW_MODE"), choices = c("raw", "entity"), selected = ctrl_profile$mode)
+        ),
+        shiny::tabPanel(
+          id = "profile_settings_optional",
+          title = i18n()$t("CFG_EDITOR_PROFILE_OPTIONAL_SETTINGS"),
+          textInput(inputId = ns("profile_option_line_separator"), label = i18n()$t("CFG_EDITOR_PROFILE_MD_LINE_SEPARATOR"), value = ctrl_profile$options$line_separator),
+          selectizeInput(inputId = ns("profile_option_skipDataDownload"), label = i18n()$t("CFG_EDITOR_PROFILE_SKIP_DATA_DOWNLOAD"), choices = c("FALSE", "TRUE"), selected = ctrl_profile$options$skipDataDownload),
+          selectizeInput(inputId = ns("profile_option_skipEnrichWithData"), label = i18n()$t("CFG_EDITOR_PROFILE_SKIP_ENRICH_WITH_DATA"), choices = c("FALSE", "TRUE"), selected = ctrl_profile$options$skipEnrichWithData),
+          selectizeInput(inputId = ns("profile_option_skipEnrichWithDatatypes"), label = i18n()$t("CFG_EDITOR_PROFILE_SKIP_ENRICH_WITH_DATATYPES"), choices = c("FALSE", "TRUE"), selected = ctrl_profile$options$skipEnrichWithDatatypes),
+          selectizeInput(inputId = ns("profile_option_skipDynamicBbox"), label = i18n()$t("CFG_EDITOR_PROFILE_SKIP_DYNAMIC_BBOX"), choices = c("FALSE", "TRUE"), selected = ctrl_profile$options$skipDynamicBbox),
+          selectizeInput(inputId = ns("profile_option_enrichDataStrategy"), label = i18n()$t("CFG_EDITOR_PROFILE_ENRICH_DATA_STRATEGY"), choices = c("first", "union"), selected = ctrl_profile$options$enrichDataStrategy)
         )
       ),
-      box(
-        width = 6,
-        title = "Additional information",
-        textInput(inputId = ns("profile_name"), label = "Name", value = ctrl_profile$name),
-        textInput(inputId = ns("profile_project"), label = "Project", value = ctrl_profile$project),
-        textInput(inputId = ns("profile_organization"), label = "Organization", value = ctrl_profile$organization),
-        selectizeInput(inputId = ns("profile_logos"), label = "Logos", choices = ctrl_profile$logos, selected = ctrl_profile$logos,
-                      multiple = TRUE, options = list(create = TRUE))
+      tabBox(
+        width = 6, id = "profile_additional_information", 
+        type = "tabs", solidHeader = FALSE, status = "teal",
+        shiny::tabPanel(
+          id = "profile_additional_information",
+          title = i18n()$t("CFG_EDITOR_PROFILE_ADDITIONAL_INFO"),
+          textInput(inputId = ns("profile_name"), label = i18n()$t("CFG_EDITOR_PROFILE_ADDITIONAL_INFO_NAME"), value = ctrl_profile$name),
+          textInput(inputId = ns("profile_project"), label = i18n()$t("CFG_EDITOR_PROFILE_ADDITIONAL_INFO_PROJECT"), value = ctrl_profile$project),
+          textInput(inputId = ns("profile_organization"), label = i18n()$t("CFG_EDITOR_PROFILE_ADDITIONAL_INFO_ORG"), value = ctrl_profile$organization),
+          selectizeInput(
+            inputId = ns("profile_logos"), 
+            label = i18n()$t("CFG_EDITOR_PROFILE_ADDITIONAL_INFO_LOGOS"), 
+            choices = ctrl_profile$logos, 
+            selected = ctrl_profile$logos,
+            multiple = TRUE, 
+            options = list(
+              create = TRUE,
+              render = I("{
+                    item: function(item, escape) {
+                      return '<div><img src=\"'+item.value+'\" height=25 /> ' + item.value + '</div>'; 
+                    }
+                  }"
+              )
+            )
+          )
+        )
       )
     )
   })
@@ -307,7 +555,6 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
     )
   )
   output$validation_report_HT <- rhandsontable::renderRHandsontable({
-    
     #check if any warning
     rows_with_warning <- c()
     cols_with_warning <- c()
@@ -450,9 +697,9 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
       INFO("Validate data content")
       md_content_report <- md_validator$validate_content()
       if(nrow(md_content_report)==0){
-        md_validation_message <- tags$span("No validation issue detected!", style = "color:green;font-weight:bold;")
+        md_validation_message <- tags$span(i18n()$t("CFG_EDITOR_METADATA_VALIDATION_OK"), style = "color:green;font-weight:bold;")
       }else{
-        md_content_report$row <- paste("Row", md_content_report$row)
+        md_content_report$row <- paste(i18n()$t("CFG_EDITOR_METADATA_VALIDATION_ROW"), md_content_report$row)
         ctrl_validation$report <- md_content_report
         ctrl_validation$report_raw <- md_validator$validate_content(raw = TRUE)
         ctrl_validation$report_data <- md_data
@@ -462,17 +709,17 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
     
     showModal(
       modalDialog(
-        title = sprintf("Metadata (%s) validation report", type),
-        tags$b("Source: "), tags$b(tags$a(href = source, source)),hr(),
+        title = sprintf(i18n()$t("CFG_EDITOR_METADATA_VALIDATION_REPORT"), type),
+        tags$b(paste0(i18n()$t("CFG_EDITOR_SOURCE"),": ")), tags$b(tags$a(href = source, source)),hr(),
         if(hasReport){
           bs4Dash::tabsetPanel(
             type = "pills",
             shiny::tabPanel(
-              title = "Smart view", hr(),
+              title = i18n()$t("CFG_EDITOR_METADATA_VALIDATION_SMARTVIEW"), hr(),
               rhandsontable::rHandsontableOutput(ns("validation_report_HT"))
             ),
             shiny::tabPanel(
-              title = "Raw report", hr(),
+              title = i18n()$t("CFG_EDITOR_METADATA_VALIDATION_RAWVIEW"), hr(),
               DT::dataTableOutput(ns("validation_report_DT"))
             )
           )
@@ -500,14 +747,14 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
   metadataTableHandler <- function(data, type, uuids, validate = TRUE){
     
     #DT::datatable({
-      colnames(data) <- c("Handler", "Source")
-      if(validate){
+      colnames(data) <- c(i18n()$t("CFG_EDITOR_HANDLER"), i18n()$t("CFG_EDITOR_SOURCE"))
+      if(validate) if(nrow(data)>0){
         data <- do.call("rbind", lapply(1:nrow(data), function(i){
             out_tib <- tibble::tibble(
-              Handler = data[i, "Handler"],
-              Source = data[i, "Source"],
+              Handler = data[i, i18n()$t("CFG_EDITOR_HANDLER")],
+              Source = data[i, i18n()$t("CFG_EDITOR_SOURCE")],
               Actions = as(actionButton(inputId = ns(paste0('button_validate_',type,'_', uuids[i])), class="btn btn-info", style = "margin-right: 2px;",
-                             title = "Check metadata", label = "", icon = icon("tasks")),"character")
+                             title = i18n()$t("CFG_EDITOR_METADATA_VALIDATION_CHECK"), label = "", icon = icon("tasks")),"character")
             )
             return(out_tib)
           }
@@ -572,13 +819,14 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
   #-----------------------------------------------------------------------------------------------------
   #contact form
   showContactModal <- function(new = TRUE, handler = "", source = ""){
-    title_prefix <- ifelse(new, "Add", "Modify")
-    form_action <- tolower(title_prefix)
-    showModal(modalDialog(title = sprintf("%s contact source", title_prefix),
-                          selectInput(ns("contact_form_handler"), "Handler:",choices=geoflow::list_contact_handlers()$id, selected = handler),
-                          textInput(ns("contact_form_source"), "Source", value = source),
-                          actionButton(ns("contact_form_cancel"), "Cancel"),
-                          actionButton(ns(sprintf("contact_%s_go", form_action)), title_prefix, style = "float:right"),
+    title = ifelse(new,i18n()$t("CFG_EDITOR_ADD"),i18n()$t("CFG_EDITOR_MODIFY"))
+    i18n_key_suffix <- ifelse(new, "ADD", "MODIFY")
+    form_action <- tolower(title)
+    showModal(modalDialog(title = i18n()$t(sprintf("CFG_EDITOR_METADATA_C_%s", i18n_key_suffix)),
+                          selectInput(ns("contact_form_handler"), i18n()$t("CFG_EDITOR_HANDLER"),choices=geoflow::list_contact_handlers()$id, selected = handler),
+                          textInput(ns("contact_form_source"), i18n()$t("CFG_EDITOR_SOURCE"), value = source),
+                          actionButton(ns("contact_form_cancel"), i18n()$t("CFG_EDITOR_CANCEL")),
+                          actionButton(ns(sprintf("contact_%s_go", form_action)), title, style = "float:right"),
                           easyClose = FALSE, footer = NULL ))
   }
   observeEvent(input$contact_form_cancel, {
@@ -600,8 +848,8 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
       showContactModal(new = FALSE, handler = contact_sel$handler, contact_sel$source)
     }else{
       modalDialog(
-        title = "Warning",
-        paste("Please select the row that you want to edit!" ),easyClose = TRUE
+        title = i18n$t("CFG_EDITOR_WARNING"),
+        i18n()$t("CFG_EDITOR_WARNING_ROW"),easyClose = TRUE
       )
     }
   })
@@ -616,16 +864,16 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
     showModal(
       if(length(input$tbl_contacts_rows_selected)>=1 ){
         modalDialog(
-          title = "Warning",
-          paste("Are you sure to delete",length(input$tbl_contacts_rows_selected),"contact source(s)?" ),
+          title = i18n()$t("CFG_EDITOR_WARNING"),
+          i18n()$t("CFG_EDITOR_DELETE_CONFIRMATION"),
           footer = tagList(
-            modalButton("Cancel"),
+            modalButton(i18n()$t("CFG_EDITOR_CANCEL")),
             actionButton(ns("contact_delete_go"), "Yes", style = "float:right")
           ), easyClose = TRUE)
       }else{
         modalDialog(
-          title = "Warning",
-          paste("Please select contact source(s) that you want to delete!" ),easyClose = TRUE
+          title = i18n()$t("CFG_EDITOR_WARNING"),
+          i18n()$t("CFG_EDITOR_DELETE_SELECTION"),easyClose = TRUE
         )
       }
     )
@@ -640,13 +888,14 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
   #----------------------------------------------------------------------------------------------------
   #entity form
   showEntityModal <- function(new = TRUE, handler = "", source = ""){
-    title_prefix <- ifelse(new, "Add", "Modify")
-    form_action <- tolower(title_prefix)
-    showModal(modalDialog(title = sprintf("%s entity source", title_prefix),
-                          selectInput(ns("entity_form_handler"), "Handler:",choices=geoflow::list_entity_handlers()$id, selected = handler),
-                          textInput(ns("entity_form_source"), "Source", value = source),
-                          actionButton(ns("entity_form_cancel"), "Cancel"),
-                          actionButton(ns(sprintf("entity_%s_go", form_action)), title_prefix, style = "float:right"),
+    title = ifelse(new,i18n()$t("CFG_EDITOR_ADD"),i18n()$t("CFG_EDITOR_MODIFY"))
+    i18n_key_suffix <- ifelse(new, "ADD", "MODIFY")
+    form_action <- tolower(title)
+    showModal(modalDialog(title = i18n()$t(sprintf("CFG_EDITOR_METADATA_E_%s", i18n_key_suffix)),
+                          selectInput(ns("entity_form_handler"), i18n()$t("CFG_EDITOR_HANDLER"),choices=geoflow::list_entity_handlers()$id, selected = handler),
+                          textInput(ns("entity_form_source"), i18n()$t("CFG_EDITOR_SOURCE"), value = source),
+                          actionButton(ns("entity_form_cancel"), i18n()$t("CFG_EDITOR_CANCEL")),
+                          actionButton(ns(sprintf("entity_%s_go", form_action)), title, style = "float:right"),
                           easyClose = FALSE, footer = NULL ))
   }
   observeEvent(input$entity_form_cancel, {
@@ -668,8 +917,8 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
       showEntityModal(new = FALSE, handler = entity_sel$handler, entity_sel$source)
     }else{
       modalDialog(
-        title = "Warning",
-        paste("Please select the row that you want to edit!" ),
+        title = i18n()$t("CFG_EDITOR_WARNING"),
+        i18n()$t("CFG_EDITOR_WARNING_ROW"),
         easyClose = TRUE
       )
     }
@@ -685,16 +934,16 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
     showModal(
       if(length(input$tbl_entities_rows_selected)>=1 ){
         modalDialog(
-          title = "Warning",
-          paste("Are you sure to delete",length(input$tbl_entities_rows_selected),"entity source(s)?" ),
+          title = i18n()$t("CFG_EDITOR_WARNING"),
+          i18n()$t("CFG_EDITOR_DELETE_CONFIRMATION"),
           footer = tagList(
-            modalButton("Cancel"),
+            modalButton(i18n()$t("CFG_EDITOR_CANCEL")),
             actionButton(ns("entity_delete_go"), "Yes", style = "float:right")
           ), easyClose = TRUE)
       }else{
         modalDialog(
-          title = "Warning",
-          paste("Please select entity source(s) that you want to delete!" ),easyClose = TRUE
+          title = i18n()$t("CFG_EDITOR_WARNING"),
+          i18n()$t("CFG_EDITOR_DELETE_SELECTION"),easyClose = TRUE
         )
       }
     )
@@ -708,13 +957,14 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
   #-----------------------------------------------------------------------------------------------------
   #dictionary form
   showDictionaryModal <- function(new = TRUE, handler = "", source = ""){
-    title_prefix <- ifelse(new, "Add", "Modify")
-    form_action <- tolower(title_prefix)
-    showModal(modalDialog(title = sprintf("%s dictionary source", title_prefix),
-                          selectInput(ns("dictionary_form_handler"), "Handler:",choices=geoflow::list_dictionary_handlers()$id, selected = handler),
-                          textInput(ns("dictionary_form_source"), "Source", value = source),
-                          actionButton(ns("dictionary_form_cancel"), "Cancel"),
-                          actionButton(ns(sprintf("dictionary_%s_go", form_action)), title_prefix, style = "float:right"),
+    title = ifelse(new,i18n()$t("CFG_EDITOR_ADD"),i18n()$t("CFG_EDITOR_MODIFY"))
+    i18n_key_suffix <- ifelse(new, "ADD", "MODIFY")
+    form_action <- tolower(title)
+    showModal(modalDialog(title = i18n()$t(sprintf("CFG_EDITOR_METADATA_D_%s", i18n_key_suffix)),
+                          selectInput(ns("dictionary_form_handler"), i18n()$t("CFG_EDITOR_HANDLER"),choices=geoflow::list_dictionary_handlers()$id, selected = handler),
+                          textInput(ns("dictionary_form_source"), i18n()$t("CFG_EDITOR_SOURCE"), value = source),
+                          actionButton(ns("dictionary_form_cancel"), i18n()$t("CFG_EDITOR_CANCEL")),
+                          actionButton(ns(sprintf("dictionary_%s_go", form_action)), title, style = "float:right"),
                           easyClose = FALSE, footer = NULL ))
   }
   observeEvent(input$dictionary_form_cancel,{
@@ -736,8 +986,8 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
       showDictionaryModal(new = FALSE, handler = dictionary_sel$handler, dictionary_sel$source)
     }else{
       modalDialog(
-        title = "Warning",
-        paste("Please select the row that you want to edit!" ),easyClose = TRUE
+        title = i18n()$t("CFG_EDITOR_WARNING"),
+        i18n()$t("CFG_EDITOR_WARNING_ROW"),easyClose = TRUE
       )
     }
   })
@@ -752,16 +1002,16 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
     showModal(
       if(length(input$tbl_dictionary_rows_selected)>=1 ){
         modalDialog(
-          title = "Warning",
-          paste("Are you sure to delete",length(input$tbl_dictionary_rows_selected),"dictionary source(s)?" ),
+          title = i18n()$t("CFG_EDITOR_WARNING"),
+          i18n()$t("CFG_EDITOR_DELETE_CONFIRMATION"),
           footer = tagList(
-            modalButton("Cancel"),
+            modalButton(i18n()$t("CFG_EDITOR_CANCEL")),
             actionButton(ns("dictionary_delete_go"), "Yes", style = "float:right")
           ), easyClose = TRUE)
       }else{
         modalDialog(
-          title = "Warning",
-          paste("Please select dictionary source(s) that you want to delete!" ),easyClose = TRUE
+          title = i18n()$t("CFG_EDITOR_WARNING"),
+          i18n()$t("CFG_EDITOR_DELETE_SELECTION"),easyClose = TRUE
         )
       }
     )
@@ -788,7 +1038,7 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
             )
           )
           in_software$def = if(length(ctrl_software$list)>0) geoflow::list_software()[sapply(in_software$software_type, function(x){which(x ==geoflow::list_software()$software_type)}),]$definition else character(0)
-          colnames(in_software)[colnames(in_software) %in% c("id","type","software_type","def")] <- c("Identifier", "Type (input/output)", "Software Type", "Definition")
+          colnames(in_software)[colnames(in_software) %in% c("id","type","software_type","def")] <- c(i18n()$t("CFG_EDITOR_SOFTWARE_IDENTIFIER"), i18n()$t("CFG_EDITOR_SOFTWARE_TYPE"), i18n()$t("CFG_EDITOR_SOFTWARE_SOFTWARETYPE"), i18n()$t("CFG_EDITOR_SOFTWARE_DEFINITION"))
           in_software
         },
         selection='single', escape=FALSE,rownames=FALSE,
@@ -855,15 +1105,22 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
   )
   #software form
   showSoftwareModal <- function(new = TRUE, software = NULL){
-    title_prefix <- ifelse(new, "Add", "Modify")
-    form_action <- tolower(title_prefix)
-    showModal(modalDialog(title = sprintf("%s software", title_prefix),
-                          textInput(ns("software_form_id"), "Id:", value = software$id),
-                          selectInput(ns("software_form_type"), "Type:",choices=c("input", "output"), selected = software$type),
-                          selectInput(ns("software_form_software_type"), "Type:",choices=geoflow::list_software()$software_type, selected = software$software_type),
-                          uiOutput(ns("software_form_details")),
-                          actionButton(ns("software_form_cancel"), "Cancel"),
-                          actionButton(ns(sprintf("software_%s_go", form_action)), title_prefix, style = "float:right"),
+    title = ifelse(new,i18n()$t("CFG_EDITOR_ADD"),i18n()$t("CFG_EDITOR_MODIFY"))
+    i18n_key_suffix <- ifelse(new, "ADD", "MODIFY")
+    form_action <- tolower(title)
+    showModal(modalDialog(title = i18n()$t(sprintf("CFG_EDITOR_METADATA_C_%s", i18n_key_suffix)), size = "l",
+                          fluidRow(
+                            column(width=6,
+                              textInput(ns("software_form_id"), paste0(i18n()$t("CFG_EDITOR_SOFTWARE_IDENTIFIER"),":"), value = software$id),
+                              selectInput(ns("software_form_type"), paste0(i18n()$t("CFG_EDITOR_SOFTWARE_TYPE"),":"),choices=c("input", "output"), selected = software$type),
+                              selectInput(ns("software_form_software_type"), paste0(i18n()$t("CFG_EDITOR_SOFTWARE_SOFTWARETYPE"),":"),choices=geoflow::list_software()$software_type, selected = software$software_type)
+                            ),
+                            column(width=6,
+                              uiOutput(ns("software_form_details"))
+                            )
+                          ),
+                          actionButton(ns("software_form_cancel"), i18n()$t("CFG_EDITOR_CANCEL")),
+                          actionButton(ns(sprintf("software_%s_go", form_action)), title, style = "float:right"),
                           easyClose = FALSE, footer = NULL ))
   }
   #software
@@ -919,8 +1176,8 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
         properties = geoflow::list_software_properties(input$software_form_software_type, raw = TRUE)
       )
       items <- list()
-      if(length(software_details$parameters)>0) items <- c(items, "Parameters")
-      if(length(software_details$properties)>0) items <- c(items, "Properties")
+      if(length(software_details$parameters)>0) items <- c(items, i18n()$t("CFG_EDITOR_SOFTWARE_PARAMETERS"))
+      if(length(software_details$properties)>0) items <- c(items, i18n()$t("CFG_EDITOR_SOFTWARE_PROPERTIES"))
       
       if(length(items)>0){
         do.call(bs4Dash::tabsetPanel, c(
@@ -1008,8 +1265,8 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
       showSoftwareModal(new = FALSE, software_sel)
     }else{
       modalDialog(
-        title = "Warning",
-        paste("Please select the row that you want to edit!" ),
+        title = i18n()$t("CFG_EDITOR_WARNING"),
+        i18n()$t("CFG_EDITOR_WARNING_ROW"),
         easyClose = TRUE
       )
     }
@@ -1023,16 +1280,16 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
     showModal(
       if(length(input$tbl_software_rows_selected)>=1 ){
         modalDialog(
-          title = "Warning",
-          paste("Are you sure to delete",length(input$tbl_software_rows_selected),"software?" ),
+          title = i18n()$t("CFG_EDITOR_WARNING"),
+          i18n()$t("CFG_EDITOR_DELETE_CONFIRMATION"),
           footer = tagList(
-            modalButton("Cancel"),
+            modalButton(i18n()$t("CFG_EDITOR_CANCEL")),
             actionButton(ns("software_delete_go"), "Yes", style = "float:right")
           ), easyClose = TRUE)
       }else{
         modalDialog(
-          title = "Warning",
-          paste("Please select software that you want to delete!" ),easyClose = TRUE
+          title = i18n()$t("CFG_EDITOR_WARNING"),
+          i18n()$t("CFG_EDITOR_DELETE_SELECTION"),easyClose = TRUE
         )
       }
     )
@@ -1078,7 +1335,7 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
             }
           })
         }
-        colnames(in_action)[colnames(in_action) %in% c("id","run","type","def")] <- c("Identifier", "Run?", "Action Type", "Definition")
+        colnames(in_action)[colnames(in_action) %in% c("id","run","type","def")] <- c(i18n()$t("CFG_EDITOR_ACTION_IDENTIFIER"), i18n()$t("CFG_EDITOR_ACTION_RUN"), i18n()$t("CFG_EDITOR_ACTION_TYPE"), i18n()$t("CFG_EDITOR_ACTION_DEFINITION"))
         in_action
       },
       selection='single', escape=FALSE,rownames=FALSE,
@@ -1133,14 +1390,15 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
   )
   #action form
   showActionModal <- function(new = TRUE, action = NULL){
-    title_prefix <- ifelse(new, "Add", "Modify")
-    form_action <- tolower(title_prefix)
-    showModal(modalDialog(title = sprintf("%s action", title_prefix),
-                          selectInput(ns("action_form_id"), "Type:",choices=geoflow::list_actions()$id, selected = action$id),
-                          selectInput(ns("action_form_run"), "Run:",choices=c(TRUE,FALSE), selected = action$run),
+    title = ifelse(new,i18n()$t("CFG_EDITOR_ADD"),i18n()$t("CFG_EDITOR_MODIFY"))
+    i18n_key_suffix <- ifelse(new, "ADD", "MODIFY")
+    form_action <- tolower(title)
+    showModal(modalDialog(title = i18n()$t(sprintf("CFG_EDITOR_SOFTWARE_%s", i18n_key_suffix)),
+                          selectInput(ns("action_form_id"), paste0(i18n()$t("CFG_EDITOR_ACTION_IDENTIFIER"),":"),choices=geoflow::list_actions()$id, selected = action$id),
+                          selectInput(ns("action_form_run"), paste0(i18n()$t("CFG_EDITOR_ACTION_RUN"),":"),choices=c(TRUE,FALSE), selected = action$run),
                           uiOutput(ns("action_form_details")),
-                          actionButton(ns("action_form_cancel"), "Cancel"),
-                          actionButton(ns(sprintf("action_%s_go", form_action)), title_prefix, style = "float:right"),
+                          actionButton(ns("action_form_cancel"), i18n()$t("CFG_EDITOR_CANCEL")),
+                          actionButton(ns(sprintf("action_%s_go", form_action)), title, style = "float:right"),
                           easyClose = FALSE, footer = NULL ))
   }
   #action
@@ -1183,7 +1441,7 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
       print(act_options)
       if(length(act_options)>0){
         tags$div(
-            h5(tags$b("Action options")),hr(),
+            h5(tags$b(i18n()$t("CFG_EDITOR_ACTION_OPTIONS"))),hr(),
             do.call("tagList", lapply(names(act_options), function(name){
               act_option = act_options[[name]]
               multiple <- if(!is.null(act_option$multiple)) act_option$multiple else FALSE
@@ -1242,8 +1500,8 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
       showActionModal(new = FALSE, action_sel)
     }else{
       modalDialog(
-        title = "Warning",
-        paste("Please select the row that you want to edit!" ),
+        title = i18n()$t("CFG_EDITOR_WARNING"),
+        i18n()$t("CFG_EDITOR_WARNING_ROW"),
         easyClose = TRUE
       )
     }
@@ -1257,16 +1515,16 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
     showModal(
       if(length(input$tbl_actions_rows_selected)>=1 ){
         modalDialog(
-          title = "Warning",
-          paste("Are you sure to delete",length(input$tbl_actions_rows_selected),"action(s)?" ),
+          title = i18n()$t("CFG_EDITOR_WARNING"),
+          i18n()$t("CFG_EDITOR_DELETE_CONFIRMATION"),
           footer = tagList(
-            modalButton("Cancel"),
+            modalButton(i18n()$t("CFG_EDITOR_CANCEL")),
             actionButton(ns("action_delete_go"), "Yes", style = "float:right")
           ), easyClose = TRUE)
       }else{
         modalDialog(
-          title = "Warning",
-          paste("Please select action that you want to delete!" ),easyClose = TRUE
+          title = i18n()$t("CFG_EDITOR_WARNING"),
+          i18n()$t("CFG_EDITOR_DELETE_SELECTION"),easyClose = TRUE
         )
       }
     )
@@ -1290,25 +1548,6 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
         ctrl_config_file(attr(config, "filepath"))
         loadConfigurationUI(config)
       }
-    }
-  })
-  #on config load
-  observeEvent(input$load_configuration,{
-    if(!is.null(input$jsonfile)){
-      config <- loadConfigurationFile()
-      output$jsonfile_msg <- renderUI({
-        if(is(config, "try-error")){
-          tags$span("Please provide a valid JSON file!", style = "color:red;font-weight:bold;float:left;margin-top: 8px;margin-left: 5px;")
-        }else{
-          ctrl_config_file(attr(config, "filepath"))
-          loadConfigurationUI(config)
-          tags$span("Valid JSON", style = "color:green;font-weight:bold;float:left;margin-top: 8px;margin-left: 5px;")
-        }
-      })
-    }else{
-      output$jsonfile_msg <- renderUI({
-        tags$span("No file specified!", style = "color:red;font-weight:bold;float:left;margin-top: 8px;margin-left: 5px;")
-      })
     }
   })
   
@@ -1343,6 +1582,7 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
   
   #save configuration
   getConfiguration <- function(){
+    
     out_json <- list(
       profile = getProfileFromInput(),
       metadata = reactiveValuesToList(ctrl_metadata),
@@ -1350,78 +1590,19 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
       actions = ctrl_actions$list,
       registers = list()
     )
+    
+    for(md_domain in c("contacts", "entities", "dictionary")){
+      out_json$metadata[[md_domain]] = lapply(seq_len(nrow(out_json$metadata[[md_domain]])), function(i) {
+        as.list(out_json$metadata[[md_domain]][i, , drop = FALSE])
+      })
+    }
+    
     out_json <- rapply(out_json, function(x){
       if(x[1] %in% c("TRUE","FALSE")) x <- as.logical(x); 
       return(x)
     }, classes = "character", deflt = NA_integer_, how = "replace")
     return(out_json)
   }
-  
-  #saveConfiguration
-  observeEvent(input$saveConfiguration,{
-    shinyjs::disable("saveConfiguration")
-    progress <- Progress$new(session, min=0, max=100)
-    on.exit(progress$close())
-    config_json <- getConfiguration()
-    progress$set(value = 25, message = "Preparing geoflow configuration file...")
-    filename <- paste0(config_json$profile$id, ".json")
-    if(appConfig$auth){
-      switch(auth_info()$endpoint$auth_type,
-        "ocs" = {
-          #use of ocs4R::ocsManager
-          if(!paste0(appConfig$data_dir_remote,"/") %in% AUTH_API$listFiles()$name){
-            AUTH_API$makeCollection(appConfig$data_dir_remote)
-          }
-          file <- file.path(tempdir(), filename)
-          jsonlite::write_json(config_json, 
-                               file, 
-                               auto_unbox = TRUE, pretty = TRUE)
-          AUTH_API$uploadFile(relPath = appConfig$data_dir_remote, filename = file)
-          unlink(file)
-        },
-        "d4science" = {
-          #use of d4storagehub4R::StoragehubManager
-          folderPath <- dir(appConfig$data_dir_remote)
-          if(length(folderPath)==0) folderPath <- NULL
-          folderName <- basename(appConfig$data_dir_remote)
-          if(is.null(folderPath)){
-            if(!folderName %in% AUTH_API$listWSItems()$name){
-              AUTH_API$createFolder(name = folderName)
-            }
-          }else{
-            AUTH_API$createFolder(folderPath = folderPath, name = folderName)
-          }
-          
-          file <- file.path(tempdir(), filename)
-          jsonlite::write_json(config_json, 
-                               file, 
-                               auto_unbox = TRUE, pretty = TRUE)
-          AUTH_API$uploadFile(folderPath = appConfig$data_dir_remote, file = file) 
-        }
-      )
-    }else{
-      if(!dir.exists(GEOFLOW_DATA_DIR)) dir.create(GEOFLOW_DATA_DIR, recursive = TRUE)
-      jsonlite::write_json(config_json, 
-                           file.path(GEOFLOW_DATA_DIR, filename), 
-                           auto_unbox = TRUE, pretty = TRUE)
-      unlink(file)
-    }
-    progress$set(value = 99, message = "geoflow configuration file successfully saved!")
-    Sys.sleep(1)
-    progress$set(value = 100)
-    shinyjs::enable("saveConfiguration")
-  })
-  
-  #downloadConfiguration
-  output$downloadConfiguration <- downloadHandler(
-    filename = function(){ paste0("geoflow_config_", ctrl_profile$id, ".json")  },
-    content = function(con){
-      disable("downloadConfiguration")
-      config_json <- getConfiguration()
-      jsonlite::write_json(config_json, con, auto_unbox = TRUE, pretty = TRUE)
-      enable("downloadConfiguration")
-    }
-  )
   
  })
   

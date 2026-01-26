@@ -40,7 +40,7 @@ shinyInput <- function(FUN, len, indexes = NULL, id, ns, ...) {
 downloadButtonCustom <- function (outputId, label = "Download", class = NULL, href = "", icon = icon("download"), ...) {
   aTab <- tags$a(
     id = outputId, 
-    class = paste("btn btn-default shiny-download-link", class),
+    class = paste("btn shiny-download-link", class),
     href = href,
     target = "_blank", 
     download = NA, 

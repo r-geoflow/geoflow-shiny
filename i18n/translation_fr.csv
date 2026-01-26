@@ -9,8 +9,83 @@ MENU_SUBITEM_CREATE_WORKFLOW,Créer/Editer configuration
 MENU_SUBITEM_EXECUTE_WORKFLOW,Executer flux de travail
 HOME_TITLE,Lancer des flux de travail interactifs avec
 HOME_WORKFLOWS,Flux de travail
-CONFIG_EDITOR_TITLE,<b>geoflow</b> Editeur de configuration
-CONFIG_EDITOR_SUBTITLE,"Créer, éditer et sauvegarder une configuration de flux de travail"
+CFG_EDITOR,Configurations
+CFG_EDITOR_SUBTITLE,Créer une configuration
+CFG_EDITOR_CONFIG_CREATE,Créer configuration
+CFG_EDITOR_CONFIG_LOAD,Charger configuration
+CFG_EDITOR_CONFIG_SAVE,Sauvegarder configuration
+CFG_EDITOR_MODE_CLOUD,CLOUD
+CFG_EDITOR_MODE_LOCAL,FICHIER LOCAL
+CFG_EDITOR_CHOOSEFILE,Choisir fichier
+CFG_EDITOR_SELECT,Sélectionner
+CFG_EDITOR_CANCEL,Annuler
+CFG_EDITOR_ADD,Ajouter
+CFG_EDITOR_MODIFY,Modifier
+CFG_EDITOR_WARNING,Alerte
+CFG_EDITOR_WARNING_ROW,Merci de sélectionner la ligne à éditer!
+CFG_EDITOR_HANDLER,Gestionnaire
+CFG_EDITOR_SOURCE,Source
+CFG_EDITOR_FORMAT,Format
+CFG_EDITOR_FILENAME,Nom de fichier
+CFG_EDITOR_SAVE,Sauvegarder
+CFG_EDITOR_UPLOAD,Charger
+CFG_EDITOR_UPLOAD_TOOLTIP,Sélectionner un dossier cible ou un fichier à écraser
+CFG_EDITOR_PROFILE,Profil
+CFG_EDITOR_METADATA,Métadonnées
+CFG_EDITOR_METADATA_DELETE_CONFIRMATION,Etes-vous sûr de vouloir supprimer ces entrées?
+CFG_EDITOR_METADATA_DELETE_SELECTION,Veuillez sélectionner les entrées à supprimer
+CFG_EDITOR_METADATA_C,Contacts
+CFG_EDITOR_METADATA_C_ADD,Ajouter une source de contacts
+CFG_EDITOR_METADATA_C_MODIFY,Modifier une source de contacts
+CFG_EDITOR_METADATA_C_DELETE,Supprimer une source de contacts
+CFG_EDITOR_METADATA_E,Entités
+CFG_EDITOR_METADATA_E_ADD,Ajouter une source d'entités
+CFG_EDITOR_METADATA_E_MODIFY,Modifier une source d'entités
+CFG_EDITOR_METADATA_E_DELETE,Supprimer une source d'entités
+CFG_EDITOR_METADATA_D,Dictionnaire
+CFG_EDITOR_METADATA_D_ADD,Ajouter une source de dictionnaire
+CFG_EDITOR_METADATA_D_MODIFY,Modifier une source de dictionnaire
+CFG_EDITOR_METADATA_D_DELETE,Supprimer une source de dictionnaire
+CFG_EDITOR_METADATA_VALIDATION_ROW,Ligne
+CFG_EDITOR_METADATA_VALIDATION_REPORT,Rapport de validation de métadonnées (%s)
+CFG_EDITOR_METADATA_VALIDATION_SMARTVIEW,Vue intelligente
+CFG_EDITOR_METADATA_VALIDATION_RAWVIEW,Vue brute
+CFG_EDITOR_METADATA_VALIDATION_CHECK,Vérifier les métadonnées
+CFG_EDITOR_METADATA_VALIDATION_OK,Pas de problème de validation détecté
+CFG_EDITOR_SOFTWARE,Logiciels
+CFG_EDITOR_SOFTWARE_ADD,Ajouter un logiciel
+CFG_EDITOR_SOFTWARE_MODIFY,Modifier un logiciel
+CFG_EDITOR_SOFTWARE_DELETE,Supprimer un logiciel
+CFG_EDITOR_ACTIONS,Actions
+CFG_EDITOR_ACTION_ADD,Ajouter une action
+CFG_EDITOR_ACTION_MODIFY,Modifier une action
+CFG_EDITOR_ACTION_DELETE,Supprimer une action
+CFG_EDITOR_ACTION_IDENTIFIER,Identifiant
+CFG_EDITOR_ACTION_TYPE,Type
+CFG_EDITOR_ACTION_DEFINITION,Définition
+CFG_EDITOR_ACTION_OPTIONS,Options
+CFG_EDITOR_ACTION_RUN,Exécuter
+CFG_EDITOR_PROFILE_MAIN_SETTINGS,Principaux paramètres
+CFG_EDITOR_PROFILE_OPTIONAL_SETTINGS,Paramètres optionnels
+CFG_EDITOR_PROFILE_WORKFLOW_IDENTIFIER,Identifiant de flux
+CFG_EDITOR_PROFILE_WORKFLOW_MODE,Mode
+CFG_EDITOR_PROFILE_MD_LINE_SEPARATOR,Séparateur de ligne de métadonnées
+CFG_EDITOR_PROFILE_SKIP_DATA_DOWNLOAD,Ignorer le téléchargement de données
+CFG_EDITOR_PROFILE_SKIP_ENRICH_WITH_DATA,Ignorer l'enrichissement avec les données
+CFG_EDITOR_PROFILE_SKIP_ENRICH_WITH_DATATYPES,Ignorer l'enrichissement de types de données
+CFG_EDITOR_PROFILE_SKIP_DYNAMIC_BBOX,Ignorer la couverture spatiale des données
+CFG_EDITOR_PROFILE_ENRICH_DATA_STRATEGY,Stratégie d'enrichissement de données
+CFG_EDITOR_PROFILE_ADDITIONAL_INFO,Information additionnelle
+CFG_EDITOR_PROFILE_ADDITIONAL_INFO_NAME,Nom
+CFG_EDITOR_PROFILE_ADDITIONAL_INFO_PROJECT,Projet
+CFG_EDITOR_PROFILE_ADDITIONAL_INFO_ORG,Organisation
+CFG_EDITOR_PROFILE_ADDITIONAL_INFO_LOGOS,Logos
+CFG_EDITOR_SOFTWARE_IDENTIFIER,Identifiant
+CFG_EDITOR_SOFTWARE_TYPE,Type
+CFG_EDITOR_SOFTWARE_SOFTWARETYPE,Type de software
+CFG_EDITOR_SOFTWARE_DEFINITION,Définition
+CFG_EDITOR_SOFTWARE_PARAMETERS,Paramètres
+CFG_EDITOR_SOFTWARE_PROPERTIES,Propriétés
 EXEC_TITLE,<h2>Liste des configurations <b>geoflow</b> <small>Accéder à un flux de travail et l'éxecuter</small></h2><hr>
 EXEC_CONSOLE,Console
 EXEC_WORKFLOW,Flux de travail
