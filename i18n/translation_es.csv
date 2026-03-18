@@ -88,6 +88,8 @@ MD_EDITOR_C_FACSIMILE,Fax
 MD_EDITOR_C_WEBSITE_URL,Sitio web - URL
 MD_EDITOR_C_WEBSITE_NAME,Sitio web - Nombre
 MD_EDITOR_C_CLOUD_UPLOAD,Cargar contactos en el cloud
+MD_EDITOR_C_CLOUD_UPLOAD_SUCCESS, Fichero de contacts cargado con éxito en el cloud!
+MD_EDITOR_C_CLOUD_UPLOAD_ERROR, Error durante el cargo del fichero de contactos en el cloud!
 MD_EDITOR_E_NEW,Crear nueva entidad
 MD_EDITOR_E_EDIT,Editar entidad
 MD_EDITOR_E,Entidades
@@ -180,6 +182,8 @@ MD_EDITOR_E_DATA_UPLOAD_SOURCE,Fuente de carga
 MD_EDITOR_E_DATA_SRT,Tipo de representación espacial
 MD_EDITOR_E_DATA_FT,Tipo de entidad
 MD_EDITOR_E_CLOUD_UPLOAD,Cargar entidades en la nube
+MD_EDITOR_E_CLOUD_UPLOAD_SUCCESS, Fichero de entidades cargado con éxito en el cloud!
+MD_EDITOR_E_CLOUD_UPLOAD_ERROR, Error durante el cargo del fichero de entidades en el cloud!
 MD_EDITOR_E_WKT_VALID,Geometría válida
 MD_EDITOR_E_WKT_INVALID,Geometría inválida
 MD_EDITOR_D_NEW,Crear nuevo diccionario
@@ -206,6 +210,8 @@ MD_EDITOR_D_REGISTER_SCRIPT,Script de registro
 MD_EDITOR_D_ADD,Añadir tipo
 MD_EDITOR_D_CLOUD_UPLOAD,Cargar el diccionario en la nube
 MD_EDITOR_D_CLOUD_UPLOAD_OVERWRITE,"Atención, usted va a reemplazar un fichero en la nube!"
+MD_EDITOR_D_CLOUD_UPLOAD_SUCCESS, Diccionario cargado con éxito en el cloud!
+MD_EDITOR_D_CLOUD_UPLOAD_ERROR, Error durante el cargo del diccionario en el cloud!
 MD_EDITOR_VALIDATION_ERRORS,Errores de validación
 MD_EDITOR_VALIDATION_WARNINGS,Alertas de validación
 MD_EDITOR_LOAD_CONTACTS, Cargar una lista de contactos

@@ -13,6 +13,9 @@ CFG_EDITOR,Configurations
 CFG_EDITOR_SUBTITLE,Créer une configuration
 CFG_EDITOR_CONFIG_CREATE,Créer configuration
 CFG_EDITOR_CONFIG_LOAD,Charger configuration
+CFG_EDITOR_CONFIG_LOAD_SUCCESS,Configuration chargée avec succès
+CFG_EDITOR_CONFIG_LOAD_ERROR1,Erreur: fichier invalide
+CFG_EDITOR_CONFIG_LOAD_ERROR2,Erreur: configuration invalide
 CFG_EDITOR_CONFIG_SAVE,Sauvegarder configuration
 CFG_EDITOR_MODE_CLOUD,CLOUD
 CFG_EDITOR_MODE_LOCAL,FICHIER LOCAL
@@ -163,6 +166,8 @@ MD_EDITOR_C_FACSIMILE,Fax
 MD_EDITOR_C_WEBSITE_URL,Site web - URL
 MD_EDITOR_C_WEBSITE_NAME,Site web - Nom
 MD_EDITOR_C_CLOUD_UPLOAD,Charger les contacts dans le cloud
+MD_EDITOR_C_CLOUD_UPLOAD_SUCCESS, Fichier de contacts chargé avec succès sur le cloud!
+MD_EDITOR_C_CLOUD_UPLOAD_ERROR, Erreur pendant le chargement du fichier de contacts sur le cloud!
 MD_EDITOR_E_NEW,Créer nouvelle entité
 MD_EDITOR_E_EDIT,Editer entité
 MD_EDITOR_E,Entités,
@@ -257,6 +262,8 @@ MD_EDITOR_E_DATA_FT,Type d'entité
 MD_EDITOR_E_WKT_VALID,Geométrie valide
 MD_EDITOR_E_WKT_INVALID,Geométrie invalide
 MD_EDITOR_E_CLOUD_UPLOAD,Charger les entités dans le cloud
+MD_EDITOR_E_CLOUD_UPLOAD_SUCCESS, Fichier d'entités chargé avec succès sur le cloud!
+MD_EDITOR_E_CLOUD_UPLOAD_ERROR, Erreur pendant le chargement du fichier d'entités sur le cloud!
 MD_EDITOR_D_NEW,Créer nouveau dictionnaire
 MD_EDITOR_D_EDIT,Editer dictionnaire
 MD_EDITOR_D,Dictionnaire
@@ -281,6 +288,8 @@ MD_EDITOR_D_REGISTER_SCRIPT,Script de registre
 MD_EDITOR_D_ADD,Ajouter type
 MD_EDITOR_D_CLOUD_UPLOAD,Charger le dictionnaire dans le cloud
 MD_EDITOR_D_CLOUD_UPLOAD_OVERWRITE,"Attention, vous êtes sur le point d'écraser un fichier sur le cloud!"
+MD_EDITOR_D_CLOUD_UPLOAD_SUCCESS, Dictionnaire chargé avec succès sur le cloud!
+MD_EDITOR_D_CLOUD_UPLOAD_ERROR, Erreur pendant le chargement du dictionnaire sur le cloud!
 MD_EDITOR_VALIDATION_ERRORS,Erreurs de validation
 MD_EDITOR_VALIDATION_WARNINGS,Alertes de validation
 MD_EDITOR_LOAD_CONTACTS, Charger une liste de contacts

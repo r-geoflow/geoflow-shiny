@@ -1886,6 +1886,11 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
           dirname(selected_resource$data)
         }
       )
+      if(!is(uploaded, "try-error")){
+        postMessage(msg = i18n()$t("MD_EDITOR_E_CLOUD_UPLOAD_SUCCESS"), type = "success")
+      }else{
+        postMessage(msg = i18n()$t("MD_EDITOR_E_CLOUD_UPLOAD_ERROR"), type = "error")
+      }
       shiny::removeModal()
       loadCloudTree(id = "entities_load_tree", config = appConfig, auth_api = AUTH_API, leaves_only = FALSE, output = output)
       cloud_overwriting_danger(FALSE)
@@ -2087,14 +2092,19 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
                writexl::write_xlsx(metatbl, file.path(tempdir(), input$contact_table_filename))
              }
       )
-      uploaded = AUTH_API$uploadFile(
+      uploaded = try(AUTH_API$uploadFile(
         filename = file.path(tempdir(), input$contact_table_filename),
         relPath = if(selected_resource$type == "folder"){
           selected_resource$data
         }else if(selected_resource$type == "file"){
           dirname(selected_resource$data)
         }
-      )
+      ))
+      if(!is(uploaded, "try-error")){
+        postMessage(msg = i18n()$t("MD_EDITOR_C_CLOUD_UPLOAD_SUCCESS"), type = "success")
+      }else{
+        postMessage(msg = i18n()$t("MD_EDITOR_C_CLOUD_UPLOAD_ERROR"), type = "error")
+      }
       shiny::removeModal()
       loadCloudTree(id = "contacts_load_tree", config = appConfig, auth_api = AUTH_API, leaves_only = FALSE, output = output)
       cloud_overwriting_danger(FALSE)
@@ -2298,6 +2308,11 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
           dirname(selected_resource$data)
         }
       )
+      if(!is(uploaded, "try-error")){
+        postMessage(msg = i18n()$t("MD_EDITOR_D_CLOUD_UPLOAD_SUCCESS"), type = "success")
+      }else{
+        postMessage(msg = i18n()$t("MD_EDITOR_D_CLOUD_UPLOAD_ERROR"), type = "error")
+      }
       shiny::removeModal()
       loadCloudTree(id = "featuretypes_load_tree", config = appConfig, auth_api = AUTH_API, leaves_only = FALSE, output = output)
       cloud_overwriting_danger(FALSE)
@@ -2487,13 +2502,18 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       INFO("Add subject to entity")
       entity = md_model_draft()
       subj = md_model_subject_draft()
-      same_subject = sapply(entity$subjects, function(x){x$key == subj$key & x$name == subj$name})
+      same_subject = sapply(entity$subjects, function(x){
+        pred = x$key == subj$key
+        if(!is.null(x$name) & !is.null(subj$name)) pred = pred & x$name == subj$name
+        pred
+      })
       if(any(same_subject)){
         entity$subjects[[which(same_subject)]] <- subj
       }else{
         entity$addSubject(subj)
       }
       md_model_draft(entity$clone(deep = T))
+      md_model_subject_draft(NULL)
     })
     observeEvent(input$entity_subject_button_remove,{
       md_model_subject_draft(NULL)

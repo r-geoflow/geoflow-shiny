@@ -87,6 +87,7 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
     #load actions
     ctrl_actions$list <- config$actions
     
+    return(TRUE)
   }
   
   #controllers
@@ -299,16 +300,26 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
                         "application/json" = jsonlite::read_json(filepath),
                         "application/yaml" = yaml::read_yaml(filepath)
     ))
+    if(is(config, "try-error")){
+      postMessage(msg = i18n()$t("CFG_EDITOR_CONFIG_LOAD_ERROR1"), type = "error")
+      return(NULL)
+    }
+    
     attr(config, "filepath") <- filepath
     print(filepath)
     
     #load configuration UI
     ctrl_config_file(attr(config, "filepath"))
-    loadConfigurationUI(config)
+    loaded = try(loadConfigurationUI(config))
+    if(is(loaded, "try-error")){
+      postMessage(msg = i18n()$t("CFG_EDITOR_CONFIG_LOAD_ERROR2"), type = "error")
+      return(NULL)
+    }
     
     shiny::removeModal()
     loadCloudTree(id = "config_load_tree_leavesonly", config = appConfig, auth_api = AUTH_API, 
                   mime_types = c(".json", ".yml", ".yaml"), leaves_only = TRUE, output = output)
+    postMessage(msg = i18n()$t("CFG_EDITOR_CONFIG_LOAD_SUCCESS"), type = "success")
   })
   observeEvent(input$config_local_file_select,{
     req(!is.null(input$config_local_file))
@@ -319,13 +330,22 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
                          "application/json" = jsonlite::read_json(filepath),
                          "application/yaml" = yaml::read_yaml(filepath)
     ))
+    if(is(config, "try-error")){
+      postMessage(msg = i18n()$t("CFG_EDITOR_CONFIG_LOAD_ERROR1"), type = "error")
+      return(NULL)
+    }
+    
     attr(config, "filepath") <- filepath
     #load configuration UI
     ctrl_config_file(attr(config, "filepath"))
-    loadConfigurationUI(config)
+    loaded = loadConfigurationUI(config)
+    if(is(loaded, "try-error")){
+      postMessage(msg = i18n()$t("CFG_EDITOR_CONFIG_LOAD_ERROR2"), type = "error")
+      return(NULL)
+    }
     
     shiny::removeModal()
-    
+    postMessage(msg = i18n()$t("CFG_EDITOR_CONFIG_LOAD_SUCCESS"), type = "success")
   })
   
   

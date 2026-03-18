@@ -13,6 +13,9 @@ CFG_EDITOR,Configurations
 CFG_EDITOR_SUBTITLE,Create a configuration
 CFG_EDITOR_CONFIG_CREATE,Create configuration
 CFG_EDITOR_CONFIG_LOAD,Load configuration
+CFG_EDITOR_CONFIG_LOAD_SUCCESS,Configuration successfully loaded
+CFG_EDITOR_CONFIG_LOAD_ERROR1,Error: invalid file
+CFG_EDITOR_CONFIG_LOAD_ERROR2,Error: invalid configuration
 CFG_EDITOR_CONFIG_SAVE,Save configuration
 CFG_EDITOR_MODE_CLOUD,CLOUD
 CFG_EDITOR_MODE_LOCAL,LOCAL FILE
@@ -163,6 +166,8 @@ MD_EDITOR_C_FACSIMILE,Fac simile
 MD_EDITOR_C_WEBSITE_URL,Website URL
 MD_EDITOR_C_WEBSITE_NAME,Website name
 MD_EDITOR_C_CLOUD_UPLOAD,Upload contacts to the cloud
+MD_EDITOR_C_CLOUD_UPLOAD_SUCCESS, Contacts file successfully uploaded to cloud!
+MD_EDITOR_C_CLOUD_UPLOAD_ERROR, Error while upload contacts file to cloud!
 MD_EDITOR_E_NEW,Create new entity
 MD_EDITOR_E_EDIT,Edit entity
 MD_EDITOR_E,Entities,
@@ -255,6 +260,8 @@ MD_EDITOR_E_DATA_UPLOAD_SOURCE,Upload source
 MD_EDITOR_E_DATA_SRT,Spatial representation type
 MD_EDITOR_E_DATA_FT,Feature type
 MD_EDITOR_E_CLOUD_UPLOAD,Upload entities to the cloud
+MD_EDITOR_E_CLOUD_UPLOAD_SUCCESS, Entities file successfully uploaded to cloud!
+MD_EDITOR_E_CLOUD_UPLOAD_ERROR, Error while upload entities file to cloud!
 MD_EDITOR_E_WKT_VALID,Valid geometry
 MD_EDITOR_E_WKT_INVALID,Invalid geometry
 MD_EDITOR_D_NEW,Create new dictionary
@@ -281,6 +288,8 @@ MD_EDITOR_D_REGISTER_SCRIPT,Register script
 MD_EDITOR_D_ADD,Add feature type
 MD_EDITOR_D_CLOUD_UPLOAD,Upload contacts in the cloud
 MD_EDITOR_D_CLOUD_UPLOAD_OVERWRITE,"Careful, you are going to overwrite a file on the cloud!"
+MD_EDITOR_D_CLOUD_UPLOAD_SUCCESS, Dictionary file successfully uploaded to cloud!
+MD_EDITOR_D_CLOUD_UPLOAD_ERROR, Error while upload dictionary file to cloud!
 MD_EDITOR_VALIDATION_ERRORS,Validation errors
 MD_EDITOR_VALIDATION_WARNINGS,Validation warnings
 MD_EDITOR_LOAD_CONTACTS, Load list of contacts
