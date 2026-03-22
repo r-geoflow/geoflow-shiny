@@ -763,7 +763,9 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
                   #sources are managed through observer
                 }
                )
+               #TODO setSourceFid
                entity$data$setSourceType(input$entity_data_sourcetype)
+               entity$data$setSourceSql(input$entity_data_sourcesql)
                #=> data -> data characteristics
                if(nzchar(input$entity_data_spatialrepresentationtype)) entity$data$setSpatialRepresentationType(input$entity_data_spatialrepresentationtype)
                if(nzchar(input$entity_data_featuretype)) entity$data$setFeatureType(input$entity_data_featuretype)
@@ -1548,7 +1550,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         )
       }else if(input$entity_data_type == "dir"){
         fluidRow(
-          column(12,textInput(ns("entity_data_dir"), i18n()$t("MD_EDITOR_E_DATA_SOURCE_DIRECTORY"),value = NULL, width = NULL)),
+          column(12,textInput(ns("entity_data_dir"), i18n()$t("MD_EDITOR_E_DATA_SOURCE_DIRECTORY"),value = if(!is.null(md_model_draft())) md_model_draft()$data$dir else NULL, width = NULL)),
         )
       }
     })
@@ -1664,6 +1666,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       entry = selected_entry$clone(deep = TRUE)
       md_model_draft(entry)
       if(is(entry, "geoflow_entity")){
+        #spatial information
         bbox = entry$spatial_bbox
         if(!is.null(bbox)){
           geom = sf::st_polygon(list(
@@ -1676,6 +1679,11 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
           ))
           geom_wkt = sf::st_as_text(geom)
           md_model_bbox(geom_wkt)
+        }
+        
+        #data dir
+        if(!is.null(entry$data$dir)){
+          updateSelectInput(inputId = "entity_data_type", selected = "dir")
         }
       }
     })
@@ -2190,14 +2198,15 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
     })
     observeEvent(input$featuretypes_local_file_select,{
       req(!is.null(input$featuretypes_local_file))
+      print(input$featuretypes_local_file)
       
       config = list()
       config$profile$id = "load_local_featuretypes"
       config = geoflow::add_config_logger(config)
       dictionary_handler = switch(mime::guess_type(input$featuretypes_local_file$datapath),
-                              "text/csv" = geoflow::geoflow_handler$new(yaml = system.file("metadata/entity", "dictionary_handler_csv.yml", package = "geoflow")),
-                              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" = geoflow::geoflow_handler$new(yaml = system.file("metadata/entity", "dictionary_handler_excel.yml", package = "geoflow")),
-                              "application/vn.ms-excel" = geoflow::geoflow_handler$new(yaml = system.file("metadata/entity", "dictionary_handler_excel.yml", package = "geoflow"))
+                              "text/csv" = geoflow::geoflow_handler$new(yaml = system.file("metadata/dictionary", "dictionary_handler_csv.yml", package = "geoflow")),
+                              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" = geoflow::geoflow_handler$new(yaml = system.file("metadata/dictionary", "dictionary_handler_excel.yml", package = "geoflow")),
+                              "application/vn.ms-excel" = geoflow::geoflow_handler$new(yaml = system.file("metadata/dictionary", "dictionary_handler_excel.yml", package = "geoflow"))
       )
       dict = dictionary_handler$fun(
         handler = dictionary_handler,
