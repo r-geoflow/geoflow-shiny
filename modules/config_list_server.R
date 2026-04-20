@@ -20,7 +20,7 @@ config_list_server<- function(id, auth_info, i18n, geoflow_configs, parent.sessi
     
     #update job_status (handled as reactive)
     status_code = attr(reactive_job_status(),"status_code")
-    translated_status = if(status_code != ""){ translator$t(paste0("EXEC_JOB_STATUS_", toupper(status_code))) }else{ "" }
+    translated_status = if(status_code != ""){ i18n()$t(paste0("EXEC_JOB_STATUS_", toupper(status_code))) }else{ "" }
     attr(translated_status, "status_code") = status_code
     reactive_job_status(translated_status)
     
@@ -134,14 +134,20 @@ config_list_server<- function(id, auth_info, i18n, geoflow_configs, parent.sessi
         #geoflow execution
         ipc.progress <- ipc::AsyncProgress$new(
           value = 0, min = 0, max = 100,
-          message = sprintf("%s '%s'", translator$t("EXEC_WORKFLOW"), outconfig$profile$id),
-          detail = translator$t("EXEC_JOB_INITIALIZATION")
+          message = sprintf("%s '%s'", i18n()$translate("EXEC_WORKFLOW"), outconfig$profile$id),
+          detail = as.character(i18n()$translate("EXEC_JOB_INITIALIZATION"))
         )
         
+        #i18n messages (to be shared within future)
+        workflow_msg_started = as.character(translator$translate("EXEC_JOB_STATUS_STARTED")); attr(workflow_msg_started, "status_code") = "started"
+        workflow_msg_inprogress = as.character(translator$translate("EXEC_JOB_STATUS_INPROGRESS")); attr(workflow_msg_inprogress, "status_code") = "inprogress"
+        workflow_msg_exec = as.character(translator$translate("EXEC_WORKFLOW"))
+        workflow_msg_exec_detail = as.character(translator$translate("EXEC_WORKFLOW_EXECUTION_ACTION_DETAIL"))
+        
+        #exec
         future::future({
           ipc.queue$producer$fireEval(print("Process started for geoflow job"))
-          started = translator$t("EXEC_JOB_STATUS_STARTED"); attr(started, "status_code") = "started"
-          ipc.queue$producer$fireAssignReactive("reactive_job_status", started)
+          ipc.queue$producer$fireAssignReactive("reactive_job_status", workflow_msg_started)
           
           geoflow::executeWorkflow(
             file = filepath,
@@ -153,8 +159,7 @@ config_list_server<- function(id, auth_info, i18n, geoflow_configs, parent.sessi
             },
             on_initWorkflow = function(config, queue){
               queue$producer$fireEval(print("Successful workflow initialization"))
-              inprogress = translator$t("EXEC_JOB_STATUS_INPROGRESS"); attr(inprogress, "status_code") = "inprogress"
-              ipc.queue$producer$fireAssignReactive("reactive_job_status", inprogress)
+              ipc.queue$producer$fireAssignReactive("reactive_job_status", workflow_msg_inprogress)
             },
             on_closeWorkflow = function(config, queue){
               ipc.progress$close()
@@ -162,25 +167,26 @@ config_list_server<- function(id, auth_info, i18n, geoflow_configs, parent.sessi
             monitor = function(step, config, entity, action, queue){
               queue$producer$fireAssignReactive("reactive_job_progress", step)
               ipc.progress$set(
-                value = step, 
-                message = sprintf("%s [%s] :", translator$t("EXEC_WORKFLOW"), config$profile$id),
-                detail = sprintf(translator$t("EXEC_ACTION_EXEC_DETAIL"),action$id,entity$identifiers[["id"]],step)
+                value = step,
+                message = sprintf("%s [%s] :", workflow_msg_exec, config$profile$id),
+                detail = sprintf(workflow_msg_exec_detail,action$id, entity$identifiers[["id"]], step)
               )
             },
             session = parent.session
           )
         }) %...>% 
           (function(result){
-            success = translator$t("EXEC_JOB_STATUS_SUCCESS"); attr(success, "status_code") = "success"
+            success = as.character(translator$translate("EXEC_JOB_STATUS_SUCCESS")); attr(success, "status_code") = "success"
             reactive_job_status(success)
             shinyjs::enable(button_id)
           }) %...T!%
           (function(error){
+            print(error)
             ipc.progress$close()
-            error_status = translator$t("EXEC_JOB_STATUS_ERROR"); attr(error_status, "status_code") = "error"
+            error_status = as.character(translator$translate("EXEC_JOB_STATUS_ERROR")); attr(error_status, "status_code") = "error"
             reactive_job_status(error_status)
             showModal(modalDialog(title = "Error",
-                                  p(sprintf(translator$t("EXEC_JOB_ERROR_MESSAGE"), outconfig$profile$id)),
+                                  p(sprintf(as.character(translator$translate("EXEC_JOB_ERROR_MESSAGE")), outconfig$profile$id)),
                                   p(as.character(error)),
                                   easyClose = TRUE, footer = NULL ))
             shinyjs::enable(button_id)

@@ -98,6 +98,7 @@ EXEC_WORKFLOW,Workflow
 EXEC_WORKFLOWS,Workflows
 EXEC_WORKFLOW_INITIALIZATION,Workflow initialization
 EXEC_WORKFLOW_EXECUTION,Workflow execution
+EXEC_WORKFLOW_EXECUTION_ACTION_DETAIL,Executing action '%s' for entity '%s' (%s %%)
 EXEC_SESSION_INFO,Session info
 EXEC_BUTTON_EDIT,Edit
 EXEC_BUTTON_EXECUTE,Execute
