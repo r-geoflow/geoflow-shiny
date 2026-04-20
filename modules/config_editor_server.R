@@ -51,6 +51,11 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
     ctrl_profile$project <- config$profile$project
     ctrl_profile$organization <- config$profile$organization
     ctrl_profile$logos <- unlist(config$profile$logos)
+    if(!is.null(config$profile$environment)){
+      ctrl_profile$environment = list()
+      if(!is.null(config$profile$environment$file)) ctrl_profile$environment$file <- config$profile$environment$file
+      if(!is.null(config$profile$environment$software)) ctrl_profile$environment$software <- config$profile$environment$software
+    }
     cfg_options = if(!is.null(config$profile$options)) config$profile$options else config$options
     if(!is.null(cfg_options)){
       if(!is.null(cfg_options$line_separator)) ctrl_profile$options$line_separator <- cfg_options$line_separator
@@ -293,7 +298,6 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
   })
   observeEvent(input$config_load_tree_leavesonly_select,{
     selected_resource = input$config_load_tree_leavesonly_selected
-    print(selected_resource)
     #OCS download selected resource and read it
     filepath <- AUTH_API$downloadFile(relPath = dirname(selected_resource[[1]]$data), filename = selected_resource[[1]]$text, outdir = tempdir())
     config <- try(switch(mime::guess_type(filepath),
@@ -306,7 +310,6 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
     }
     
     attr(config, "filepath") <- filepath
-    print(filepath)
     
     #load configuration UI
     ctrl_config_file(attr(config, "filepath"))
@@ -474,8 +477,6 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
   })
   output$config_local_save <- downloadHandler(
     filename = function(){ 
-      print("PIPO")
-      print(input$config_local_filename)
       input$config_local_filename
     },
     content = function(con){
@@ -509,6 +510,14 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
           title = i18n()$t("CFG_EDITOR_PROFILE_MAIN_SETTINGS"),
           textInput(inputId = ns("profile_id"), label = i18n()$t("CFG_EDITOR_PROFILE_WORKFLOW_IDENTIFIER"), value = ctrl_profile$id),
           selectizeInput(inputId = ns("profile_mode"), label = i18n()$t("CFG_EDITOR_PROFILE_WORKFLOW_MODE"), choices = c("raw", "entity"), selected = ctrl_profile$mode)
+        ),
+        shiny::tabPanel(
+          id = "profile_settings_env",
+          title = i18n()$t("CFG_EDITOR_PROFILE_ENV_SETTINGS"),
+          textInput(inputId = ns("profile_env_file"), label = i18n()$t("CFG_EDITOR_PROFILE_ENV_FILE"), value = ctrl_profile$environment$file),
+          hr(),
+          selectizeInput(inputId = ns("profile_env_software_type"), label = i18n()$t("CFG_EDITOR_PROFILE_ENV_SOFTWARE_TYPE"), choices = c("", geoflow::list_software()$software_type), selected = ctrl_profile$environment$software$software_type),
+          uiOutput(ns("profile_env_software_parameters"))
         ),
         shiny::tabPanel(
           id = "profile_settings_optional",
@@ -549,6 +558,85 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
         )
       )
     )
+  })
+  
+  observeEvent(input$profile_env_software_type,{
+    
+    output$profile_env_software_parameters <- renderUI({
+      
+      parameters = list()
+      if(nzchar(input$profile_env_software_type)){
+        parameters = geoflow::list_software_parameters(input$profile_env_software_type, raw = TRUE)
+      }
+      
+      if(length(parameters)>0){
+        do.call(tagList,
+          lapply(names(parameters), function(name){
+            software_param <- parameters[[name]]
+            if(!is.null(software_param$choices)){
+              selectizeInput(
+                inputId = ns(sprintf("profile_env_software_param_%s", name)),
+                label = c(software_param$label, list(tags$span(class = "glyphicon glyphicon-info-sign software-parameter-info", title = software_param$def))),
+                selected = ctrl_profile$environment$software$software_type,
+                choices = software_param$choices
+              )
+            }else{
+              clazz <- software_param$class
+              if(length(clazz)==0) clazz = ""
+              switch(clazz,
+                     "character" = {
+                       input_fun = if(name %in% c("pwd", "password", "token")) passwordInput else textInput
+                       input_fun(
+                         inputId = ns(sprintf("profile_env_software_param_%s", name)),
+                         label = c(software_param$label, list(tags$span(class = "glyphicon glyphicon-info-sign software-parameter-info", title = software_param$def))),
+                         value = if(!is.null(ctrl_profile$environment$software$parameters[[name]])){
+                           ctrl_profile$environment$software$parameters[[name]]
+                         }else{
+                           if(!is.null(software_param$default)){software_param$default}else{
+                             if(input$profile_env_software_type == "ocs" & name %in% c("url","user","pwd")){
+                               sprintf("{{GEOFLOW_SHINY_AUTH_%s}}", toupper(name))
+                             }else{
+                               NULL
+                             }
+                           }
+                         }
+                       )
+                      },
+                     "integer" = numericInput(
+                       inputId = ns(sprintf("profile_env_software_param_%s", name)),
+                       label = c(software_param$label, list(tags$span(class = "glyphicon glyphicon-info-sign software-parameter-info", title = software_param$def))),
+                       value = if(!is.null(ctrl_profile$environment$software$parameters[[name]])){
+                         ctrl_profile$environment$software$parameters[[name]]
+                       }else{
+                         if(!is.null(software_param$default)){software_param$default}else{NULL}
+                       }
+                     ),
+                     "numeric" = numericInput(
+                       inputId = ns(sprintf("profile_env_software_param_%s", name)),
+                       label = c(software_param$label, list(tags$span(class = "glyphicon glyphicon-info-sign software-parameter-info", title = software_param$def))),
+                       value = if(!is.null(ctrl_profile$environment$software$parameters[[name]])){
+                         ctrl_profile$environment$software$parameters[[name]]
+                       }else{
+                         if(!is.null(software_param$default)){software_param$default}else{NULL}
+                       }
+                     ),
+                     textInput(
+                       inputId = ns(sprintf("profile_env_software_param_%s", name)),
+                       label = c(software_param$label, list(tags$span(class = "glyphicon glyphicon-info-sign software-parameter-info", title = software_param$def))),
+                       value = if(!is.null(ctrl_profile$environment$software$parameters[[name]])){
+                         ctrl_profile$environment$software$parameters[[name]]
+                       }else{
+                         if(!is.null(software_param$default)){software_param$default}else{NULL}
+                       }
+                     )
+              )
+            }
+          })       
+        )
+      }else{
+        div()
+      }
+    })
   })
   
   #CONFIG VALIDATION/TEST
@@ -1188,7 +1276,6 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
       if(!is.null(input$tbl_software_rows_selected)){
         print(sprintf("Row selected: %s", input$tbl_software_rows_selected))
         software <- ctrl_software$list[[input$tbl_software_rows_selected]]
-        print(software)
       }
       
       software_details <- list(
@@ -1221,21 +1308,24 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
                   clazz <- software_param$class
                   if(length(clazz)==0) clazz = ""
                   switch(clazz,
-                    "character" = textInput(
-                      inputId = ns(sprintf("software_form_%s_%s", tolower(item), name)),
-                      label = c(software_param$label, list(tags$span(class = "glyphicon glyphicon-info-sign software-parameter-info", title = software_param$def))),
-                      value = if(!is.null(software[[tolower(item)]][[name]])){
-                        software[[tolower(item)]][[name]]
-                      }else{
-                        if(!is.null(software_param$default)){software_param$default}else{
-                          if(input$software_form_software_type == "ocs" & name %in% c("url","user","pwd")){
-                            sprintf("{{GEOFLOW_SHINY_AUTH_%s}}", toupper(name))
-                          }else{
-                            NULL
+                    "character" = {
+                      input_fun = if(name %in% c("pwd", "password", "token")) passwordInput else textInput
+                      input_fun(
+                        inputId = ns(sprintf("software_form_%s_%s", tolower(item), name)),
+                        label = c(software_param$label, list(tags$span(class = "glyphicon glyphicon-info-sign software-parameter-info", title = software_param$def))),
+                        value = if(!is.null(software[[tolower(item)]][[name]])){
+                          software[[tolower(item)]][[name]]
+                        }else{
+                          if(!is.null(software_param$default)){software_param$default}else{
+                            if(input$software_form_software_type == "ocs" & name %in% c("url","user","pwd")){
+                              sprintf("{{GEOFLOW_SHINY_AUTH_%s}}", toupper(name))
+                            }else{
+                              NULL
+                            }
                           }
                         }
-                      }
-                    ),
+                      )
+                    },
                     "integer" = numericInput(
                       inputId = ns(sprintf("software_form_%s_%s", tolower(item), name)),
                       label = c(software_param$label, list(tags$span(class = "glyphicon glyphicon-info-sign software-parameter-info", title = software_param$def))),
@@ -1453,7 +1543,6 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
       if(!is.null(input$tbl_actions_rows_selected)){
         print(sprintf("Row selected: %s", input$tbl_actions_rows_selected))
         action <- ctrl_actions$list[[input$tbl_actions_rows_selected]]
-        print(action)
       }
       
       act_options = geoflow::list_action_options(input$action_form_id, raw = TRUE)
@@ -1581,6 +1670,25 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
     ctrl_profile$project <- input$profile_project
     ctrl_profile$organization <- input$profile_organization
     ctrl_profile$logos <- input$profile_logos
+    
+    #environment
+    if(!is.null(input$profile_env_file) && nzchar(input$profile_env_file)){
+      ctrl_profile$environment$file <- input$profile_env_file
+      if(!is.null(input$profile_env_software_type) && nzchar(input$profile_env_software_type)){
+        software <- list(
+          software_type = input$profile_env_software_type,
+          parameters = list()
+        )
+        params <- geoflow::list_software_parameters(input$profile_env_software_type, raw = TRUE)
+        paramNames <- names(params)
+        if(length(paramNames)>0){
+          software$parameters <- lapply(paramNames, function(paramName){
+            input[[sprintf("profile_env_software_param_%s", paramName)]]
+          })
+          names(software$parameters) <- paramNames
+        }
+      }
+    }
     
     #options
     line_separator <- geoflow::get_line_separator()
