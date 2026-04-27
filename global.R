@@ -63,8 +63,8 @@ source("modules/metadata_editor_server.R")
 source("modules/metadata_editor_ui.R")
 source("modules/config_editor_server.R")
 source("modules/config_editor_ui.R")
-source("modules/config_list_server.R")
-source("modules/config_list_ui.R")
+source("modules/config_runner_server.R")
+source("modules/config_runner_ui.R")
 
 #main Shiny scripts
 #---------------------------------------------------------------------------------------
