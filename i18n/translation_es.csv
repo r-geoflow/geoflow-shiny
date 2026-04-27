@@ -14,7 +14,6 @@ CONFIG_EDITOR_SUBTITLE,"Crear, editar una configuración de flujo de trabajo"
 EXEC_TITLE,<h2>Lista de las configuraciones <b>geoflow</b> <small>Acceder a un flujo de trabajo y ejecutarlo</small></h2><hr>
 EXEC_CONSOLE,Consola
 EXEC_WORKFLOW,Flujo de trabajo
-EXEC_WORKFLOWS,Flujos de trabajo
 EXEC_WORKFLOW_INITIALIZATION,Inicialización
 EXEC_WORKFLOW_EXECUTION,Ejecución
 EXEC_SESSION_INFO,Info sesión

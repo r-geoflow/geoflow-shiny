@@ -1647,16 +1647,16 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
   #CONFIGURATION LOAD
   #=====================================================================================
   #on config url load
-  observe({
-    query <- parseQueryString(session$clientData$url_search)
-    if(length(query)>0){
-      filename <- query[["file"]]
-      if(!is.null(filename)) {
-        cat(sprintf("Selecting configuration file '%s'\n", filename))
-        config <- loadConfigurationFileFromUrl(filename)
-        ctrl_config_file(attr(config, "filepath"))
-        loadConfigurationUI(config)
-      }
+  observeEvent(parent.session$userData$workflow(),{
+    workflow = parent.session$userData$workflow()
+    print(workflow)
+    if(!is.null(workflow)){
+      config <- try(switch(mime::guess_type(workflow),
+         "application/json" = jsonlite::read_json(workflow),
+         "application/yaml" = yaml::read_yaml(workflow)
+      ))
+      ctrl_config_file(workflow)
+      loadConfigurationUI(config)
     }
   })
   

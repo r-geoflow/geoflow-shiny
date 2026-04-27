@@ -95,7 +95,6 @@ CFG_EDITOR_SOFTWARE_PROPERTIES,Propriétés
 EXEC_TITLE,<h2>Liste des configurations <b>geoflow</b> <small>Accéder à un flux de travail et l'éxecuter</small></h2><hr>
 EXEC_CONSOLE,Console
 EXEC_WORKFLOW,Flux de travail
-EXEC_WORKFLOWS,Flux de travail
 EXEC_WORKFLOW_INITIALIZATION,Initialisation
 EXEC_WORKFLOW_EXECUTION,Execution
 EXEC_WORKFLOW_EXECUTION_ACTION_DETAIL,Exécution de l'action '%s' pour l'entité '%s' (%s %%)

@@ -292,21 +292,8 @@ server <- function(input, output, session) {
     updateModuleUrl(session, moduleUrl)
   })
   
-  observeEvent(input$selected_language, {
-    INFO(paste("Set app language:", input$selected_language))
-    shiny.i18n::update_lang(input$selected_language)
-    if(appConfig$auth){
-      AUTH_API <- try(get("AUTH_API", envir = GEOFLOW_SHINY_ENV), silent = TRUE)
-      config_files = getConfigurationFiles(config = appConfig, auth_api = AUTH_API, auth_info = auth_info())
-      attr(config_files, "lastModified") = Sys.time()
-      geoflow_configs(config_files)
-    }else{
-      config_files = getConfigurationFiles(config = appConfig, auth_api = NULL, auth_info = NULL)
-      attr(config_files, "lastModified") = Sys.time()
-      geoflow_configs(config_files)
-    }
-  })
-  
+  #workflow temp management
+  session$userData$workflow <- reactiveVal(NULL)
   
   
 }
