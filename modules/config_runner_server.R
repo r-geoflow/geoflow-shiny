@@ -156,9 +156,14 @@ config_list_server<- function(id, auth_info, i18n, geoflow_configs, parent.sessi
     if(attr(reactive_job_status(), "status_code") %in% c("success", "error")){
       div(
         downloadButtonCustom(
-          ns("downloadJob"),
+          ns("download_job_archive"),
           i18n()$t("EXEC_BUTTON_JOB_ARCHIVE"),
           icon = icon("download")
+        ),
+        downloadButtonCustom(
+          ns("download_job_log"),
+          i18n()$t("EXEC_BUTTON_JOB_LOG"),
+          icon = icon("list")
         ),
         style = "float:right;margin-right:7.5px;"
       )
@@ -166,15 +171,28 @@ config_list_server<- function(id, auth_info, i18n, geoflow_configs, parent.sessi
       ""
     }
   })
-  output$downloadJob <- downloadHandler(
+  output$download_job_archive <- downloadHandler(
     filename = function(){ paste0(basename(reactive_job()), ".zip") },
     content = function(con){
-      disable("downloadJob")
+      disable("download_job_archive")
       setwd(reactive_job())
       zip::zip(zipfile = con, files = list.files())
-      enable("downloadJob")
+      enable("download_job_archive")
     },
     contentType = "application/zip"
+  )
+  
+  output$download_job_log <- downloadHandler(
+    filename = function(){ paste0(basename(reactive_job()),"_log", ".txt") },
+    content = function(con){
+      disable("download_job_log")
+      file.copy(
+        from = file.path(reactive_job(), "job-logs.txt"),
+        to = con
+      )
+      enable("download_job_log")
+    },
+    contentType = "text/plain"
   )
   
   #Interactive job console log

@@ -102,6 +102,7 @@ EXEC_SESSION_INFO,Session info
 EXEC_BUTTON_EDIT,Edit
 EXEC_BUTTON_EXECUTE,Execute
 EXEC_BUTTON_JOB_ARCHIVE,Download job archive
+EXEC_BUTTON_JOB_LOG,Download job log
 EXEC_JOB_NOJOBSTARTED,No geoflow job started!
 EXEC_JOB_STARTING,Starting geoflow job...
 EXEC_JOB_INITIALIZATION,Initializing workflow ... 0%

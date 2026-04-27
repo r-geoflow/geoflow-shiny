@@ -101,7 +101,8 @@ EXEC_WORKFLOW_EXECUTION_ACTION_DETAIL,Exécution de l’action '%s' pour l’ent
 EXEC_SESSION_INFO,Informations de session
 EXEC_BUTTON_EDIT,Modifier
 EXEC_BUTTON_EXECUTE,Exécuter
-EXEC_BUTTON_JOB_ARCHIVE,Télécharger l’archive du job
+EXEC_BUTTON_JOB_ARCHIVE,Télécharger l’archive du travail
+EXEC_BUTTON_JOB_LOG,Télécharger le journal du travail
 EXEC_JOB_NOJOBSTARTED,Aucun job geoflow démarré !
 EXEC_JOB_STARTING,Démarrage du job geoflow...
 EXEC_JOB_INITIALIZATION,Initialisation du workflow ... 0%
