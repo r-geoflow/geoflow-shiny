@@ -343,7 +343,10 @@ config_list_server<- function(id, auth_info, i18n, geoflow_configs, parent.sessi
     reactive_job_status(started)
     
     filepath <- reactive_workflow()
-    outconfig <- jsonlite::read_json(filepath)
+    outconfig <- try(switch(mime::guess_type(filepath),
+     "application/json" = jsonlite::read_json(filepath),
+     "application/yaml" = yaml::read_yaml(filepath)
+    ))
     if(is.null(outconfig$profile$id)) outconfig$profile$id <- outconfig$id
     
     targetdir <- if(appConfig$auth){
