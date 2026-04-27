@@ -4,50 +4,132 @@ SELECT_LANGUAGE,Idioma
 MENU_ITEM_HOME,Inicio
 MENU_ITEM_CREATE,Crear
 MENU_ITEM_EXECUTE,Ejecutar
-MENU_SUBITEM_CREATE_METADATA,Crear/Editar metadata
+MENU_SUBITEM_CREATE_METADATA,Crear/Editar metadatos
 MENU_SUBITEM_CREATE_WORKFLOW,Crear/Editar configuración
 MENU_SUBITEM_EXECUTE_WORKFLOW,Ejecutar flujo de trabajo
-HOME_TITLE,Lanzar flujos de trabajo interactivos con
+HOME_TITLE,Ejecutar flujos de trabajo interactivos con
 HOME_WORKFLOWS,Flujos de trabajo
-CONFIG_EDITOR_TITLE,<b>geoflow</b> Editor de configuración
-CONFIG_EDITOR_SUBTITLE,"Crear, editar una configuración de flujo de trabajo"
-EXEC_TITLE,<h2>Lista de las configuraciones <b>geoflow</b> <small>Acceder a un flujo de trabajo y ejecutarlo</small></h2><hr>
+CFG_EDITOR,Configuraciones
+CFG_EDITOR_SUBTITLE,Crear una configuración
+CFG_EDITOR_CONFIG_CREATE,Crear configuración
+CFG_EDITOR_CONFIG_LOAD,Cargar configuración
+CFG_EDITOR_CONFIG_LOAD_SUCCESS,Configuración cargada correctamente
+CFG_EDITOR_CONFIG_LOAD_ERROR1,Error: archivo inválido
+CFG_EDITOR_CONFIG_LOAD_ERROR2,Error: configuración inválida
+CFG_EDITOR_CONFIG_SAVE,Guardar configuración
+CFG_EDITOR_MODE_CLOUD,CLOUD
+CFG_EDITOR_MODE_LOCAL,ARCHIVO LOCAL
+CFG_EDITOR_CHOOSEFILE,Seleccionar archivo
+CFG_EDITOR_SELECT,Seleccionar
+CFG_EDITOR_CANCEL,Cancelar
+CFG_EDITOR_ADD,Añadir
+CFG_EDITOR_MODIFY,Modificar
+CFG_EDITOR_WARNING,Advertencia
+CFG_EDITOR_WARNING_ROW,¡Seleccione la fila que desea editar!
+CFG_EDITOR_HANDLER,Gestor
+CFG_EDITOR_SOURCE,Fuente
+CFG_EDITOR_FORMAT,Formato
+CFG_EDITOR_FILENAME,Nombre de archivo
+CFG_EDITOR_SAVE,Guardar
+CFG_EDITOR_UPLOAD,Subir
+CFG_EDITOR_UPLOAD_TOOLTIP,Seleccione una carpeta de destino o un archivo para sobrescribir
+CFG_EDITOR_PROFILE,Perfil
+CFG_EDITOR_METADATA,Metadatos
+CFG_EDITOR_DELETE_CONFIRMATION,¿Está seguro de que desea eliminar estos elementos?
+CFG_EDITOR_DELETE_SELECTION,¡Seleccione los elementos que desea eliminar!
+CFG_EDITOR_METADATA_C,Contactos
+CFG_EDITOR_METADATA_C_ADD,Añadir fuente de contacto
+CFG_EDITOR_METADATA_C_MODIFY,Modificar fuente de contacto
+CFG_EDITOR_METADATA_C_DELETE,Eliminar fuente de contacto
+CFG_EDITOR_METADATA_E,Entidades
+CFG_EDITOR_METADATA_E_ADD,Añadir fuente de entidad
+CFG_EDITOR_METADATA_E_MODIFY,Modificar fuente de entidad
+CFG_EDITOR_METADATA_E_DELETE,Eliminar fuente de entidad
+CFG_EDITOR_METADATA_D,Diccionario
+CFG_EDITOR_METADATA_D_ADD,Añadir fuente de diccionario
+CFG_EDITOR_METADATA_D_MODIFY,Modificar fuente de diccionario
+CFG_EDITOR_METADATA_D_DELETE,Eliminar fuente de diccionario
+CFG_EDITOR_METADATA_VALIDATION_ROW,Fila
+CFG_EDITOR_METADATA_VALIDATION_REPORT,Informe de validación de metadatos (%s)
+CFG_EDITOR_METADATA_VALIDATION_SMARTVIEW,Vista inteligente
+CFG_EDITOR_METADATA_VALIDATION_RAWVIEW,Vista sin procesar
+CFG_EDITOR_METADATA_VALIDATION_CHECK,Verificar metadatos
+CFG_EDITOR_METADATA_VALIDATION_OK,¡No se detectaron problemas de validación!
+CFG_EDITOR_SOFTWARE,Software
+CFG_EDITOR_SOFTWARE_ADD,Añadir software
+CFG_EDITOR_SOFTWARE_MODIFY,Modificar software
+CFG_EDITOR_SOFTWARE_DELETE,Eliminar software
+CFG_EDITOR_ACTIONS,Acciones
+CFG_EDITOR_ACTION_ADD,Añadir una acción
+CFG_EDITOR_ACTION_MODIFY,Modificar una acción
+CFG_EDITOR_ACTION_DELETE,Eliminar una acción
+CFG_EDITOR_ACTION_IDENTIFIER,Identificador
+CFG_EDITOR_ACTION_TYPE,Tipo
+CFG_EDITOR_ACTION_DEFINITION,Definición
+CFG_EDITOR_ACTION_OPTIONS,Opciones
+CFG_EDITOR_ACTION_RUN,Ejecutar
+CFG_EDITOR_PROFILE_MAIN_SETTINGS,Configuración principal
+CFG_EDITOR_PROFILE_ENV_SETTINGS,Configuración del entorno
+CFG_EDITOR_PROFILE_ENV_FILE,Archivo de entorno
+CFG_EDITOR_PROFILE_ENV_SOFTWARE_TYPE,Software de entorno
+CFG_EDITOR_PROFILE_OPTIONAL_SETTINGS,Configuración opcional
+CFG_EDITOR_PROFILE_WORKFLOW_IDENTIFIER,Identificador del flujo de trabajo
+CFG_EDITOR_PROFILE_WORKFLOW_MODE,Modo
+CFG_EDITOR_PROFILE_MD_LINE_SEPARATOR,Separador de línea de metadatos
+CFG_EDITOR_PROFILE_SKIP_DATA_DOWNLOAD,Omitir descarga de datos
+CFG_EDITOR_PROFILE_SKIP_ENRICH_WITH_DATA,Omitir enriquecimiento con datos
+CFG_EDITOR_PROFILE_SKIP_ENRICH_WITH_DATATYPES,Omitir enriquecimiento con tipos de datos
+CFG_EDITOR_PROFILE_SKIP_DYNAMIC_BBOX,Omitir bounding box dinámico
+CFG_EDITOR_PROFILE_ENRICH_DATA_STRATEGY,Estrategia de enriquecimiento de datos
+CFG_EDITOR_PROFILE_ADDITIONAL_INFO,Información adicional
+CFG_EDITOR_PROFILE_ADDITIONAL_INFO_NAME,Nombre
+CFG_EDITOR_PROFILE_ADDITIONAL_INFO_PROJECT,Proyecto
+CFG_EDITOR_PROFILE_ADDITIONAL_INFO_ORG,Organización
+CFG_EDITOR_PROFILE_ADDITIONAL_INFO_LOGOS,Logotipos
+CFG_EDITOR_SOFTWARE_IDENTIFIER,Identificador
+CFG_EDITOR_SOFTWARE_TYPE,Tipo
+CFG_EDITOR_SOFTWARE_SOFTWARETYPE,Tipo de software
+CFG_EDITOR_SOFTWARE_DEFINITION,Definición
+CFG_EDITOR_SOFTWARE_PARAMETERS,Parámetros
+CFG_EDITOR_SOFTWARE_PROPERTIES,Propiedades
+EXEC_TITLE,<h2>Lista de configuraciones <b>geoflow</b> <small>Acceder y ejecutar flujos de trabajo</small></h2><hr>
 EXEC_CONSOLE,Consola
 EXEC_WORKFLOW,Flujo de trabajo
-EXEC_WORKFLOW_INITIALIZATION,Inicialización
-EXEC_WORKFLOW_EXECUTION,Ejecución
-EXEC_SESSION_INFO,Info sesión
+EXEC_WORKFLOW_INITIALIZATION,Inicialización del flujo de trabajo
+EXEC_WORKFLOW_EXECUTION,Ejecución del flujo de trabajo
+EXEC_WORKFLOW_EXECUTION_ACTION_DETAIL,Ejecutando la acción '%s' para la entidad '%s' (%s %%)
+EXEC_SESSION_INFO,Información de sesión
 EXEC_BUTTON_EDIT,Editar
 EXEC_BUTTON_EXECUTE,Ejecutar
 EXEC_BUTTON_JOB_ARCHIVE,Descargar archivo del trabajo
-EXEC_JOB_NOJOBSTARTED,Ninguno flujo de trabajo iniciado
-EXEC_JOB_STARTING,Inicialización en curso...
+EXEC_JOB_NOJOBSTARTED,¡Ningún trabajo geoflow iniciado!
+EXEC_JOB_STARTING,Iniciando trabajo geoflow...
 EXEC_JOB_INITIALIZATION,Inicializando flujo de trabajo ... 0%
 EXEC_JOB_STATUS_STARTED,Iniciado
-EXEC_JOB_STATUS_INPROGRESS,En curso
-EXEC_JOB_STATUS_SUCCESS,Exito
+EXEC_JOB_STATUS_INPROGRESS,En progreso
+EXEC_JOB_STATUS_SUCCESS,Éxito
 EXEC_JOB_STATUS_ERROR,Error
-EXEC_JOB_ERROR_MESSAGE,Error durante la ejecución del flujo de trabajo '%s'!
-EXEC_ACTION_DETAIL_EXEC,Acción '%s' en curso de ejecución - entidad '%s' ... %s %%
+EXEC_JOB_ERROR_MESSAGE,¡El flujo de trabajo '%s' ha generado un error!
+EXEC_ACTION_DETAIL_EXEC,Ejecutando acción: '%s' - entidad '%s' ... %s %%
 TABLE_LANGUAGE,//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json
 TABLE_NAME,Nombre
-TABLE_LASTMODIFIED,Ultima modificación
+TABLE_LASTMODIFIED,Última modificación
 TABLE_ACTIONS,Acciones
-MD_EDITOR_MODE_CLOUD,NUBE
-MD_EDITOR_MODE_LOCAL,FICHERO LOCAL
+MD_EDITOR_MODE_CLOUD,CLOUD
+MD_EDITOR_MODE_LOCAL,ARCHIVO LOCAL
 MD_EDITOR_CHECK,Verificar
 MD_EDITOR_SAVE,Guardar
 MD_EDITOR_SELECT,Seleccionar
-MD_EDITOR_CANCEL,Anular
-MD_EDITOR_CHOOSEFILE,Escoger fichero
-MD_EDITOR_FILENAME,Nombre de fichero
-MD_EDITOR_UPLOAD,Cargar
-MD_EDITOR_UPLOAD_TOOLTIP,Seleccionar una carpeta cible o un fichero a reemplazar
+MD_EDITOR_CANCEL,Cancelar
+MD_EDITOR_CHOOSEFILE,Seleccionar archivo
+MD_EDITOR_FILENAME,Nombre de archivo
+MD_EDITOR_UPLOAD,Subir
+MD_EDITOR_UPLOAD_TOOLTIP,Seleccione una carpeta de destino o un archivo para sobrescribir
 MD_EDITOR_VALIDATION_REPORT,Informe de validación
-MD_EDITOR_TABLE_VIEW,Vista tabular
+MD_EDITOR_TABLE_VIEW,Vista de tabla
 MD_EDITOR_TABLE_DOWNLOAD_CSV,Descargar como CSV
 MD_EDITOR_TABLE_DOWNLOAD_EXCEL,Descargar como Excel
-MD_EDITOR_TABLE_UPLOAD_CLOUD,Guardar en el cloud
+MD_EDITOR_TABLE_UPLOAD_CLOUD,Guardar en la nube
 MD_EDITOR_HEADER,<h2>Crear/Editar metadatos</h2>
 MD_EDITOR_IDENTIFIER,Identificador
 MD_EDITOR_TYPE,Tipo
@@ -57,26 +139,26 @@ MD_EDITOR_TITLE,Título
 MD_EDITOR_NAME,Nombre
 MD_EDITOR_DESCRIPTION,Descripción
 MD_EDITOR_VALUE,Valor
-MD_EDITOR_URI,Vínculo
+MD_EDITOR_URI,Enlace
 MD_EDITOR_ACTIONS,Acciones
 MD_EDITOR_TABLE_CREATE,Crear tabla
 MD_EDITOR_TABLE_LOAD,Cargar tabla
-MD_EDITOR_NOVALIDATIONISSUES,Ningún problema de validación
+MD_EDITOR_NOVALIDATIONISSUES,Sin problemas de validación
 MD_EDITOR_C_NEW,Crear nuevo contacto
 MD_EDITOR_C_EDIT,Editar contacto
 MD_EDITOR_C,Contactos
 MD_EDITOR_C_ONE,Contacto
-MD_EDITOR_C_SUBTITLE,Crear contactos a asociar a juegos de datos
+MD_EDITOR_C_SUBTITLE,Crear contactos para asociar a los conjuntos de datos
 MD_EDITOR_C_CREATE,Crear contacto
 MD_EDITOR_C_IDENTIFIERS,Identificador(es)
 MD_EDITOR_C_IDENTIFIER,Identificador
 MD_EDITOR_C_IDENTIFIER_ADD,Añadir identificador
 MD_EDITOR_C_DETAILS,Detalles
-MD_EDITOR_C_ORGNAME,Organización
+MD_EDITOR_C_ORGNAME,Nombre de la organización
 MD_EDITOR_C_LASTNAME,Apellido
 MD_EDITOR_C_FIRSTNAME,Nombre
-MD_EDITOR_C_POSITIONNAME,Puesto
-MD_EDITOR_C_POSTALADDRESS,Dirección
+MD_EDITOR_C_POSITIONNAME,Cargo
+MD_EDITOR_C_POSTALADDRESS,Dirección postal
 MD_EDITOR_C_POSTALCODE,Código postal
 MD_EDITOR_C_CITY,Ciudad
 MD_EDITOR_C_COUNTRY,País
@@ -84,15 +166,15 @@ MD_EDITOR_C_INFO,Información
 MD_EDITOR_C_EMAIL,Correo electrónico
 MD_EDITOR_C_PHONENUMBER,Número de teléfono
 MD_EDITOR_C_FACSIMILE,Fax
-MD_EDITOR_C_WEBSITE_URL,Sitio web - URL
-MD_EDITOR_C_WEBSITE_NAME,Sitio web - Nombre
-MD_EDITOR_C_CLOUD_UPLOAD,Cargar contactos en el cloud
-MD_EDITOR_C_CLOUD_UPLOAD_SUCCESS, Fichero de contacts cargado con éxito en el cloud!
-MD_EDITOR_C_CLOUD_UPLOAD_ERROR, Error durante el cargo del fichero de contactos en el cloud!
+MD_EDITOR_C_WEBSITE_URL,URL del sitio web
+MD_EDITOR_C_WEBSITE_NAME,Nombre del sitio web
+MD_EDITOR_C_CLOUD_UPLOAD,Subir contactos a la nube
+MD_EDITOR_C_CLOUD_UPLOAD_SUCCESS,¡Archivo de contactos subido correctamente a la nube!
+MD_EDITOR_C_CLOUD_UPLOAD_ERROR,¡Error al subir el archivo de contactos!
 MD_EDITOR_E_NEW,Crear nueva entidad
 MD_EDITOR_E_EDIT,Editar entidad
 MD_EDITOR_E,Entidades
-MD_EDITOR_E_SUBTITLE,Crear entidades para describir juegos de datos
+MD_EDITOR_E_SUBTITLE,Crear entidades para describir los conjuntos de datos
 MD_EDITOR_E_CREATE,Crear entidad
 MD_EDITOR_E_IDENTIFIERS,Identificador(es)
 MD_EDITOR_E_IDENTIFIER,Identificador
@@ -101,32 +183,32 @@ MD_EDITOR_E_TITLE,Título
 MD_EDITOR_E_TITLE_ADD,Añadir título
 MD_EDITOR_E_DESCRIPTION,Descripción
 MD_EDITOR_E_DESCRIPTION_ADD,Añadir descripción
-MD_EDITOR_E_SUBJECTS,Sujeto(s)
-MD_EDITOR_E_SUBJECT,Sujeto
-MD_EDITOR_E_SUBJECT_ADD,Añadir sujeto
+MD_EDITOR_E_SUBJECTS,Tema(s)
+MD_EDITOR_E_SUBJECT,Tema
+MD_EDITOR_E_SUBJECT_ADD,Añadir tema
 MD_EDITOR_E_VOCABULARY,Vocabulario
 MD_EDITOR_E_VOCABULARY_CUSTOM,Personalizado
 MD_EDITOR_E_CONTACTS,Contacto(s)
 MD_EDITOR_E_CONTACTS_LOAD,Cargar contactos
 MD_EDITOR_E_CONTACT,Contacto
 MD_EDITOR_E_CONTACT_ADD,Añadir contacto
-MD_EDITOR_E_DATES,Date(s)
-MD_EDITOR_E_DATE,Date
-MD_EDITOR_E_DATETYPE,Type de date
-MD_EDITOR_E_DATE_ADD,Ajouter date
+MD_EDITOR_E_DATES,Fecha(s)
+MD_EDITOR_E_DATE,Fecha
+MD_EDITOR_E_DATETYPE,Tipo de fecha
+MD_EDITOR_E_DATE_ADD,Añadir fecha
 MD_EDITOR_E_TYPE,Tipo
 MD_EDITOR_E_TYPE_ADD,Añadir tipo
 MD_EDITOR_E_LANGUAGE,Idioma
-MD_EDITOR_E_THESAURUS_NAME,Nombre del Tesauro
-MD_EDITOR_E_THESAURUS_URI,URI del Tesauro
+MD_EDITOR_E_THESAURUS_NAME,Nombre del tesauro
+MD_EDITOR_E_THESAURUS_URI,URI del tesauro
 MD_EDITOR_E_KEYWORD,Palabra clave
-MD_EDITOR_E_KEYWORD_URI,URI de Palabra clave
+MD_EDITOR_E_KEYWORD_URI,URI de la palabra clave
 MD_EDITOR_E_KEYWORD_ADD,Añadir palabra clave
-MD_EDITOR_E_KEYWORD_CLEAR,Borrar palabra clave
-MD_EDITOR_E_BBOX_HELPTEXT, Dibujar un rectángulo en el mapa para ver la representación WKT.
+MD_EDITOR_E_KEYWORD_CLEAR,Limpiar palabra clave
+MD_EDITOR_E_BBOX_HELPTEXT,Dibuje un rectángulo en el mapa para ver la representación WKT.
 MD_EDITOR_E_SPATIALCOVERAGE,Cobertura espacial
 MD_EDITOR_E_TEMPORALCOVERAGE,Cobertura temporal
-MD_EDITOR_E_RELATIONS,Relacion(es)
+MD_EDITOR_E_RELATIONS,Relación(es)
 MD_EDITOR_E_RELATION,Relación
 MD_EDITOR_E_RELATION_ADD,Añadir relación
 MD_EDITOR_E_RIGHTS,Derechos
@@ -138,9 +220,9 @@ MD_EDITOR_E_RIGHT_USECONSTRAINT,Restricción de uso
 MD_EDITOR_E_RIGHT_ACCESSCONSTRAINT,Restricción de acceso
 MD_EDITOR_E_RIGHT_OTHERCONSTRAINT,Otra restricción
 MD_EDITOR_E_RIGHT_USELIMITATION,Limitación de uso
-MD_EDITOR_E_RIGHT_ACCESSRIGHTS,Derecho de acceso
+MD_EDITOR_E_RIGHT_ACCESSRIGHTS,Derechos de acceso
 MD_EDITOR_E_RIGHT_ACCESSCONDITIONS,Condiciones de acceso
-MD_EDITOR_E_RIGHT_TERMSOFUSE,Condiciones de uso
+MD_EDITOR_E_RIGHT_TERMSOFUSE,Términos de uso
 MD_EDITOR_E_RIGHT_DISCLAIMER,Descargo de responsabilidad
 MD_EDITOR_E_RIGHT_CITATION,Citación
 MD_EDITOR_E_FORMATS,Formatos
@@ -149,49 +231,49 @@ MD_EDITOR_E_FORMAT_ADD,Añadir formato
 MD_EDITOR_E_FORMATTYPE,Tipo de formato
 MD_EDITOR_E_PROV,Procedencia
 MD_EDITOR_E_PROV_STATEMENT,Declaración
-MD_EDITOR_E_PROV_PROCESS_RATIONALE,Fundamento del proceso
+MD_EDITOR_E_PROV_PROCESS_RATIONALE,Justificación del proceso
 MD_EDITOR_E_PROV_PROCESS_DESCRIPTION,Descripción del proceso
 MD_EDITOR_E_PROV_PROCESS_ADD,Añadir proceso
 MD_EDITOR_E_DATA,Datos
-MD_EDITOR_E_DATA_ACCESS,Acceso de datos
-MD_EDITOR_E_DATA_ACCESS_INFORMATION,Acceso et Información de datos
+MD_EDITOR_E_DATA_ACCESS,Acceso a datos
+MD_EDITOR_E_DATA_ACCESS_INFORMATION,Acceso e información de datos
 MD_EDITOR_E_DATA_ACCESS_MODE,Modo
-MD_EDITOR_E_DATA_ACCESS_MODE_FILE,Fichero(s)
+MD_EDITOR_E_DATA_ACCESS_MODE_FILE,Archivo(s)
 MD_EDITOR_E_DATA_ACCESS_MODE_DIR,Directorio
 MD_EDITOR_E_DATA_SOURCE_NAME,Nombre de la fuente
-MD_EDITOR_E_DATA_SOURCE_URL,CAmino/URL de la fuente
+MD_EDITOR_E_DATA_SOURCE_URL,Ruta/URL de la fuente
 MD_EDITOR_E_DATA_SOURCE_ADD,Añadir fuente
 MD_EDITOR_E_DATA_SOURCE_DIRECTORY,Directorio
 MD_EDITOR_E_DATA_SOURCETYPE,Tipo de fuente
-MD_EDITOR_E_DATA_SOURCESQL,Fuente SQL
-MD_EDITOR_E_DATA_CHARACTERISTICS,Características de datos
-MD_EDITOR_E_DATA_UPLOAD_CONFIGURATION,Configuración de carga
+MD_EDITOR_E_DATA_SOURCESQL,SQL de la fuente
+MD_EDITOR_E_DATA_CHARACTERISTICS,Características de los datos
+MD_EDITOR_E_DATA_UPLOAD_CONFIGURATION,Configuración de subida
 MD_EDITOR_E_DATA_LAYER_IDENTIFICATION,Identificación de capa
-MD_EDITOR_E_DATA_VIEWSQL,SQL (para vistas SQL GeoServer)
+MD_EDITOR_E_DATA_VIEWSQL,SQL (para vistas SQL de GeoServer)
 MD_EDITOR_E_DATA_GEOMETRY_FIELD,Campo de geometría
 MD_EDITOR_E_DATA_GEOMETRY_TYPE,Tipo de geometría
-MD_EDITOR_E_DATA_PARAMETER_FIELDNAME,Parámetro - nombre
+MD_EDITOR_E_DATA_PARAMETER_FIELDNAME,Parámetro - nombre de campo
 MD_EDITOR_E_DATA_PARAMETER_ALIAS,Parámetro - alias (opcional)
 MD_EDITOR_E_DATA_PARAMETER_REGEXP,Parámetro - control (regexp)
 MD_EDITOR_E_DATA_PARAMETER_DEFAULTVALUE,Valor por defecto
-MD_EDITOR_E_DATA_PARAMETER_ADD,Añadir parametro
-MD_EDITOR_E_DATA_UPLOAD,Cargar?
-MD_EDITOR_E_DATA_UPLOAD_TYPE,Tipo de carga
-MD_EDITOR_E_DATA_UPLOAD_SOURCE,Fuente de carga
+MD_EDITOR_E_DATA_PARAMETER_ADD,Añadir parámetro
+MD_EDITOR_E_DATA_UPLOAD,¿Subir?
+MD_EDITOR_E_DATA_UPLOAD_TYPE,Tipo de subida
+MD_EDITOR_E_DATA_UPLOAD_SOURCE,Fuente de subida
 MD_EDITOR_E_DATA_SRT,Tipo de representación espacial
 MD_EDITOR_E_DATA_FT,Tipo de entidad
-MD_EDITOR_E_CLOUD_UPLOAD,Cargar entidades en la nube
-MD_EDITOR_E_CLOUD_UPLOAD_SUCCESS, Fichero de entidades cargado con éxito en el cloud!
-MD_EDITOR_E_CLOUD_UPLOAD_ERROR, Error durante el cargo del fichero de entidades en el cloud!
+MD_EDITOR_E_CLOUD_UPLOAD,Subir entidades a la nube
+MD_EDITOR_E_CLOUD_UPLOAD_SUCCESS,¡Archivo de entidades subido correctamente a la nube!
+MD_EDITOR_E_CLOUD_UPLOAD_ERROR,¡Error al subir el archivo de entidades!
 MD_EDITOR_E_WKT_VALID,Geometría válida
 MD_EDITOR_E_WKT_INVALID,Geometría inválida
 MD_EDITOR_D_NEW,Crear nuevo diccionario
 MD_EDITOR_D_EDIT,Editar diccionario
-MD_EDITOR_D,Dictionario
-MD_EDITOR_D_SUBTITLE,Crear un dictionario de datos
-MD_EDITOR_D_CREATE,Crear dictionario
+MD_EDITOR_D,Diccionario
+MD_EDITOR_D_SUBTITLE,Crear un diccionario de datos
+MD_EDITOR_D_CREATE,Crear diccionario
 MD_EDITOR_D_MEMBERS,Miembros
-MD_EDITOR_D_ATTRIBUTE,Atríbuto
+MD_EDITOR_D_ATTRIBUTE,Atributo
 MD_EDITOR_D_VARIABLE,Variable
 MD_EDITOR_D_GEOM_POINT,Geometría - Punto
 MD_EDITOR_D_GEOM_MULTIPOINT,Geometría - MultiPunto
@@ -199,21 +281,21 @@ MD_EDITOR_D_GEOM_LINESTRING,Geometría - Línea
 MD_EDITOR_D_GEOM_MULTILINESTRING,Geometría - MultiLínea
 MD_EDITOR_D_GEOM_POLYGON,Geometría - Polígono
 MD_EDITOR_D_GEOM_MULTIPOLYGON,Geometría - MultiPolígono
-MD_EDITOR_D_MINOCCURS,Min occurs
-MD_EDITOR_D_MAXOCCURS,Max occurs
+MD_EDITOR_D_MINOCCURS,Ocurrencias mínimas
+MD_EDITOR_D_MAXOCCURS,Ocurrencias máximas
 MD_EDITOR_D_MEASUREMENTUNIT,Unidad de medida
 MD_EDITOR_D_DEFINITION,Definición
 MD_EDITOR_D_DEFINITION_SOURCE,Fuente de definición
-MD_EDITOR_D_REGISTER_FUNCTION,Función de registro
-MD_EDITOR_D_REGISTER_SCRIPT,Script de registro
-MD_EDITOR_D_ADD,Añadir tipo
-MD_EDITOR_D_CLOUD_UPLOAD,Cargar el diccionario en la nube
-MD_EDITOR_D_CLOUD_UPLOAD_OVERWRITE,"Atención, usted va a reemplazar un fichero en la nube!"
-MD_EDITOR_D_CLOUD_UPLOAD_SUCCESS, Diccionario cargado con éxito en el cloud!
-MD_EDITOR_D_CLOUD_UPLOAD_ERROR, Error durante el cargo del diccionario en el cloud!
+MD_EDITOR_D_REGISTER_FUNCTION,Registrar función
+MD_EDITOR_D_REGISTER_SCRIPT,Registrar script
+MD_EDITOR_D_ADD,Añadir tipo de entidad
+MD_EDITOR_D_CLOUD_UPLOAD,Subir diccionario a la nube
+MD_EDITOR_D_CLOUD_UPLOAD_OVERWRITE,¡Atención, va a sobrescribir un archivo en la nube!
+MD_EDITOR_D_CLOUD_UPLOAD_SUCCESS,¡Archivo de diccionario subido correctamente a la nube!
+MD_EDITOR_D_CLOUD_UPLOAD_ERROR,¡Error al subir el archivo de diccionario!
 MD_EDITOR_VALIDATION_ERRORS,Errores de validación
-MD_EDITOR_VALIDATION_WARNINGS,Alertas de validación
-MD_EDITOR_LOAD_CONTACTS, Cargar una lista de contactos
-MD_EDITOR_LOAD_ENTITIES, Cargar una lista de entidades
-MD_EDITOR_LOAD_DICTIONARY, Cargar un diccionario
+MD_EDITOR_VALIDATION_WARNINGS,Advertencias de validación
+MD_EDITOR_LOAD_CONTACTS,Cargar lista de contactos
+MD_EDITOR_LOAD_ENTITIES,Cargar lista de entidades
+MD_EDITOR_LOAD_DICTIONARY,Cargar diccionario
 MD_EDITOR_DANGER,Peligro
