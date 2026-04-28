@@ -1722,7 +1722,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
               ),
               tabPanel(i18n()$t("MD_EDITOR_MODE_LOCAL"), 
                        tagList(
-                         fileInput(ns("entities_local_file"), label = "File",multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = i18n()$t("MD_EDITOR_CHOOSEFILE")),
+                         fileInput(ns("entities_local_file"), label = i18n()$t("FILE"),multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = i18n()$t("MD_EDITOR_CHOOSEFILE")),
                          actionButton(ns("entities_local_file_select"), label = i18n()$t("MD_EDITOR_SELECT"), status = "primary", style = "float:right"),
                          actionButton(ns("entities_local_file_cancel"), label = i18n()$t("MD_EDITOR_CANCEL"), style = "float:right")
                        )
@@ -1734,7 +1734,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
               id = "load_entity_tables_modes",
               tabPanel(i18n()$t("MD_EDITOR_MODE_LOCAL"),
                       tagList(
-                        fileInput(ns("entities_local_file"), label = "File",multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = i18n()$t("MD_EDITOR_CHOOSEFILE")),
+                        fileInput(ns("entities_local_file"), label = i18n()$t("FILE"),multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = i18n()$t("MD_EDITOR_CHOOSEFILE")),
                         actionButton(ns("entities_local_file_select"), label = i18n()$t("MD_EDITOR_SELECT"), status = "primary", style = "float:right"),
                         actionButton(ns("entities_local_file_cancel"), label = i18n()$t("MD_EDITOR_CANCEL"), style = "float:right")
                       )
@@ -1937,7 +1937,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
               ),
               tabPanel(i18n()$t("MD_EDITOR_MODE_LOCAL"),
                        tagList(
-                         fileInput(ns("contacts_local_file"), label = "File",multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = i18n()$t("MD_EDITOR_CHOOSEFILE")),
+                         fileInput(ns("contacts_local_file"), label = i18n()$t("FILE"),multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = i18n()$t("MD_EDITOR_CHOOSEFILE")),
                          actionButton(ns("contacts_local_file_select"), label = i18n()$t("MD_EDITOR_SELECT"), status = "primary", style = "float:right"),
                          actionButton(ns("contacts_local_file_cancel"), label = i18n()$t("MD_EDITOR_CANCEL"), style = "float:right")
                        )
@@ -1948,7 +1948,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
               id = "load_contact_tables_modes",
               tabPanel(i18n()$t("MD_EDITOR_MODE_LOCAL"),
                        tagList(
-                         fileInput(ns("contacts_local_file"), label = "File",multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = i18n()$t("MD_EDITOR_CHOOSEFILE")),
+                         fileInput(ns("contacts_local_file"), label = i18n()$t("FILE"),multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = i18n()$t("MD_EDITOR_CHOOSEFILE")),
                          actionButton(ns("contacts_local_file_select"), label = i18n()$t("MD_EDITOR_SELECT"), status = "primary", style = "float:right"),
                          actionButton(ns("contacts_local_file_cancel"), label = i18n()$t("MD_EDITOR_CANCEL"), style = "float:right")
                        )
@@ -2143,7 +2143,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
               ),
               tabPanel(i18n()$t("MD_EDITOR_MODE_LOCAL"),
                        tagList(
-                         fileInput(ns("featuretypes_local_file"), label = "File",multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = i18n()$t("MD_EDITOR_CHOOSEFILE")),
+                         fileInput(ns("featuretypes_local_file"), label = i18n()$t("FILE"),multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = i18n()$t("MD_EDITOR_CHOOSEFILE")),
                          actionButton(ns("featuretypes_local_file_select"), label = i18n()$t("MD_EDITOR_SELECT"), status = "primary", style = "float:right"),
                          actionButton(ns("featuretypes_local_file_cancel"), label = i18n()$t("MD_EDITOR_CANCEL"), style = "float:right")
                        )
@@ -2154,7 +2154,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
               id = "load_featuretype_tables_modes",
               tabPanel(i18n()$t("MD_EDITOR_MODE_LOCAL"),
                        tagList(
-                         fileInput(ns("featuretypes_local_file"), label = "File",multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = i18n()$t("MD_EDITOR_CHOOSEFILE")),
+                         fileInput(ns("featuretypes_local_file"), label = i18n()$t("FILE"),multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = i18n()$t("MD_EDITOR_CHOOSEFILE")),
                          actionButton(ns("featuretypes_local_file_select"), label = i18n()$t("MD_EDITOR_SELECT"), status = "primary", style = "float:right"),
                          actionButton(ns("featuretypes_local_file_cancel"), label = i18n()$t("MD_EDITOR_CANCEL"), style = "float:right")
                        )

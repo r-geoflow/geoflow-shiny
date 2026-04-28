@@ -264,7 +264,7 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
             ),
             tabPanel(i18n()$t("CFG_EDITOR_MODE_LOCAL"),
                      tagList(
-                       fileInput(ns("config_local_file"), label = "File",multiple = FALSE,accept = c(".json",".yml",".yaml"),buttonLabel = i18n()$t("CFG_EDITOR_CHOOSEFILE")),
+                       fileInput(ns("config_local_file"), label = i18n()$t("FILE"),multiple = FALSE,accept = c(".json",".yml",".yaml"),buttonLabel = i18n()$t("CFG_EDITOR_CHOOSEFILE")),
                        actionButton(ns("config_local_file_select"), label = i18n()$t("CFG_EDITOR_SELECT"), status = "primary", style = "float:right"),
                        actionButton(ns("config_local_file_cancel"), label = i18n()$t("CFG_EDITOR_CANCEL"), style = "float:right")
                      )
@@ -275,7 +275,7 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
             id = "load_contact_tables_modes",
             tabPanel(i18n()$t("CFG_EDITOR_MODE_LOCAL"),
                      tagList(
-                       fileInput(ns("config_local_file"), label = "File",multiple = FALSE,accept = c(".json",".yml",".yaml"),buttonLabel = i18n()$t("CFG_EDITOR_CHOOSEFILE")),
+                       fileInput(ns("config_local_file"), label = i18n()$t("FILE"),multiple = FALSE,accept = c(".json",".yml",".yaml"),buttonLabel = i18n()$t("CFG_EDITOR_CHOOSEFILE")),
                        actionButton(ns("config_local_file_select"), label = i18n()$t("CFG_EDITOR_SELECT"), status = "primary", style = "float:right"),
                        actionButton(ns("config_local_file_cancel"), label = i18n()$t("CFG_EDITOR_CANCEL"), style = "float:right")
                      )

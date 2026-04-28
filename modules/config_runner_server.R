@@ -1,5 +1,5 @@
-#config_list_server
-config_list_server<- function(id, auth_info, i18n, geoflow_configs, parent.session){
+#config_runner_server
+config_runner_server<- function(id, auth_info, i18n, geoflow_configs, parent.session){
   
  moduleServer(id, function(input, output, session){
   
@@ -38,18 +38,7 @@ config_list_server<- function(id, auth_info, i18n, geoflow_configs, parent.sessi
         inputId = "config_loader", 
         title = i18n()$t("EXEC_WORKFLOW"), status = "primary", width = 6,
         br(),
-        bs4Dash::tabsetPanel(
-          id = "config_file_panel",
-          vertical = TRUE, type = "pills",
-          shiny::tabPanel(
-            tabName = "config_file_loader_tab", title = "Load",
-            uiOutput(ns("config_file_loader"))
-          ),
-          shiny::tabPanel(
-            tabName = "config_file_preview_tab", title = "Preview",
-            uiOutput(ns("config_file_preview"))
-          )
-        ),
+        uiOutput(ns("config_file_loader")),
         br(),
         hr(),
         uiOutput(ns("config_actions"))
@@ -78,7 +67,7 @@ config_list_server<- function(id, auth_info, i18n, geoflow_configs, parent.sessi
         ),
         tabPanel(i18n()$t("CFG_EDITOR_MODE_LOCAL"),
                  tagList(
-                   fileInput(ns("config_local_file"), label = "File",multiple = FALSE,accept = c(".json",".yml",".yaml"),buttonLabel = i18n()$t("CFG_EDITOR_CHOOSEFILE")),
+                   fileInput(ns("config_local_file"), label = i18n()$t("FILE"),multiple = FALSE,accept = c(".json",".yml",".yaml"),buttonLabel = i18n()$t("CFG_EDITOR_CHOOSEFILE")),
                    actionButton(ns("config_local_file_select"), label = i18n()$t("CFG_EDITOR_SELECT"), status = "primary", style = "float:right"),
                    actionButton(ns("config_local_file_cancel"), label = i18n()$t("CFG_EDITOR_CANCEL"), style = "float:right")
                  )
@@ -89,7 +78,7 @@ config_list_server<- function(id, auth_info, i18n, geoflow_configs, parent.sessi
         id = "config_runner_load_config_modes",
         tabPanel(i18n()$t("CFG_EDITOR_MODE_LOCAL"),
                  tagList(
-                   fileInput(ns("config_local_file"), label = "File",multiple = FALSE,accept = c(".json",".yml",".yaml"),buttonLabel = i18n()$t("CFG_EDITOR_CHOOSEFILE")),
+                   fileInput(ns("config_local_file"), label = i18n()$t("FILE"),multiple = FALSE,accept = c(".json",".yml",".yaml"),buttonLabel = i18n()$t("CFG_EDITOR_CHOOSEFILE")),
                    actionButton(ns("config_local_file_select"), label = i18n()$t("CFG_EDITOR_SELECT"), status = "primary", style = "float:right"),
                    actionButton(ns("config_local_file_cancel"), label = i18n()$t("CFG_EDITOR_CANCEL"), style = "float:right")
                  )
@@ -100,11 +89,6 @@ config_list_server<- function(id, auth_info, i18n, geoflow_configs, parent.sessi
   
   loadCloudTree(id = "config_load_tree_leavesonly", config = appConfig, auth_api = AUTH_API, 
                 mime_types = c(".json", ".yml", ".yaml"), leaves_only = TRUE, output = output)
-  
-  #Preview
-  output$config_file_preview <- renderUI({
-    "COMING SOON"
-  })
   
   #actions
   output$config_actions <- renderUI({

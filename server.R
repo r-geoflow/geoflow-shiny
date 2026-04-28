@@ -94,8 +94,8 @@ server <- function(input, output, session) {
             home_server("home", auth_info, i18n, geoflow_configs, parent.session = session)
             INFO("Load configuration editor module")
             config_editor_server("config_editor", auth_info, i18n, geoflow_configs, parent.session = session)
-            INFO("Load configuration list module")
-            config_list_server("config_list", auth_info, i18n, geoflow_configs, parent.session = session)
+            INFO("Load configuration runner module")
+            config_runner_server("config_runner", auth_info, i18n, geoflow_configs, parent.session = session)
             INFO("Load metadata editor module")
             metadata_editor_server("metadata_editor", auth_info, i18n, geoflow_configs, parent.session = session)
             
@@ -153,7 +153,7 @@ server <- function(input, output, session) {
               INFO("Load configuration editor module")
               config_editor_server("config_editor", auth_info, i18n, geoflow_configs, parent.session = session)
               INFO("Load configuration list module")
-              config_list_server("config_list", auth_info, i18n, geoflow_configs, parent.session = session)
+              config_runner_server("config_runner", auth_info, i18n, geoflow_configs, parent.session = session)
               INFO("Load metadata editor module")
               metadata_editor_server("metadata_editor", auth_info, i18n, geoflow_configs, parent.session = session)
               
@@ -173,7 +173,7 @@ server <- function(input, output, session) {
     INFO("Load configuration editor module")
     config_editor_server("config_editor", i18n = i18n, geoflow_configs = geoflow_configs, parent.session = session)
     INFO("Load configuration list module")
-    config_list_server("config_list", i18n = i18n, geoflow_configs = geoflow_configs, parent.session = session)
+    config_runner_server("config_runner", i18n = i18n, geoflow_configs = geoflow_configs, parent.session = session)
     INFO("Load metadata editor module")
     metadata_editor_server("metadata_editor", i18n = i18n, geoflow_configs = geoflow_configs, parent.session = session)
     geoflow_configs(getConfigurationFiles(config = appConfig, auth_api = NULL, auth_info = NULL))
@@ -202,7 +202,7 @@ server <- function(input, output, session) {
       bs4Dash::menuItem(
         text = i18n()$t("MENU_ITEM_EXECUTE"),
         tabName = "exec",
-        bs4Dash::menuSubItem(text = i18n()$t("MENU_SUBITEM_EXECUTE_WORKFLOW"), tabName = "config_list", icon = icon("play")),
+        bs4Dash::menuSubItem(text = i18n()$t("MENU_SUBITEM_EXECUTE_WORKFLOW"), tabName = "config_runner", icon = icon("play")),
         startExpanded = TRUE
       )
     )
@@ -226,7 +226,7 @@ server <- function(input, output, session) {
     tabItems(
       home_ui("home"),
       config_editor_ui("config_editor"),
-      config_list_ui("config_list"),
+      config_runner_ui("config_runner"),
       metadata_editor_ui("metadata_editor")
     )
   }
