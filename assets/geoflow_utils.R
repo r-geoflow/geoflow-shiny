@@ -4,28 +4,15 @@ getConfigurationFiles <- function(config, auth_api = NULL, auth_info = NULL) {
     INFO(sprintf("Listing configuration files in '%s' at '%s'", config$data_dir_remote, auth_info$endpoint$auth_url))
     switch(auth_info$endpoint$auth_type,
            "ocs" = {
+             files = get_cloud_files(auth_api, root = config$data_dir_remote, mime_types = c(".json", ".yaml", ".yml"), recursive = TRUE)
              outfiles <- list()
-             data_dir_remote_exists <- TRUE
-             folders <- unlist(strsplit(config$data_dir_remote,"/"))
-             folders <- folders[folders!=""]
-             path <- "/"
-             for(folder in folders){
-               folder_path <- paste0(folder, "/")
-               data_dir_remote_exists <- folder_path %in% auth_api$listFiles(relPath = path)$name
-               if(!data_dir_remote_exists) break
-               path <- paste0(path, folder_path)
-             }
-             if(data_dir_remote_exists){
-               files <- auth_api$listFiles(relPath = config$data_dir_remote)
-               files <- files[files$contentType == "application/json",]
-               if(nrow(files)>0){
-                 files <- files[!is.na(files$name) & endsWith(files$name, ".json"),]
-                 outfiles <- lapply(1:nrow(files), function(i){files[i,]})
-               }
+             if(nrow(files)>0){
+               outfiles <- lapply(1:nrow(files), function(i){files[i,]})
              }
              outfiles
            },
            "d4science" = {
+             #unmaintained
              outfiles <- list()
              files <- auth_api$listWSItemsByPath(config$data_dir_remote)
              if(length(files)>0) if(nrow(files)>0){

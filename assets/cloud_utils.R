@@ -1,3 +1,25 @@
+#get_cloud_files
+get_cloud_files = function(auth_api, root, mime_types, recursive = TRUE){
+  resources = auth_api$listFiles(root)
+  resources = resources[order(resources$resourceType),]
+  cloud_resources = resources[!is.na(resources$contentType) & resources$contentType %in% sapply(mime_types, mime::guess_type),]
+  cloud_resources = cbind(
+    path = if(nrow(cloud_resources)>0) file.path(root, cloud_resources$name) else character(0),
+    cloud_resources
+  )
+  dir_resources = resources[resources$resourceType == "collection",]
+  if(recursive){
+    if(nrow(dir_resources)>0){
+      child_resources = do.call("rbind", lapply(1:nrow(dir_resources), function(i){
+        dir_resource_name = sub("/", "", basename(resources[i,]$name))
+        get_cloud_files(auth_api, root = file.path(root, dir_resource_name), mime_types = mime_types, recursive = recursive)
+      }))
+      cloud_resources = rbind(cloud_resources, child_resources)
+    }
+  }
+  return(cloud_resources)
+}
+
 #build_tree_data_dir
 build_tree_data_dir = function(auth_api, root, mime_types, folder_basename = FALSE){
   resources = auth_api$listFiles(root)
