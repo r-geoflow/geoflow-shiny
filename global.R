@@ -37,7 +37,7 @@ if(Sys.info()[["sysname"]] == "Windows"){
   future::plan(multicore)
 }
 GEOFLOW_DATA_DIR <- appConfig$data_dir_local
-GEOFLOW_SHINY_ENV <- new.env()
+#GEOFLOW_SHINY_ENV <- new.env()
 
 #keyring
 #---------------------------------------------------------------------------------------

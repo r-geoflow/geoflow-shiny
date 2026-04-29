@@ -1,11 +1,11 @@
 #metadata_editor_server
-metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.session){
+metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, geoflow_configs, parent.session){
   
   moduleServer(id, function(input, output, session){
     
     ns <- session$ns
     
-    AUTH_API <- try(get("AUTH_API", envir = GEOFLOW_SHINY_ENV), silent = TRUE)
+    #AUTH_API <- try(get("AUTH_API", envir = GEOFLOW_SHINY_ENV), silent = TRUE)
     
     #templates
     contact_tpl = geoflow_contact$new()
@@ -1746,8 +1746,8 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       )
     })
     
-    loadCloudTree(id = "entities_load_tree", config = appConfig, auth_api = AUTH_API, leaves_only = FALSE, output = output)
-    loadCloudTree(id = "entities_load_tree_leavesonly", config = appConfig, auth_api = AUTH_API, leaves_only = TRUE, output = output)
+    loadCloudTree(id = "entities_load_tree", config = appConfig, auth_api = auth_api(), leaves_only = FALSE, output = output)
+    loadCloudTree(id = "entities_load_tree_leavesonly", config = appConfig, auth_api = auth_api(), leaves_only = TRUE, output = output)
     
     observeEvent(input$entities_local_file_cancel,{
       shiny::removeModal()
@@ -1760,7 +1760,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       
       config = list()
       config$profile$id = "load_ocs_entities"
-      config$software$input$ocs = AUTH_API
+      config$software$input$ocs = auth_api()
       config = geoflow::add_config_logger(config)
       entity_handler = geoflow::geoflow_handler$new(yaml = system.file("metadata/entity", "entity_handler_ocs.yml", package = "geoflow"))
       entities = entity_handler$fun(
@@ -1774,7 +1774,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       updateSelectInput(inputId = "meta_editor_entry_selector", selected = NULL)
       
       shiny::removeModal()
-      loadCloudTree(id = "entities_load_tree_leavesonly", config = appConfig, auth_api = AUTH_API, leaves_only = TRUE, output = output)
+      loadCloudTree(id = "entities_load_tree_leavesonly", config = appConfig, auth_api = auth_api(), leaves_only = TRUE, output = output)
     })
     observeEvent(input$entities_local_file_select,{
       req(!is.null(input$entities_local_file))
@@ -1860,7 +1860,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
           shiny::updateTextInput(inputId = "entity_table_filename", value = basename(selected_resource$data))
           cloud_overwriting_danger(TRUE)
         }else if(selected_resource$type == "folder"){
-          files = AUTH_API$listFiles(relPath = selected_resource$data)
+          files = auth_api()$listFiles(relPath = selected_resource$data)
           if(input$entity_table_filename %in% files$name){
             cloud_overwriting_danger(TRUE)
           }else{
@@ -1886,7 +1886,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
                writexl::write_xlsx(metatbl, file.path(tempdir(), input$entity_table_filename))
              }
       )
-      uploaded = AUTH_API$uploadFile(
+      uploaded = auth_api()$uploadFile(
         filename = file.path(tempdir(), input$entity_table_filename),
         relPath = if(selected_resource$type == "folder"){
           selected_resource$data
@@ -1900,7 +1900,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         postMessage(msg = i18n()$t("MD_EDITOR_E_CLOUD_UPLOAD_ERROR"), type = "error")
       }
       shiny::removeModal()
-      loadCloudTree(id = "entities_load_tree", config = appConfig, auth_api = AUTH_API, leaves_only = FALSE, output = output)
+      loadCloudTree(id = "entities_load_tree", config = appConfig, auth_api = auth_api(), leaves_only = FALSE, output = output)
       cloud_overwriting_danger(FALSE)
     })
     
@@ -1960,8 +1960,8 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       )
     })
     
-    loadCloudTree(id = "contacts_load_tree", config = appConfig, auth_api = AUTH_API, leaves_only = FALSE, output = output)
-    loadCloudTree(id = "contacts_load_tree_leavesonly", config = appConfig, auth_api = AUTH_API, leaves_only = TRUE, output = output)
+    loadCloudTree(id = "contacts_load_tree", config = appConfig, auth_api = auth_api(), leaves_only = FALSE, output = output)
+    loadCloudTree(id = "contacts_load_tree_leavesonly", config = appConfig, auth_api = auth_api(), leaves_only = TRUE, output = output)
     
     observeEvent(input$contacts_local_file_cancel, {
       shiny::removeModal()
@@ -1974,7 +1974,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       
       config = list()
       config$profile$id = "load_ocs_contacts"
-      config$software$input$ocs = AUTH_API
+      config$software$input$ocs = auth_api()
       config = geoflow::add_config_logger(config)
       contact_handler = geoflow::geoflow_handler$new(yaml = system.file("metadata/contact", "contact_handler_ocs.yml", package = "geoflow"))
       contacts = contact_handler$fun(
@@ -1988,7 +1988,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       updateSelectInput(inputId = "meta_editor_entry_selector", selected = NULL)
 
       shiny::removeModal()
-      loadCloudTree(id = "contacts_load_tree_leavesonly", config = appConfig, auth_api = AUTH_API, leaves_only = TRUE, output = output)
+      loadCloudTree(id = "contacts_load_tree_leavesonly", config = appConfig, auth_api = auth_api(), leaves_only = TRUE, output = output)
     })
     observeEvent(input$contacts_local_file_select,{
       req(!is.null(input$contacts_local_file))
@@ -2073,7 +2073,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
           shiny::updateTextInput(inputId = "contact_table_filename", value = basename(selected_resource$data))
           cloud_overwriting_danger(TRUE)
         }else if(selected_resource$type == "folder"){
-          files = AUTH_API$listFiles(relPath = selected_resource$data)
+          files = auth_api()$listFiles(relPath = selected_resource$data)
           if(input$contact_table_filename %in% files$name){
             cloud_overwriting_danger(TRUE)
           }else{
@@ -2100,7 +2100,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
                writexl::write_xlsx(metatbl, file.path(tempdir(), input$contact_table_filename))
              }
       )
-      uploaded = try(AUTH_API$uploadFile(
+      uploaded = try(auth_api()$uploadFile(
         filename = file.path(tempdir(), input$contact_table_filename),
         relPath = if(selected_resource$type == "folder"){
           selected_resource$data
@@ -2114,7 +2114,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         postMessage(msg = i18n()$t("MD_EDITOR_C_CLOUD_UPLOAD_ERROR"), type = "error")
       }
       shiny::removeModal()
-      loadCloudTree(id = "contacts_load_tree", config = appConfig, auth_api = AUTH_API, leaves_only = FALSE, output = output)
+      loadCloudTree(id = "contacts_load_tree", config = appConfig, auth_api = auth_api(), leaves_only = FALSE, output = output)
       cloud_overwriting_danger(FALSE)
     })
     
@@ -2166,8 +2166,8 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       )
     })
     
-    loadCloudTree(id = "featuretypes_load_tree", config = appConfig, auth_api = AUTH_API, leaves_only = FALSE, output = output)
-    loadCloudTree(id = "featuretypes_load_tree_leavesonly", config = appConfig, auth_api = AUTH_API, leaves_only = TRUE, output = output)
+    loadCloudTree(id = "featuretypes_load_tree", config = appConfig, auth_api = auth_api(), leaves_only = FALSE, output = output)
+    loadCloudTree(id = "featuretypes_load_tree_leavesonly", config = appConfig, auth_api = auth_api(), leaves_only = TRUE, output = output)
     
     observeEvent(input$featuretypes_local_file_cancel, {
       shiny::removeModal()
@@ -2180,7 +2180,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       
       config = list()
       config$profile$id = "load_ocs_featuretypes"
-      config$software$input$ocs = AUTH_API
+      config$software$input$ocs = auth_api()
       config = geoflow::add_config_logger(config)
       dictionary_handler = geoflow::geoflow_handler$new(yaml = system.file("metadata/dictionary", "dictionary_handler_ocs.yml", package = "geoflow"))
       dict = dictionary_handler$fun(
@@ -2194,7 +2194,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       updateSelectInput(inputId = "meta_editor_entry_selector", selected = NULL)
       
       shiny::removeModal()
-      loadCloudTree(id = "featuretypes_load_tree_leavesonly", config = appConfig, auth_api = AUTH_API, leaves_only = TRUE, output = output)
+      loadCloudTree(id = "featuretypes_load_tree_leavesonly", config = appConfig, auth_api = auth_api(), leaves_only = TRUE, output = output)
     })
     observeEvent(input$featuretypes_local_file_select,{
       req(!is.null(input$featuretypes_local_file))
@@ -2280,7 +2280,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
           shiny::updateTextInput(inputId = "featuretype_table_filename", value = basename(selected_resource$data))
           cloud_overwriting_danger(TRUE)
         }else if(selected_resource$type == "folder"){
-          files = AUTH_API$listFiles(relPath = selected_resource$data)
+          files = auth_api()$listFiles(relPath = selected_resource$data)
           if(input$featuretype_table_filename %in% files$name){
             cloud_overwriting_danger(TRUE)
           }else{
@@ -2309,7 +2309,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
                writexl::write_xlsx(metatbl, file.path(tempdir(), input$featuretype_table_filename))
              }
       )
-      uploaded = AUTH_API$uploadFile(
+      uploaded = auth_api()$uploadFile(
         filename = file.path(tempdir(), input$featuretype_table_filename),
         relPath = if(selected_resource$type == "folder"){
           selected_resource$data
@@ -2323,7 +2323,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
         postMessage(msg = i18n()$t("MD_EDITOR_D_CLOUD_UPLOAD_ERROR"), type = "error")
       }
       shiny::removeModal()
-      loadCloudTree(id = "featuretypes_load_tree", config = appConfig, auth_api = AUTH_API, leaves_only = FALSE, output = output)
+      loadCloudTree(id = "featuretypes_load_tree", config = appConfig, auth_api = auth_api(), leaves_only = FALSE, output = output)
       cloud_overwriting_danger(FALSE)
     })
     
@@ -2406,7 +2406,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       )
     })
     
-    loadCloudTree(id = "entity_contacts_load_tree", config = appConfig, auth_api = AUTH_API, leaves_only = TRUE, output = output)
+    loadCloudTree(id = "entity_contacts_load_tree", config = appConfig, auth_api = auth_api(), leaves_only = TRUE, output = output)
    
     observeEvent(input$entity_contacts_local_file_cancel, {
       shiny::removeModal()
@@ -2420,7 +2420,7 @@ metadata_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.s
       
       config = list()
       config$profile$id = "load_ocs_contacts"
-      config$software$input$ocs = AUTH_API
+      config$software$input$ocs = auth_api()
       config = geoflow::add_config_logger(config)
       contact_handler = geoflow::geoflow_handler$new(yaml = system.file("metadata/contact", "contact_handler_ocs.yml", package = "geoflow"))
       contacts = contact_handler$fun(

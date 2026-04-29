@@ -10,7 +10,8 @@ authLoginServer <- function (id, config, log_out = shiny::reactiveVal(), reload_
     
     credentials <- shiny::reactiveValues(
       user_auth = FALSE, 
-      user_info = NULL
+      auth_info = NULL,
+      auth_api = NULL
     )
     shiny::observeEvent(log_out(), {
       if (reload_on_logout) {
@@ -38,7 +39,7 @@ authLoginServer <- function (id, config, log_out = shiny::reactiveVal(), reload_
                  logger = appConfig$logger
                ))
                if (is(AUTH_API, "ocsManager") && !is.null(AUTH_API$getWebdavRoot())) {
-                 assign("AUTH_API", AUTH_API, envir = GEOFLOW_SHINY_ENV)
+                 #assign("AUTH_API", AUTH_API, envir = GEOFLOW_SHINY_ENV)
                  if(!is.null(appConfig$data_dir_remote_user_root)) if(appConfig$data_dir_remote_user_root){
                    INFO(sprintf("Using user '%s' root directory", input$auth_username))
                    appConfig$data_dir_remote <<- paste0(input$auth_username, "/", appConfig$data_dir_remote)
@@ -53,6 +54,7 @@ authLoginServer <- function (id, config, log_out = shiny::reactiveVal(), reload_
                    user = input$auth_username,
                    token = NA
                  )
+                 credentials$auth_api <- AUTH_API
                }else{
                  credentials$user_auth <- FALSE
                  credentials$auth_info <- list(
@@ -60,6 +62,7 @@ authLoginServer <- function (id, config, log_out = shiny::reactiveVal(), reload_
                    user = character(0),
                    token = character(0)
                  )
+                 credentials$auth_api <- NULL
                }
              },{
                errMsg <- sprintf("No authentication provider for '%s'", auth_endpoint$auth_type)

@@ -3,6 +3,7 @@
 server <- function(input, output, session) {
   
   auth_info = reactiveVal(NULL)
+  auth_api = reactiveVal(NULL)
   session_reloaded = reactiveVal(FALSE)
   geoflow_configs = reactiveVal(NULL)
   
@@ -39,11 +40,12 @@ server <- function(input, output, session) {
                      pwd = stored_password
                    ))
                    if(!is(AUTH_API, "try-error")) if(is(AUTH_API, "ocsManager") && !is.null(AUTH_API$getWebdavRoot())) {
-                     assign("AUTH_API", AUTH_API, envir = GEOFLOW_SHINY_ENV)
+                     #assign("AUTH_API", AUTH_API, envir = GEOFLOW_SHINY_ENV)
                      shinyjs::show("main-content")
                      shinyjs::hide("login-wrapper")
                      auth_info(session_data)
-                     geoflow_configs(getConfigurationFiles(config = appConfig, auth_api = AUTH_API, auth_info = auth_info()))
+                     auth_api(AUTH_API)
+                     geoflow_configs(getConfigurationFiles(config = appConfig, auth_api = auth_api(), auth_info = auth_info()))
                    }
                  }       
           )
@@ -71,7 +73,10 @@ server <- function(input, output, session) {
       )
       
       observe({
-        if (credentials()$user_auth) auth_info(credentials()$auth_info)
+        if (credentials()$user_auth){
+          auth_info(credentials()$auth_info)
+          auth_api(credentials()$auth_api)
+        }
       })
   
       # call the logout module with reactive trigger to hide/show
@@ -91,16 +96,16 @@ server <- function(input, output, session) {
             
             #load modules
             INFO("Load home module")
-            home_server("home", auth_info, i18n, geoflow_configs, parent.session = session)
+            home_server("home", auth_info, auth_api, i18n, geoflow_configs, parent.session = session)
             INFO("Load configuration editor module")
-            config_editor_server("config_editor", auth_info, i18n, geoflow_configs, parent.session = session)
+            config_editor_server("config_editor", auth_info, auth_api, i18n, geoflow_configs, parent.session = session)
             INFO("Load configuration runner module")
-            config_runner_server("config_runner", auth_info, i18n, geoflow_configs, parent.session = session)
+            config_runner_server("config_runner", auth_info, auth_api, i18n, geoflow_configs, parent.session = session)
             INFO("Load metadata editor module")
-            metadata_editor_server("metadata_editor", auth_info, i18n, geoflow_configs, parent.session = session)
+            metadata_editor_server("metadata_editor", auth_info, auth_api, i18n, geoflow_configs, parent.session = session)
             
-            AUTH_API <- try(get("AUTH_API", envir = GEOFLOW_SHINY_ENV), silent = TRUE)
-            geoflow_configs(getConfigurationFiles(config = appConfig, auth_api = AUTH_API, auth_info = auth_info()))
+            #AUTH_API <- try(get("AUTH_API", envir = GEOFLOW_SHINY_ENV), silent = TRUE)
+            geoflow_configs(getConfigurationFiles(config = appConfig, auth_api = auth_api(), auth_info = auth_info()))
           }
           
           shinyjs::show("main-content")
@@ -138,7 +143,8 @@ server <- function(input, output, session) {
         if(startsWith(jwt_profile$iss, "https://accounts.d4science.org")){
           AUTH_API <- try(d4storagehub4R::StoragehubManager$new(token = jwt_profile$access$access_token, token_type = "jwt"))
           if (is(AUTH_API, "StoragehubManager")) {
-            assign("AUTH_API", AUTH_API, envir = GEOFLOW_SHINY_ENV)
+            #assign("AUTH_API", AUTH_API, envir = GEOFLOW_SHINY_ENV)
+            auth_api(AUTH_API)
             auth_info(list(
               endpoint = list(auth_url = "https://api.d4science.org/workspace", auth_type = "d4science"),
               user = AUTH_API$getUserProfile()$username, 
@@ -147,18 +153,18 @@ server <- function(input, output, session) {
             if(!is.null(auth_info())){
               #load modules
               INFO("Set-up geoflow-shiny in auth mode (no UI, token based)")
-              initAuthSessionVariables(session, auth_info())
+              initAuthSessionVariables(session, appConfig, auth_info())
               INFO("Load home module")
-              home_server("home", auth_info, i18n, geoflow_configs, parent.session = session)
+              home_server("home", auth_info, auth_api, i18n, geoflow_configs, parent.session = session)
               INFO("Load configuration editor module")
-              config_editor_server("config_editor", auth_info, i18n, geoflow_configs, parent.session = session)
+              config_editor_server("config_editor", auth_info, auth_api, i18n, geoflow_configs, parent.session = session)
               INFO("Load configuration list module")
-              config_runner_server("config_runner", auth_info, i18n, geoflow_configs, parent.session = session)
+              config_runner_server("config_runner", auth_info, auth_api, i18n, geoflow_configs, parent.session = session)
               INFO("Load metadata editor module")
-              metadata_editor_server("metadata_editor", auth_info, i18n, geoflow_configs, parent.session = session)
+              metadata_editor_server("metadata_editor", auth_info, auth_api, i18n, geoflow_configs, parent.session = session)
               
-              AUTH_API <- try(get("AUTH_API", envir = GEOFLOW_SHINY_ENV), silent = TRUE)
-              geoflow_configs(getConfigurationFiles(config = appConfig, auth_api = AUTH_API, auth_info = auth_info()))
+              #AUTH_API <- try(get("AUTH_API", envir = GEOFLOW_SHINY_ENV), silent = TRUE)
+              geoflow_configs(getConfigurationFiles(config = appConfig, auth_api = auth_api(), auth_info = auth_info()))
             }
           }
         }

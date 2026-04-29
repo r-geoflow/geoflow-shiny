@@ -1,5 +1,5 @@
 #home_ui
-home_server <- function(id, auth_info, i18n, geoflow_configs, parent.session){
+home_server <- function(id, auth_info = NULL, auth_api = NULL, i18n, geoflow_configs, parent.session){
   
   moduleServer(id, function(input, output, session) {
     

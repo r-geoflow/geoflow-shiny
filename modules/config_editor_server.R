@@ -1,11 +1,11 @@
 #config_editor_server
-config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.session){
+config_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, geoflow_configs, parent.session){
 
  moduleServer(id, function(input, output, session){
   
   ns <- session$ns
 
-  AUTH_API <- try(get("AUTH_API", envir = GEOFLOW_SHINY_ENV), silent = TRUE)
+  #AUTH_API <- try(get("AUTH_API", envir = GEOFLOW_SHINY_ENV), silent = TRUE)
   
   #contact handlers
   #---------------------------------------------------------------------------------------------
@@ -287,7 +287,7 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
     )
   })
   
-  loadCloudTree(id = "config_load_tree_leavesonly", config = appConfig, auth_api = AUTH_API, 
+  loadCloudTree(id = "config_load_tree_leavesonly", config = appConfig, auth_api = auth_api(), 
                 mime_types = c(".json", ".yml", ".yaml"), leaves_only = TRUE, output = output)
   
   observeEvent(input$config_local_file_cancel, {
@@ -299,7 +299,7 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
   observeEvent(input$config_load_tree_leavesonly_select,{
     selected_resource = input$config_load_tree_leavesonly_selected
     #OCS download selected resource and read it
-    filepath <- AUTH_API$downloadFile(relPath = dirname(selected_resource[[1]]$data), filename = selected_resource[[1]]$text, outdir = tempdir())
+    filepath <- auth_api()$downloadFile(relPath = dirname(selected_resource[[1]]$data), filename = selected_resource[[1]]$text, outdir = tempdir())
     config <- try(switch(mime::guess_type(filepath),
                         "application/json" = jsonlite::read_json(filepath),
                         "application/yaml" = yaml::read_yaml(filepath)
@@ -320,7 +320,7 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
     }
     
     shiny::removeModal()
-    loadCloudTree(id = "config_load_tree_leavesonly", config = appConfig, auth_api = AUTH_API, 
+    loadCloudTree(id = "config_load_tree_leavesonly", config = appConfig, auth_api = auth_api(), 
                   mime_types = c(".json", ".yml", ".yaml"), leaves_only = TRUE, output = output)
     postMessage(msg = i18n()$t("CFG_EDITOR_CONFIG_LOAD_SUCCESS"), type = "success")
   })
@@ -405,7 +405,7 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
     updateTextInput(inputId = "config_filename", value = sprintf("new_config.%s", input$config_filemimetype))
   })
   
-  loadCloudTree(id = "config_load_tree", config = appConfig, auth_api = AUTH_API, 
+  loadCloudTree(id = "config_load_tree", config = appConfig, auth_api = auth_api(), 
                 mime_types = c(".json", ".yml", ".yaml"), leaves_only = FALSE, output = output)
   
   output$config_load_tree_upload_action <- renderUI({
@@ -424,7 +424,7 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
         shiny::updateTextInput(inputId = "config_filename", value = basename(selected_resource$data))
         cloud_overwriting_danger(TRUE)
       }else if(selected_resource$type == "folder"){
-        files = AUTH_API$listFiles(relPath = selected_resource$data)
+        files = auth_api()$listFiles(relPath = selected_resource$data)
         if(input$config_filename %in% files$name){
           cloud_overwriting_danger(TRUE)
         }else{
@@ -451,7 +451,7 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
              yaml::write_yaml(cfg, file)
            }
     )
-    uploaded = AUTH_API$uploadFile(
+    uploaded = auth_api()$uploadFile(
       filename = file,
       relPath = if(selected_resource$type == "folder"){
         selected_resource$data
@@ -460,7 +460,7 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
       }
     )
     shiny::removeModal()
-    loadCloudTree(id = "config_load_tree", config = appConfig, auth_api = AUTH_API, leaves_only = FALSE, output = output)
+    loadCloudTree(id = "config_load_tree", config = appConfig, auth_api = auth_api(), leaves_only = FALSE, output = output)
     cloud_overwriting_danger(FALSE)
   })
   
@@ -842,7 +842,7 @@ config_editor_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
   #manage button handlers
   manageButtonValidateEvents <- function(data, type, uuids){
     prefix <- paste0("button_validate_", type,"_")
-    if(nrow(data)>0) lapply(1:nrow(data),function(i){
+    if(!is.null(data)) if(nrow(data)>0) lapply(1:nrow(data),function(i){
       x <- data[i,]
       button_id <- paste0(prefix,uuids[i])
       observeEvent(input[[button_id]],{

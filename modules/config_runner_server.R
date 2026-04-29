@@ -1,5 +1,5 @@
 #config_runner_server
-config_runner_server<- function(id, auth_info, i18n, geoflow_configs, parent.session){
+config_runner_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, geoflow_configs, parent.session){
   
  moduleServer(id, function(input, output, session){
   
@@ -9,7 +9,7 @@ config_runner_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
   ipc.queue$consumer$start()
   
   #auth API (if existing)
-  AUTH_API <- try(get("AUTH_API", envir = GEOFLOW_SHINY_ENV), silent = TRUE)
+  #AUTH_API <- try(get("AUTH_API", envir = GEOFLOW_SHINY_ENV), silent = TRUE)
   
   #reactives
   reactive_workflow <- reactiveVal(NULL)
@@ -304,7 +304,7 @@ config_runner_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
   observeEvent(input$config_load_tree_leavesonly_select,{
     selected_resource = input$config_load_tree_leavesonly_selected
     #OCS download selected resource and read it
-    filepath <- AUTH_API$downloadFile(relPath = dirname(selected_resource[[1]]$data), filename = selected_resource[[1]]$text, outdir = tempdir())
+    filepath <- auth_api()$downloadFile(relPath = dirname(selected_resource[[1]]$data), filename = selected_resource[[1]]$text, outdir = tempdir())
     config <- try(switch(mime::guess_type(filepath),
                          "application/json" = jsonlite::read_json(filepath),
                          "application/yaml" = yaml::read_yaml(filepath)
@@ -320,7 +320,7 @@ config_runner_server<- function(id, auth_info, i18n, geoflow_configs, parent.ses
     reactive_workflow(attr(config, "filepath"))
     
     shiny::removeModal()
-    loadCloudTree(id = "config_load_tree_leavesonly", config = appConfig, auth_api = AUTH_API, 
+    loadCloudTree(id = "config_load_tree_leavesonly", config = appConfig, auth_api = auth_api(), 
                   mime_types = c(".json", ".yml", ".yaml"), leaves_only = TRUE, output = output)
     postMessage(msg = i18n()$t("CFG_EDITOR_CONFIG_LOAD_SUCCESS"), type = "success")
   })
