@@ -87,7 +87,7 @@ config_runner_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, geo
     }
   })
   
-  loadCloudTree(id = "config_load_tree_leavesonly", config = appConfig, auth_api = AUTH_API, 
+  loadCloudTree(id = "config_load_tree_leavesonly", config = appConfig, auth_api = auth_api(), 
                 mime_types = c(".json", ".yml", ".yaml"), leaves_only = TRUE, output = output)
   
   #actions
