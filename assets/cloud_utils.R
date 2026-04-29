@@ -7,11 +7,12 @@ build_tree_data_dir = function(auth_api, root, mime_types, folder_basename = FAL
     text = ifelse(folder_basename, basename(root), root),
     children = if(nrow(resources)>0){ 
       lapply(1:nrow(resources), function(i){
+        resource_name = sub("/", "", basename(resources[i,]$name))
         switch(resources[i,]$resourceType,
-               "collection" = build_tree_data_dir(auth_api = auth_api, root = file.path(root, resources[i,]$name), mime_types = mime_types, folder_basename = TRUE),
+               "collection" = build_tree_data_dir(auth_api = auth_api, root = file.path(root, resource_name), mime_types = mime_types, folder_basename = TRUE),
                "file" = list(
-                 text = resources[i,]$name,
-                 data = file.path(root, resources[i,]$name),
+                 text = resource_name,
+                 data = file.path(root, resource_name),
                  type = "file"
                )
         )
