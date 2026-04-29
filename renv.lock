@@ -4094,7 +4094,7 @@
     "ocs4R": {
       "Package": "ocs4R",
       "Version": "0.3",
-      "Source": "Repository",
+      "Source": "GitHub",
       "Date": "2025-09-01",
       "Title": "Interface to Open Collaboration Services (OCS) REST API",
       "Authors@R": "c( person(\"Emmanuel\", \"Blondel\", role = c(\"aut\", \"cre\"), email = \"emmanuel.blondel1@gmail.com\", comment = c(ORCID = \"0000-0002-5870-5762\")))",
@@ -4121,9 +4121,14 @@
       "BugReports": "https://github.com/eblondel/ocs4R/issues",
       "LazyLoad": "yes",
       "RoxygenNote": "7.3.1",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteRepo": "ocs4R",
+      "RemoteUsername": "eblondel",
+      "RemoteRef": "HEAD",
+      "RemoteSha": "8f2053708875e081e892eb44ce36d6461f9d81f3",
       "NeedsCompilation": "no",
-      "Author": "Emmanuel Blondel [aut, cre] (ORCID: <https://orcid.org/0000-0002-5870-5762>)",
-      "Repository": "CRAN"
+      "Author": "Emmanuel Blondel [aut, cre] (ORCID: <https://orcid.org/0000-0002-5870-5762>)"
     },
     "openssl": {
       "Package": "openssl",

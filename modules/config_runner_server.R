@@ -302,6 +302,7 @@ config_runner_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, geo
   })
   #cloud
   observeEvent(input$config_load_tree_leavesonly_select,{
+    req(!is.null(auth_api()))
     selected_resource = input$config_load_tree_leavesonly_selected
     #OCS download selected resource and read it
     filepath <- auth_api()$downloadFile(relPath = dirname(selected_resource[[1]]$data), filename = selected_resource[[1]]$text, outdir = tempdir())
