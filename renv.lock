@@ -4093,9 +4093,9 @@
     },
     "ocs4R": {
       "Package": "ocs4R",
-      "Version": "0.3",
+      "Version": "0.3.1",
       "Source": "GitHub",
-      "Date": "2025-09-01",
+      "Date": "2026-04-29",
       "Title": "Interface to Open Collaboration Services (OCS) REST API",
       "Authors@R": "c( person(\"Emmanuel\", \"Blondel\", role = c(\"aut\", \"cre\"), email = \"emmanuel.blondel1@gmail.com\", comment = c(ORCID = \"0000-0002-5870-5762\")))",
       "Maintainer": "Emmanuel Blondel <emmanuel.blondel1@gmail.com>",
@@ -4126,7 +4126,7 @@
       "RemoteRepo": "ocs4R",
       "RemoteUsername": "eblondel",
       "RemoteRef": "HEAD",
-      "RemoteSha": "8f2053708875e081e892eb44ce36d6461f9d81f3",
+      "RemoteSha": "f036d2b172753cd9fec434919cf98c9dda6a365e",
       "NeedsCompilation": "no",
       "Author": "Emmanuel Blondel [aut, cre] (ORCID: <https://orcid.org/0000-0002-5870-5762>)"
     },
