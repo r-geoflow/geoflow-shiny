@@ -388,7 +388,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
                                           choices = {
                                             geoflow::list_data_accessors()$id
                                           },
-                                          selected = if(!is.null(model)) model$data$access else NULL,
+                                          selected = if(!is.null(model)) model$data$access else NA,
                                           selectize = FALSE
                     )),
                     column(4, selectInput(ns("entity_data_type"),
@@ -409,7 +409,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
                                           choices = {
                                             geoflow::geoflow_data$new()$getAllowedSourceTypes()
                                           },
-                                          selected = if(!is.null(model)) model$data$sourceType else NULL,
+                                          selected = if(!is.null(model)) model$data$sourceType else NA,
                                           selectize = FALSE
                     ))
                   ),
@@ -420,7 +420,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
                     column(12, textAreaInput(
                       ns("entity_data_sourcesql"),
                       label = i18n()$t("MD_EDITOR_E_DATA_SOURCESQL"),
-                      value = if(!is.null(model)) model$data$sourceSql else NULL,
+                      value = if(!is.null(model)) model$data$sourceSql else NA,
                       width = NULL,
                       placeholder = i18n()$t("MD_EDITOR_E_DATA_SOURCESQL")
                     ))
