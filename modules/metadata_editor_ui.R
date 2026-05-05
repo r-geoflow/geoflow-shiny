@@ -7,7 +7,7 @@ metadata_editor_ui <- function(id){
    uiOutput(ns("meta_editor_choices")),
    uiOutput(ns("meta_editor_hrcustom")),
    uiOutput(ns("meta_editor_entry_selector_wrapper")),
-   uiOutput(ns("meta_editor"))
+   uiOutput(ns("meta_editor_wrapper"))
   )
   
 }

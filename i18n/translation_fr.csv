@@ -188,6 +188,7 @@ MD_EDITOR_E_DESCRIPTION_ADD,Ajouter une description
 MD_EDITOR_E_SUBJECTS,Sujet(s)
 MD_EDITOR_E_SUBJECT,Sujet
 MD_EDITOR_E_SUBJECT_ADD,Ajouter un sujet
+MD_EDITOR_E_SUBJECT_ERROR,Erreur de récupération du vocabulaire
 MD_EDITOR_E_VOCABULARY,Vocabulaire
 MD_EDITOR_E_VOCABULARY_CUSTOM,Personnalisé
 MD_EDITOR_E_CONTACTS,Contact(s)

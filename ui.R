@@ -43,7 +43,7 @@ ui <- fluidPage(
             
           ),
           sidebar = bs4Dash::dashboardSidebar(
-            withSpinner(uiOutput("side_ui"))
+            uiOutput("side_ui")
           ),
           body = bs4Dash::dashboardBody(
             withSpinner(uiOutput("main_ui"))

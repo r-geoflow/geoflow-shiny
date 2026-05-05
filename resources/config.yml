@@ -4,3 +4,16 @@ auth: false
 data_dir_local: .
 data_dir_remote: geoflow
 logger: INFO
+
+module_options:
+  metadata_editor:
+    subjects:
+      choices: ["gemet", "inrae", "agrovoc"]
+      default: inrae
+    languages:
+      choices: ["fre", "eng"]
+      default: fre
+    formats:
+      default: application/geopackage+sqlite3
+    licenses:
+      default: cc-by-4.0

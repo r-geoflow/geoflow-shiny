@@ -1,19 +1,23 @@
 # Define server logic required
 #==========================================================================================
 server <- function(input, output, session) {
-  
+
   auth_info = reactiveVal(NULL)
   auth_api = reactiveVal(NULL)
   session_reloaded = reactiveVal(FALSE)
   geoflow_configs = reactiveVal(NULL)
   
   i18n <- reactive({
+    
     selected <- input$selected_language
     if (length(selected) > 0 && selected %in% translator$get_languages()) {
       translator$set_translation_language(selected)
     }
     translator
   })
+  
+  # Debounce language change to prevent UI cascade blocking
+  i18n_debounced <- reactive(i18n()) %>% shiny::debounce(200)
   
   # Read the session cookie
   cookie_observer = observe({
@@ -189,43 +193,46 @@ server <- function(input, output, session) {
   }
   
   
-  renderSideUI = function(i18n){
+  renderSideUI = function(i18n_obj){
     bs4Dash::sidebarMenu(
       id = "geoflow-tabs",
       bs4Dash::menuItem(
-        text = i18n()$t("MENU_ITEM_HOME"),
+        text = i18n_obj$t("MENU_ITEM_HOME"),
         tabName = "home",
         icon = icon("home"),
         selected = TRUE
       ),
       bs4Dash::menuItem(
-        text = i18n()$t("MENU_ITEM_CREATE"),
+        text = i18n_obj$t("MENU_ITEM_CREATE"),
         tabName = "config",
-        bs4Dash::menuSubItem(text = i18n()$t("MENU_SUBITEM_CREATE_METADATA"), tabName = "metadata_editor", icon = icon("file-edit")),
-        bs4Dash::menuSubItem(text = i18n()$t("MENU_SUBITEM_CREATE_WORKFLOW"), tabName = "config_editor", icon = icon("gears")),
+        bs4Dash::menuSubItem(text = i18n_obj$t("MENU_SUBITEM_CREATE_METADATA"), tabName = "metadata_editor", icon = icon("file-edit")),
+        bs4Dash::menuSubItem(text = i18n_obj$t("MENU_SUBITEM_CREATE_WORKFLOW"), tabName = "config_editor", icon = icon("gears")),
         startExpanded = TRUE
       ),
       bs4Dash::menuItem(
-        text = i18n()$t("MENU_ITEM_EXECUTE"),
+        text = i18n_obj$t("MENU_ITEM_EXECUTE"),
         tabName = "exec",
-        bs4Dash::menuSubItem(text = i18n()$t("MENU_SUBITEM_EXECUTE_WORKFLOW"), tabName = "config_runner", icon = icon("play")),
+        bs4Dash::menuSubItem(text = i18n_obj$t("MENU_SUBITEM_EXECUTE_WORKFLOW"), tabName = "config_runner", icon = icon("play")),
         startExpanded = TRUE
       )
     )
   }
   
   output$side_ui <- renderUI({
-    if(appConfig$auth){
-      if(appConfig$auth_ui){
-        req(!is.null(auth_info()))
-        renderSideUI(i18n())
+    i18n_debounced()
+    shiny::isolate({
+      if(appConfig$auth){
+        if(appConfig$auth_ui){
+          req(!is.null(auth_info()))
+          renderSideUI(i18n())
+        }else{
+          renderSideUI(i18n())
+        }
+        
       }else{
         renderSideUI(i18n())
       }
-      
-    }else{
-      renderSideUI(i18n())
-    }
+    })
   })
   
   renderMainUI = function(){

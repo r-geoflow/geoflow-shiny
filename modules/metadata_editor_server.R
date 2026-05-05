@@ -13,6 +13,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
     
     #reactives
     #generic reactives
+    model_editor_form_changed = reactiveVal(0)
     pageLoaded <- reactiveVal(FALSE)
     md_model <- reactiveVal(list())
     md_model_type <- reactiveVal(NULL)
@@ -24,13 +25,16 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
     md_model_subject_selection <- reactiveVal(NULL)
     md_model_subject_draft <- reactiveVal(NULL)
     md_model_bbox <- reactiveVal(NULL)
+    
     cache_vocabs <- reactiveVal(list())
+    
     cloud_overwriting_danger <- reactiveVal(FALSE)
     #model specific reactives
     active_contact_form_tab <- reactiveVal("contact_identifiers")
     active_entity_form_tab <- reactiveVal("entity_identifiers")
     ref_hierarchy <- reactiveVal(NULL)
     ref_contacts <- reactiveVal(NULL)
+    
     
     #FUNCTIONS
     setID = function(type, id){
@@ -151,22 +155,65 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
                                        selected = "theme",
                                        selectize = FALSE
               )),
-              column(6, selectInput(ns("entity_vocabulary_server"),
+              column(6, selectizeInput(ns("entity_vocabulary_server"),
                                        label = i18n()$t("MD_EDITOR_E_VOCABULARY"),
                                        multiple = F,
-                                       choices = {
-                                         vocabs = list_vocabularies()
-                                         setNames(c(vocabs$id, "custom"), nm = c(vocabs$def, i18n()$t("MD_EDITOR_E_VOCABULARY_CUSTOM")))
-                                        },
-                                       selected = "custom",
-                                       selectize = FALSE
+                                       choices = NULL,
+                                       options = list(
+                                         options = {
+                                           vocabs = geoflow::list_vocabularies()
+                                           vocabs = data.frame(
+                                             id = c(vocabs$id, "custom"),
+                                             label = c(vocabs$def, i18n()$t("MD_EDITOR_E_VOCABULARY_CUSTOM")),
+                                             connection = c(vocabs$connection, "success")
+                                           )
+                                           if(!is.null(appConfig$module_options$metadata_editor$subjects$choices)){
+                                             vocabs = vocabs[vocabs$id %in% appConfig$module_options$metadata_editor$subjects$choices | vocabs$id == "custom",]
+                                           }
+                                           lapply(seq_len(nrow(vocabs)), function(i) {
+                                             as.list(vocabs[i, ])
+                                           })
+                                         },
+                                         valueField  = "id",
+                                         labelField  = "label",
+                                         searchField = c("id", "label"),
+                                         render = I(paste0("
+                                          {
+                                            item: function(item, escape) {
+                                              if (item.connection == 'success') {
+                                                return '<div class=\"option\">' + escape(item.label) + '</div>';
+                                              } else {
+                                                return '<div class=\"option\">' + escape(item.label) + '</br><span style=\"color:red;\"><em>",i18n()$t("MD_EDITOR_E_SUBJECT_ERROR"),"</em></span></div>';
+                                              }
+                                            },
+                                            option: function(item, escape) {
+                                              console.log(item);
+                                              if (item.connection == 'success') {
+                                                return '<div class=\"option\">' + escape(item.label) + '</div>';
+                                              } else {
+                                                return '<div class=\"option disabled\">' + escape(item.label) + '</br><span style=\"color:red;margin-left:5px;\"><em>",i18n()$t("MD_EDITOR_E_SUBJECT_ERROR"),"</em></span></div>';
+                                              }
+                                            }
+                                          }
+                                        ")),
+                                         onInitialize = I(paste0('function() { 
+                                          this.setValue("',
+                                           if(!is.null(appConfig$module_options$metadata_editor$subjects$default)) appConfig$module_options$metadata_editor$subjects$default else "custom",
+                                          '"); 
+                                          this.$dropdown.on(\'mousedown\', \'.disabled\', function(e) {
+                                            e.preventDefault();
+                                            return false;
+                                          });
+                                          }'))
+                                       )
+                                       
               ))
             ),
             fluidRow(
               style = "height:500px;overflow-y:auto;",
               column(12,
-                uiOutput(ns("entity_vocabulary_custom")),
-                uiOutput(ns("entity_vocabulary_tree_wrapper"))
+                uiOutput(ns("entity_vocabulary_section"))
+
               )
             ),
             fluidRow(
@@ -243,10 +290,14 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
                                        multiple = F,
                                        choices = {
                                          languages = geometa::ISOLanguage$values(labels = T)
-                                         setNames(languages[,1], nm = languages[,2])
+                                         languages = setNames(languages[,1], nm = languages[,2])
+                                         if(!is.null(appConfig$module_options$metadata_editor$languages$choices)){
+                                           languages = languages[languages %in% appConfig$module_options$metadata_editor$languages$choices]
+                                         }
+                                         languages
                                        },
-                                       selected = "eng",
-                                       selectize = FALSE
+                                       selected = if(!is.null(appConfig$module_options$metadata_editor$languages$default)) appConfig$module_options$metadata_editor$languages$default else "eng",
+                                       selectize = TRUE
               ))
             )
           ),
@@ -339,9 +390,16 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
               column(7,selectInput(ns("entity_format_name"),
                                       label = i18n()$t("MD_EDITOR_E_FORMAT"),
                                       multiple = F,
-                                      choices = as.character(mime::mimemap),
-                                      selected = NULL,
-                                      selectize = FALSE
+                                      choices = {
+                                        formats = as.character(mime::mimemap)
+                                        formats = formats[order(formats)]
+                                        if(!is.null(appConfig$module_options$metadata_editor$formats$choices)){
+                                          formats = formats[formats %in% appConfig$module_options$metadata_editor$formats$choices]
+                                        }
+                                        formats
+                                      },
+                                      selected = if(!is.null(appConfig$module_options$metadata_editor$formats$default)) appConfig$module_options$metadata_editor$formats$default else NULL,
+                                      selectize = TRUE
               ))
             ),
             fluidRow(
@@ -1006,6 +1064,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
       
     })
     
+    #meta_editor_hrcustom (custom HR line to bind to the model type contacts/entitis/dictionary)
     output$meta_editor_hrcustom <- renderUI({
       handle_style = function(type){
         blank_style = ""
@@ -1026,11 +1085,63 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
       )
     })
     
-    #metadata editor
+    # registerUpdate = function(){
+    #   req(!is.null(md_model_draft()))
+    #   licenses = cached_licenses()
+    #   session$onFlushed(function() {
+    #     updateSelectizeInput(
+    #       session,
+    #       "entity_right_license",
+    #       choices = licenses,
+    #       selected = if(!is.null(appConfig$module_options$metadata_editor$licenses$default)) appConfig$module_options$metadata_editor$licenses$default else "cc-by-4.0",
+    #       server = TRUE
+    #     )
+    #     
+    #   }, once = TRUE)
+    # }
+    
+    #meta_editor (form)
     output$meta_editor <- renderUI({
       print("render meta editor")
       req(!is.null(md_model_type()))
+      handle_metadata_form(type = md_model_type(), model = if(md_model_draft_mode() == "edition") md_model_draft() else NULL)
+    })
+    
+    #meta_editor_footer (action buttons + validation status)
+    output$meta_editor_footer <- renderUI({
+      req(!is.null(md_model_type()))
       valid = md_model_draft_valid()
+      
+      tagList(
+        bs4Dash::actionButton(inputId = ns("check_model"), label = i18n()$t("MD_EDITOR_CHECK")),
+        bs4Dash::actionButton(inputId = ns("save_model"), label = i18n()$t("MD_EDITOR_SAVE"), style= if(is.null(valid) || (is.logical(valid) & !valid)) "display:none;" else {NULL}),br(),
+        uiOutput(ns("meta_editor_validation_status"))
+      )
+      
+    })
+    
+    #meta_editor_validation_status
+    output$meta_editor_validation_status <- renderUI({
+      if(!is.null(md_model_draft_valid())) if(!md_model_draft_valid()){
+        bs4Dash::bs4Badge(
+          if("ERROR" %in% md_model_draft_validation_report()$type) i18n()$t("MD_EDITOR_VALIDATION_ERRORS") else i18n()$t("MD_EDITOR_VALIDATION_WARNINGS"),
+          color = if("ERROR" %in% md_model_draft_validation_report()$type) "danger" else "warning"
+        )
+      }else{
+        bs4Dash::bs4Badge(
+          i18n()$t("MD_EDITOR_NOVALIDATIONISSUES"),
+          color = "success"
+        )
+      }
+    })
+
+    #metadata editor wrapper
+    output$meta_editor_wrapper <- renderUI({
+      #triggered on md_model_type / md_model_draft_mode changes
+      print("render meta editor WRAPPER") 
+      req(!is.null(md_model_type()))
+      
+      #UI
       shiny::tagList(
         fluidRow(
           tabBox(
@@ -1052,10 +1163,8 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
                                           "featuretype" = i18n()$t("MD_EDITOR_D_EDIT")
                                           )," ", md_model_draft_idx())
               ),
-              handle_metadata_form(type = md_model_type(), model = if(md_model_draft_mode() == "edition") md_model_draft() else NULL),hr(),
-              bs4Dash::actionButton(inputId = ns("check_model"), label = i18n()$t("MD_EDITOR_CHECK")),
-              bs4Dash::actionButton(inputId = ns("save_model"), label = i18n()$t("MD_EDITOR_SAVE"), style= if(is.null(valid) || (is.logical(valid) & !valid)) "display:none;" else {NULL}),br(),
-              uiOutput(ns("meta_editor_validation_status"))
+              uiOutput(ns("meta_editor")),
+              uiOutput(ns("meta_editor_footer"))
             ),
             tabPanel(
               value = paste0("tabbox_", md_model_type(), "_form_validator"),
@@ -1092,6 +1201,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
       )
     })
     
+    #meta_editor_entry_selector_wrapper (for selection of a entry to edit)
     output$meta_editor_entry_selector_wrapper <- renderUI({
       req(length(md_model())>0)
       selectInput(ns("meta_editor_entry_selector"),
@@ -1149,20 +1259,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
       )
     })
     
-    output$meta_editor_validation_status <- renderUI({
-      if(!is.null(md_model_draft_valid())) if(!md_model_draft_valid()){
-        bs4Dash::bs4Badge(
-          if("ERROR" %in% md_model_draft_validation_report()$type) i18n()$t("MD_EDITOR_VALIDATION_ERRORS") else i18n()$t("MD_EDITOR_VALIDATION_WARNINGS"),
-          color = if("ERROR" %in% md_model_draft_validation_report()$type) "danger" else "warning"
-        )
-      }else{
-        bs4Dash::bs4Badge(
-          i18n()$t("MD_EDITOR_NOVALIDATIONISSUES"),
-          color = "success"
-        )
-      }
-    })
-    
+
     #meta_table (geoflow pivot table format rendered as RHandsontable)
     output$meta_table <- rhandsontable::renderRHandsontable({
       req(!is.null(md_model_type()))
@@ -1282,6 +1379,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
     
     #entity -> Subject
     output$entity_vocabulary_tree <- jsTreeR::renderJstree({
+      print(sprintf("renderJStree for '%s'", input$entity_vocabulary_server))
       req(input$entity_vocabulary_server != "custom")
       cached_vocabs = cache_vocabs()
       hierarchy = cached_vocabs[[input$entity_vocabulary_server]]
@@ -1297,31 +1395,36 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
       }
       jsTreeR::jstree(hierarchy$children, theme = "proton", checkboxes = T, checkWithText = T, multiple = T, selectLeavesOnly = T)
     })
-    output$entity_vocabulary_tree_wrapper <- renderUI({
+    
+    output$entity_vocabulary_section <- renderUI({
+      # This only rerenders when vocabulary selection changes, NOT when meta_editor rerenders
       if(input$entity_vocabulary_server != "custom"){
-        withSpinner(jsTreeR::jstreeOutput(ns("entity_vocabulary_tree")))
+        vocabs = geoflow::list_vocabularies()
+        vocab = vocabs[vocabs$id == input$entity_vocabulary_server,]
+        if(vocab$connection == "success"){
+          withSpinner(jsTreeR::jstreeOutput(ns("entity_vocabulary_tree")))
+        }else{
+          tags$span(tags$em(i18n()$t("MD_EDITOR_E_SUBJECT_ERROR")), style = "color:red;")
+        }
       }else{
-        NULL
+        shiny::tagList(
+          fluidRow(
+            column(4,textInput(ns("custom_vocab_thesaurus_name"), i18n()$t("MD_EDITOR_E_THESAURUS_NAME"),value = NULL, width = NULL, placeholder = i18n()$t("MD_EDITOR_E_THESAURUS_NAME"))),
+            column(4,textInput(ns("custom_vocab_thesaurus_uri"), i18n()$t("MD_EDITOR_E_THESAURUS_URI"),value = NULL, width = NULL, placeholder = i18n()$t("MD_EDITOR_E_THESAURUS_URI")))
+          ),
+          fluidRow(
+            column(4,textInput(ns("custom_vocab_keyword_name"), i18n()$t("MD_EDITOR_E_KEYWORD"), value = NULL, width = NULL, placeholder = i18n()$t("MD_EDITOR_E_KEYWORD"))),
+            column(4,textInput(ns("custom_vocab_keyword_uri"), i18n()$t("MD_EDITOR_E_KEYWORD_URI"), value = NULL, width = NULL, placeholder = i18n()$t("MD_EDITOR_E_KEYWORD_URI"))),
+            column(4,
+                   actionButton(ns("custom_vocab_keyword_button_add"), title=i18n()$t("MD_EDITOR_E_KEYWORD_ADD"),size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;"),
+                   actionButton(ns("custom_vocab_keyword_button_clear"), title=i18n()$t("MD_EDITOR_E_KEYWORD_CLEAR"),size="sm",label="",icon=icon("trash"),class = "btn-warning", style = "margin-top:35px;")
+            )
+          ),
+          uiOutput(ns("entity_vocabulary_custom_keyword_table_wrapper"))
+        )
       }
     })
-    output$entity_vocabulary_custom <- renderUI({
-      req(input$entity_vocabulary_server == "custom")
-      shiny::tagList(
-        fluidRow(
-          column(4,textInput(ns("custom_vocab_thesaurus_name"), i18n()$t("MD_EDITOR_E_THESAURUS_NAME"),value = NULL, width = NULL, placeholder = i18n()$t("MD_EDITOR_E_THESAURUS_NAME"))),
-          column(4,textInput(ns("custom_vocab_thesaurus_uri"), i18n()$t("MD_EDITOR_E_THESAURUS_URI"),value = NULL, width = NULL, placeholder = i18n()$t("MD_EDITOR_E_THESAURUS_URI")))
-        ),
-        fluidRow(
-          column(4,textInput(ns("custom_vocab_keyword_name"), i18n()$t("MD_EDITOR_E_KEYWORD"), value = NULL, width = NULL, placeholder = i18n()$t("MD_EDITOR_E_KEYWORD"))),
-          column(4,textInput(ns("custom_vocab_keyword_uri"), i18n()$t("MD_EDITOR_E_KEYWORD_URI"), value = NULL, width = NULL, placeholder = i18n()$t("MD_EDITOR_E_KEYWORD_URI"))),
-          column(4,
-                 actionButton(ns("custom_vocab_keyword_button_add"), title=i18n()$t("MD_EDITOR_E_KEYWORD_ADD"),size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;"),
-                 actionButton(ns("custom_vocab_keyword_button_clear"), title=i18n()$t("MD_EDITOR_E_KEYWORD_CLEAR"),size="sm",label="",icon=icon("trash"),class = "btn-warning", style = "margin-top:35px;")
-          )
-        ),
-        uiOutput(ns("entity_vocabulary_custom_keyword_table_wrapper"))
-      )
-    })
+    
     
     output$entity_vocabulary_custom_keyword_table <- DT::renderDT(server = FALSE, {
       req(!is.null(md_model_subject_draft()))
@@ -1426,86 +1529,81 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
     })
     #entity -> Rights
     output$entity_right_wrapper <- renderUI({
-      switch(input$entity_right_type,
-        "license" = {
-          selectInput(ns("entity_right"),
-                         label = i18n()$t("MD_EDITOR_E_RIGHT_LICENSE"),
-                         multiple = F,
-                         choices = {
-                           licenses = zen4R::get_licenses()
-                           setNames(licenses$id, nm = licenses$title)
-                         },
-                         selected = "cc-by-4.0",
-                         selectize = FALSE
-          )
-        },
-        "useConstraint" = {
-          selectInput(ns("entity_right"),
-                         label = i18n()$t("MD_EDITOR_E_RIGHT_USECONSTRAINT"),
-                         multiple = F,
-                         choices = geometa::ISORestriction$values(),
-                         selected = NULL,
-                         selectize = FALSE
-          )
-        },
-        "accessConstraint" = {
-          selectInput(ns("entity_right"),
-                         label = i18n()$t("MD_EDITOR_E_RIGHT_ACCESSCONSTRAINT"),
-                         multiple = F,
-                         choices = geometa::ISORestriction$values(),
-                         selected = NULL,
-                         selectize = FALSE
-          )
-        },
-        "otherConstraint" = {
-          textInput(ns("entity_right"), 
-                    i18n()$t("MD_EDITOR_E_RIGHT_OTHERCONSTRAINT"),
-                    value = "", width = NULL, 
-                    placeholder = i18n()$t("MD_EDITOR_E_RIGHT_OTHERCONSTRAINT"))
-        },
-        "use" = {
-          textInput(ns("entity_right"),
-                    i18n()$t("MD_EDITOR_E_RIGHT_USELIMITATION"),
-                    value = "", width = NULL, 
-                    placeholder = i18n()$t("MD_EDITOR_E_RIGHT_USELIMITATION"))
-        },
-        "useLimitation" = {
-          textInput(ns("entity_right"),
-                    i18n()$t("MD_EDITOR_E_RIGHT_USELIMITATION"),
-                    value = "", width = NULL, 
-                    placeholder = i18n()$t("MD_EDITOR_E_RIGHT_USELIMITATION"))
-        },
-        "accessRight" = {
-          textInput(ns("entity_right"),
-                    i18n()$t("MD_EDITOR_E_RIGHT_ACCESSRIGHT"),
-                    value = "", width = NULL, 
-                    placeholder = i18n()$t("MD_EDITOR_E_RIGHT_ACCESSRIGHT"))
-        },
-        "accessConditions" = {
-          textInput(ns("entity_right"),
-                    i18n()$t("MD_EDITOR_E_RIGHT_ACCESSCONDITIONS"),
-                    value = "", width = NULL, 
-                    placeholder = i18n()$t("MD_EDITOR_E_RIGHT_ACCESSCONDITIONS"))
-        },
-        "termsOfUse" = {
-          textInput(ns("entity_right"),
-                    i18n()$t("MD_EDITOR_E_RIGHT_TERMSOFUSE"),
-                    value = "", width = NULL, 
-                    placeholder = i18n()$t("MD_EDITOR_E_RIGHT_TERMSOFUSE"))
-        },
-        "disclaimer" = {
-          textInput(ns("entity_right"),
-                    i18n()$t("MD_EDITOR_E_RIGHT_DISCLAIMER"),
-                    value = "", width = NULL, 
-                    placeholder = i18n()$t("MD_EDITOR_E_RIGHT_DISCLAIMER"))
-        },
-        "citation" = {
-          textInput(ns("entity_right"),
-                    i18n()$t("MD_EDITOR_E_RIGHT_CITATION"),
-                    value = "", width = NULL, 
-                    placeholder = i18n()$t("MD_EDITOR_E_RIGHT_CITATION"))
-        }
-      )
+      req(!is.null(input$entity_right_type))
+      entity_right_type = input$entity_right_type
+      if(entity_right_type == "license"){
+        selectInput(
+          ns("entity_right"),
+          label = i18n()$t("MD_EDITOR_E_RIGHT_LICENSE"),
+          multiple = F,
+          choices = {
+            licenses = zen4R::get_licenses()
+            licenses = setNames(licenses$id, nm = licenses$title)
+            if(!is.null(appConfig$module_options$metadata_editor$licenses$choices)){
+              licenses = licenses[licenses %in% appConfig$module_options$metadata_editor$licenses$choices]
+            }
+            licenses
+          },
+          selected = if(!is.null(appConfig$module_options$metadata_editor$licenses$default)) appConfig$module_options$metadata_editor$licenses$default else "cc-by-4.0",
+          selectize = TRUE
+        )
+      }else if(entity_right_type == "useConstraint"){
+        selectInput(ns("entity_right"),
+                       label = i18n()$t("MD_EDITOR_E_RIGHT_USECONSTRAINT"),
+                       multiple = F,
+                       choices = geometa::ISORestriction$values(),
+                       selected = NULL,
+                       selectize = TRUE
+        )
+      }else if(entity_right_type == "accessConstraint"){
+        selectInput(ns("entity_right"),
+                       label = i18n()$t("MD_EDITOR_E_RIGHT_ACCESSCONSTRAINT"),
+                       multiple = F,
+                       choices = geometa::ISORestriction$values(),
+                       selected = NULL,
+                       selectize = TRUE
+        )
+      }else if(entity_right_type == "otherConstraint"){
+        textInput(ns("entity_right"), 
+                  i18n()$t("MD_EDITOR_E_RIGHT_OTHERCONSTRAINT"),
+                  value = "", width = NULL, 
+                  placeholder = i18n()$t("MD_EDITOR_E_RIGHT_OTHERCONSTRAINT"))
+      }else if(entity_right_type == "use"){
+        textInput(ns("entity_right"),
+                  i18n()$t("MD_EDITOR_E_RIGHT_USELIMITATION"),
+                  value = "", width = NULL, 
+                  placeholder = i18n()$t("MD_EDITOR_E_RIGHT_USELIMITATION"))
+      }else if(entity_right_type == "useLimitation"){
+        textInput(ns("entity_right"),
+                  i18n()$t("MD_EDITOR_E_RIGHT_USELIMITATION"),
+                  value = "", width = NULL, 
+                  placeholder = i18n()$t("MD_EDITOR_E_RIGHT_USELIMITATION"))
+      }else if(entity_right_type == "accessRight"){
+        textInput(ns("entity_right"),
+                  i18n()$t("MD_EDITOR_E_RIGHT_ACCESSRIGHT"),
+                  value = "", width = NULL, 
+                  placeholder = i18n()$t("MD_EDITOR_E_RIGHT_ACCESSRIGHT"))
+      }else if(entity_right_type == "accessConditions"){
+        textInput(ns("entity_right"),
+                  i18n()$t("MD_EDITOR_E_RIGHT_ACCESSCONDITIONS"),
+                  value = "", width = NULL, 
+                  placeholder = i18n()$t("MD_EDITOR_E_RIGHT_ACCESSCONDITIONS"))
+      }else if(entity_right_type == "termsOfUse"){
+        textInput(ns("entity_right"),
+                  i18n()$t("MD_EDITOR_E_RIGHT_TERMSOFUSE"),
+                  value = "", width = NULL, 
+                  placeholder = i18n()$t("MD_EDITOR_E_RIGHT_TERMSOFUSE"))
+      }else if(entity_right_type == "disclaimer"){
+        textInput(ns("entity_right"),
+                  i18n()$t("MD_EDITOR_E_RIGHT_DISCLAIMER"),
+                  value = "", width = NULL, 
+                  placeholder = i18n()$t("MD_EDITOR_E_RIGHT_DISCLAIMER"))
+      }else if(entity_right_type == "citation"){
+        textInput(ns("entity_right"),
+                  i18n()$t("MD_EDITOR_E_RIGHT_CITATION"),
+                  value = "", width = NULL, 
+                  placeholder = i18n()$t("MD_EDITOR_E_RIGHT_CITATION"))
+      }
     })
     output$entity_rights_table <- DT::renderDT(server = FALSE, {
       render_field_elements_table(
@@ -1609,10 +1707,13 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
     #EVENTS
     #core - check_metadata
     observeEvent(input$check_model,{
+      WARN("Check model")
       check_model(type = md_model_type(), model = md_model_draft())
     })
     #core - save_metadata
     observeEvent(input$save_model,{
+      WARN("Save model")
+      print(md_model_type())
       INFO(sprintf("Save %s to metadata table", md_model_type()))
       req(!is.null(md_model_type()))
       if(md_model_type()=="entity"){
@@ -2775,6 +2876,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
         NULL
       }
     })
+    
     
   })
   
