@@ -7,6 +7,13 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
     
     #AUTH_API <- try(get("AUTH_API", envir = GEOFLOW_SHINY_ENV), silent = TRUE)
     
+    #licenses
+    licenses = readr::read_csv("resources/licenses.csv") #previously set from zen4R::get_licenses()
+    licenses = setNames(licenses$id, nm = licenses$title)
+    if(!is.null(appConfig$module_options$metadata_editor$licenses$choices)){
+      licenses = licenses[licenses %in% appConfig$module_options$metadata_editor$licenses$choices]
+    }
+    
     #templates
     contact_tpl = geoflow_contact$new()
     entity_tpl = geoflow_entity$new()
@@ -35,14 +42,61 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
     ref_hierarchy <- reactiveVal(NULL)
     ref_contacts <- reactiveVal(NULL)
     
+    contact_tree_trigger <- reactiveVal(0)
+    entity_tree_trigger <- reactiveVal(0)
+    dictionary_tree_trigger <- reactiveVal(0)
+    
+    #tab selection
+    current_tab <- reactiveVal(NULL)
+    observeEvent(input$contact_form, {
+      current_tab(input$contact_form)
+    }, ignoreNULL = FALSE)
+    observeEvent(input$entity_form, {
+      current_tab(input$entity_form)
+    }, ignoreNULL = FALSE)
+    observeEvent(input$featuretype_form, {
+      current_tab(input$featuretype_form)
+    }, ignoreNULL = FALSE)
+    
+    observeEvent(i18n(),{
+      #session on Flushed to update the current tab
+      tab_to_restore = isolate({current_tab() })
+      model_type = isolate({ md_model_type() })
+      session$onFlushed(function() {
+        if (!is.null(tab_to_restore)) {
+          INFO(sprintf("Selecting %s tab '%s'", model_type, tab_to_restore))
+          updateTabsetPanel(
+            session,
+            paste0(model_type,"_form"),
+            selected = tab_to_restore
+          )
+        }
+      }, once = TRUE)
+    })
+    
     
     #FUNCTIONS
-    setID = function(type, id){
-      sprintf("%s_%s", type, id)
+    
+    #get_contact_names
+    get_contact_names = function(contacts){
+      setNames(
+        sapply(contacts, function(x){x$identifiers[[1]]}), 
+        nm = sapply(contacts, function(x){
+          if(nzchar(x$firstName) & !is.na(x$firstName) & nzchar(x$lastName) & !is.na(x$lastName)){
+            paste(x$firstName, x$lastName)
+          }else{
+            if(nzchar(x$organizationName)){
+              x$organizationName
+            }else{
+              if(length(x$identifiers)>0) x$identifiers[[1]] else "?"
+            }
+          }
+        })
+      )
     }
     
     #handle_metadata_form
-    handle_metadata_form = function(type, model = NULL){
+    handle_metadata_form = function(type){
       switch(type,
         "contact" = bs4Dash::tabsetPanel(
           id = ns("contact_form"),
@@ -68,23 +122,23 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
           tabPanel(
             value = "contact_details",
             title = i18n()$t("MD_EDITOR_C_DETAILS"),
-            fluidRow(column(6, tags$b(i18n()$t("MD_EDITOR_C_ORGNAME"))), column(6, textInput(ns("contact_org"), label = NULL, value = if(!is.null(model)) model$organizationName else "", width = NULL, placeholder = i18n()$t("MD_EDITOR_C_ORGNAME")))),
-            fluidRow(column(6, tags$b(i18n()$t("MD_EDITOR_C_FIRSTNAME"))), column(6, textInput(ns("contact_firstname"), label = NULL, value = if(!is.null(model)) model$firstName else "", width = NULL, placeholder = i18n()$t("MD_EDITOR_C_FIRSTNAME")))),
-            fluidRow(column(6, tags$b(i18n()$t("MD_EDITOR_C_LASTNAME"))), column(6, textInput(ns("contact_lastname"), label = NULL, value = if(!is.null(model)) model$lastName else "", width = NULL, placeholder = i18n()$t("MD_EDITOR_C_LASTNAME")))),
-            fluidRow(column(6, tags$b(i18n()$t("MD_EDITOR_C_POSITIONNAME"))), column(6, textInput(ns("contact_positionname"), label = NULL, value = if(!is.null(model)) model$positionName else "", width = NULL, placeholder = i18n()$t("MD_EDITOR_C_POSITIONNAME")))),
-            fluidRow(column(6, tags$b(i18n()$t("MD_EDITOR_C_POSTALADDRESS"))), column(6, textInput(ns("contact_postaladdress"), label = NULL, value = if(!is.null(model)) model$postalAddress else "", width = NULL, placeholder = i18n()$t("MD_EDITOR_C_POSTALADDRESS")))),
-            fluidRow(column(6, tags$b(i18n()$t("MD_EDITOR_C_POSTALCODE"))), column(6, textInput(ns("contact_postalcode"), label = NULL, value = if(!is.null(model)) model$postalCode else "", width = NULL, placeholder = i18n()$t("MD_EDITOR_C_POSTALCODE")))),
-            fluidRow(column(6, tags$b(i18n()$t("MD_EDITOR_C_CITY"))), column(6, textInput(ns("contact_city"), label = NULL, value = if(!is.null(model)) model$city else "", width = NULL, placeholder = i18n()$t("MD_EDITOR_C_CITY")))),
-            fluidRow(column(6, tags$b(i18n()$t("MD_EDITOR_C_COUNTRY"))), column(6, textInput(ns("contact_country"), label = NULL, value = if(!is.null(model)) model$country else "", width = NULL, placeholder = i18n()$t("MD_EDITOR_C_COUNTRY"))))
+            fluidRow(column(6, tags$b(i18n()$t("MD_EDITOR_C_ORGNAME"))), column(6, textInput(ns("contact_org"), label = NULL, value = "", width = NULL, placeholder = i18n()$t("MD_EDITOR_C_ORGNAME")))),
+            fluidRow(column(6, tags$b(i18n()$t("MD_EDITOR_C_FIRSTNAME"))), column(6, textInput(ns("contact_firstname"), label = NULL, value = "", width = NULL, placeholder = i18n()$t("MD_EDITOR_C_FIRSTNAME")))),
+            fluidRow(column(6, tags$b(i18n()$t("MD_EDITOR_C_LASTNAME"))), column(6, textInput(ns("contact_lastname"), label = NULL, value = "", width = NULL, placeholder = i18n()$t("MD_EDITOR_C_LASTNAME")))),
+            fluidRow(column(6, tags$b(i18n()$t("MD_EDITOR_C_POSITIONNAME"))), column(6, textInput(ns("contact_positionname"), label = NULL, value = "", width = NULL, placeholder = i18n()$t("MD_EDITOR_C_POSITIONNAME")))),
+            fluidRow(column(6, tags$b(i18n()$t("MD_EDITOR_C_POSTALADDRESS"))), column(6, textInput(ns("contact_postaladdress"), label = NULL, value = "", width = NULL, placeholder = i18n()$t("MD_EDITOR_C_POSTALADDRESS")))),
+            fluidRow(column(6, tags$b(i18n()$t("MD_EDITOR_C_POSTALCODE"))), column(6, textInput(ns("contact_postalcode"), label = NULL, value = "", width = NULL, placeholder = i18n()$t("MD_EDITOR_C_POSTALCODE")))),
+            fluidRow(column(6, tags$b(i18n()$t("MD_EDITOR_C_CITY"))), column(6, textInput(ns("contact_city"), label = NULL, value = "", width = NULL, placeholder = i18n()$t("MD_EDITOR_C_CITY")))),
+            fluidRow(column(6, tags$b(i18n()$t("MD_EDITOR_C_COUNTRY"))), column(6, textInput(ns("contact_country"), label = NULL, value = "", width = NULL, placeholder = i18n()$t("MD_EDITOR_C_COUNTRY"))))
           ),
           tabPanel(
             value = "contact_info",
             title = i18n()$t("MD_EDITOR_C_INFO"),
-            fluidRow(column(6, tags$b(i18n()$t("MD_EDITOR_C_EMAIL"))), column(6, textInput(ns("contact_email"), label = NULL, value = if(!is.null(model)) model$email else "", width = NULL, placeholder = i18n()$t("MD_EDITOR_C_EMAIL")))),
-            fluidRow(column(6, tags$b(i18n()$t("MD_EDITOR_C_PHONENUMBER"))), column(6, textInput(ns("contact_voice"), label = NULL, value = if(!is.null(model)) model$voice else "", width = NULL, placeholder = i18n()$t("MD_EDITOR_C_PHONENUMBER")))),
-            fluidRow(column(6, tags$b(i18n()$t("MD_EDITOR_C_FACSIMILE"))), column(6, textInput(ns("contact_facsimile"), label = NULL, value = if(!is.null(model)) model$facsimile else "", width = NULL, placeholder = i18n()$t("MD_EDITOR_C_FACSIMILE")))),
-            fluidRow(column(6, tags$b(i18n()$t("MD_EDITOR_C_WEBSITE_URL"))), column(6, textInput(ns("contact_websiteurl"), label = NULL, value = if(!is.null(model)) model$websiteUrl else "", width = NULL, placeholder = i18n()$t("MD_EDITOR_C_WEBSITE_URL")))),
-            fluidRow(column(6, tags$b(i18n()$t("MD_EDITOR_C_WEBSITE_NAME"))), column(6, textInput(ns("contact_websitename"), label = NULL, value = if(!is.null(model)) model$websiteName else "", width = NULL, placeholder = i18n()$t("MD_EDITOR_C_WEBSITE_NAME"))))
+            fluidRow(column(6, tags$b(i18n()$t("MD_EDITOR_C_EMAIL"))), column(6, textInput(ns("contact_email"), label = NULL, value = "", width = NULL, placeholder = i18n()$t("MD_EDITOR_C_EMAIL")))),
+            fluidRow(column(6, tags$b(i18n()$t("MD_EDITOR_C_PHONENUMBER"))), column(6, textInput(ns("contact_voice"), label = NULL, value = "", width = NULL, placeholder = i18n()$t("MD_EDITOR_C_PHONENUMBER")))),
+            fluidRow(column(6, tags$b(i18n()$t("MD_EDITOR_C_FACSIMILE"))), column(6, textInput(ns("contact_facsimile"), label = NULL, value = "", width = NULL, placeholder = i18n()$t("MD_EDITOR_C_FACSIMILE")))),
+            fluidRow(column(6, tags$b(i18n()$t("MD_EDITOR_C_WEBSITE_URL"))), column(6, textInput(ns("contact_websiteurl"), label = NULL, value = "", width = NULL, placeholder = i18n()$t("MD_EDITOR_C_WEBSITE_URL")))),
+            fluidRow(column(6, tags$b(i18n()$t("MD_EDITOR_C_WEBSITE_NAME"))), column(6, textInput(ns("contact_websitename"), label = NULL, value = "", width = NULL, placeholder = i18n()$t("MD_EDITOR_C_WEBSITE_NAME"))))
           )
         ),
         "entity" = bs4Dash::tabsetPanel(
@@ -213,7 +267,6 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
               style = "height:500px;overflow-y:auto;",
               column(12,
                 uiOutput(ns("entity_vocabulary_section"))
-
               )
             ),
             fluidRow(
@@ -227,21 +280,24 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
             value = "entity_contacts",
             title = i18n()$t("MD_EDITOR_E_CONTACTS"),
             fluidRow(
-              column(3,
-                     actionButton(ns("entity_contact_load"), title = i18n()$t("MD_EDITOR_E_CONTACTS_LOAD"), size = "sm", label="", icon=icon("users"))
-              )
-            ),
-            fluidRow(
               column(3, selectInput(ns("entity_contact_type"),
-                                       label = i18n()$t("MD_EDITOR_E_CONTACT"),
+                                       label = i18n()$t("MD_EDITOR_E_TYPE"),
                                        multiple = F,
                                        choices = entity_tpl$getAllowedKeyValuesFor("Creator"),
                                        selected = "id",
                                        selectize = FALSE
               )),
-              column(7,uiOutput(ns("entity_contact_wrapper"))),
+              column(7,
+                     selectInput(ns("entity_contact"),
+                                 label = i18n()$t("MD_EDITOR_E_CONTACT"),
+                                 multiple = F,
+                                 choices = NULL,
+                                 selected = NULL,
+                                 selectize = FALSE
+                     )),
               column(2,
-                     actionButton(ns("entity_contact_button_add"), title = i18n()$t("MD_EDITOR_E_CONTACT_ADD"),size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;"))
+                     actionButton(ns("entity_contact_load"), title = i18n()$t("MD_EDITOR_E_CONTACTS_LOAD"), size = "sm", label = "", icon = icon("users"), style = "margin-top:35px;"),
+                     actionButton(ns("entity_contact_button_add"), title = i18n()$t("MD_EDITOR_E_CONTACT_ADD"),size="sm",label = "",icon = icon("plus") ,class = "btn-success", style = "margin-top:35px;"))
             ),
             DTOutput(ns("entity_contacts_table"))
           ),
@@ -446,7 +502,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
                                           choices = {
                                             geoflow::list_data_accessors()$id
                                           },
-                                          selected = if(!is.null(model)) model$data$access else NA,
+                                          selected = NA,
                                           selectize = FALSE
                     )),
                     column(4, selectInput(ns("entity_data_type"),
@@ -467,7 +523,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
                                           choices = {
                                             geoflow::geoflow_data$new()$getAllowedSourceTypes()
                                           },
-                                          selected = if(!is.null(model)) model$data$sourceType else NA,
+                                          selected = NA,
                                           selectize = FALSE
                     ))
                   ),
@@ -478,7 +534,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
                     column(12, textAreaInput(
                       ns("entity_data_sourcesql"),
                       label = i18n()$t("MD_EDITOR_E_DATA_SOURCESQL"),
-                      value = if(!is.null(model)) model$data$sourceSql else NA,
+                      value = NA,
                       width = NULL,
                       placeholder = i18n()$t("MD_EDITOR_E_DATA_SOURCESQL")
                     ))
@@ -494,13 +550,13 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
                                           choices = {
                                             c("vector","grid")
                                           },
-                                          selected = if(!is.null(model)) model$data$spatialRepresentationType else "vector",
+                                          selected = "vector",
                                           selectize = FALSE
                     )),
                     column(4, textInput(ns("entity_data_featuretype"),
                                           label = i18n()$t("MD_EDITOR_E_DATA_FT"),
                                           width = NULL,
-                                          value = if(!is.null(model)) model$data$featureType else NULL,
+                                          value = NULL,
                                           placeholder = "Feature type"
                     )),
                   )
@@ -514,7 +570,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
                                           choices = {
                                             c(TRUE,FALSE)
                                           },
-                                          selected = if(!is.null(model)) model$data$upload else TRUE,
+                                          selected = TRUE,
                                           selectize = FALSE
                     )),
                     column(4, selectInput(ns("entity_data_uploadtype"),
@@ -523,7 +579,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
                                           choices = {
                                             geoflow::geoflow_data$new()$getAllowedUploadTypes()
                                           },
-                                          selected = if(!is.null(model)) model$data$uploadType else NULL,
+                                          selected = NULL,
                                           selectize = FALSE
                     ))
                   ),
@@ -532,7 +588,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
                     column(6, textInput(
                       ns("entity_data_uploadsource"),
                       label = i18n()$t("MD_EDITOR_E_DATA_UPLOAD_SOURCE"),
-                      value = if(!is.null(model) & !is.null(model$data$uploadSource)) model$data$uploadSource[[1]] else NULL,
+                      value = NULL,
                       width = NULL,
                       placeholder = i18n()$t("MD_EDITOR_E_DATA_UPLOAD_SOURCE")
                     ))
@@ -544,13 +600,13 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
                   fluidRow(
                     column(6,textInput(ns("entity_data_layername"),
                                        label = i18n()$t("MD_EDITOR_NAME"),
-                                       value = if(!is.null(model)) model$data$layername else NULL,
+                                       value = NULL,
                                        width = NULL,
                                        placeholder = i18n()$t("MD_EDITOR_NAME")
                     )),
                     column(6,textInput(ns("entity_data_layeruri"),
                                        label = i18n()$t("MD_EDITOR_URI"),
-                                       value = if(!is.null(model)) model$data$layeruri else NULL,
+                                       value = NULL,
                                        width = NULL,
                                        placeholder = i18n()$t("MD_EDITOR_URI")
                     ))
@@ -558,7 +614,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
                   fluidRow(
                     column(12,textInput(ns("entity_data_layertitle"),
                                         label = i18n()$t("MD_EDITOR_TITLE"),
-                                        value = if(!is.null(model)) model$data$layertitle else NULL,
+                                        value = NULL,
                                         width = NULL,
                                         placeholder = i18n()$t("MD_EDITOR_TITLE")
                     ))
@@ -567,7 +623,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
                     column(12,textAreaInput(
                       ns("entity_data_layerdesc"),
                       label = i18n()$t("MD_EDITOR_DESCRIPTION"),
-                      value = if(!is.null(model)) model$data$layerdesc else NULL,
+                      value = NULL,
                       width = NULL,
                       placeholder = i18n()$t("MD_EDITOR_DESCRIPTION")
                     ))
@@ -577,7 +633,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
                     column(12, textAreaInput(
                       ns("entity_data_sql"),
                       label = i18n()$t("MD_EDITOR_E_DATA_VIEWSQL"),
-                      value = if(!is.null(model)) model$data$sql else NULL,
+                      value = NULL,
                       width = NULL,
                       placeholder = i18n()$t("MD_EDITOR_E_DATA_VIEWSQL")
                     ))
@@ -586,7 +642,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
                     column(6, textInput(
                       ns("entity_data_geometry_field"),
                       label = i18n()$t("MD_EDITOR_E_DATA_GEOMETRY_FIELD"),
-                      value = if(!is.null(model)) model$data$geometryField else NULL,
+                      value = NULL,
                       width = NULL,
                       placeholder = i18n()$t("MD_EDITOR_E_DATA_GEOMETRY_FIELD")
                     )),
@@ -596,7 +652,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
                       choices = {
                         c("Geometry", "GeometryCollection", "Point","MultiPoint","LineString","MultiLineString","Polygon","MultiPolygon")
                       },
-                      selected =  if(!is.null(model)) model$data$geometryType else "Geometry",
+                      selected =  "Geometry",
                       selectize = FALSE
                     ))
                   ),
@@ -641,7 +697,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
           )
         ),
         "featuretype" =  bs4Dash::tabsetPanel(
-          id = ns("dictionary_form"),
+          id = ns("featuretype_form"),
           type = "pills", vertical = T,
           tabPanel(
             value = "dictionary_featuretype",
@@ -651,7 +707,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
                 textInput(
                   inputId = ns("featuretype_identifier"),
                   label = "Identifier",
-                  value = if(!is.null(model)) model$id else NULL,
+                  value = NULL,
                   width = NULL,
                   placeholder = i18n()$t("MD_EDITOR_IDENTIFIER")
                 )
@@ -782,11 +838,82 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
       
     }
     
+    #update_metadata_form
+    update_metadata_form = function(){
+      model = md_model_draft()
+      switch(md_model_type(),
+             "contact" = {
+               updateTextInput(session, inputId = "contact_org", value = model$organizationName)
+               updateTextInput(session, inputId = "contact_firstname", value = model$firstName)
+               updateTextInput(session, inputId = "contact_lastname", value = model$lastName)
+               updateTextInput(session, inputId = "contact_positionname", value = model$positionName)
+               updateTextInput(session, inputId = "contact_postaladdress", value = model$postalAddress)
+               updateTextInput(session, inputId = "contact_postalcode", value = model$postalCode)
+               updateTextInput(session, inputId = "contact_city", value = model$city)
+               updateTextInput(session, inputId = "contact_country", value = model$country)
+               updateTextInput(session, inputId = "contact_email", value = model$email)
+               updateTextInput(session, inputId = "contact_voice", value = model$voice)
+               updateTextInput(session, inputId = "contact_facsimile", value = model$facsimile)
+               updateTextInput(session, inputId = "contact_websiteurl", value = model$websiteUrl)
+               updateTextInput(session, inputId = "contact_websitename", value = model$websiteName)
+             },
+             "entity" = {
+               #re-fill the select input for entity contacts
+               updateSelectInput(session, inputId = "entity_contact", choices = get_contact_names(ref_contacts()))
+               #re-fill SpatialCoverage WKT
+               shinyWidgets::updateTextInputIcon(session, inputId = "entity_wkt", value = md_model_bbox())
+               #re-fill map widget (TODO --> doesn't work)
+               bbox_polygon <- try(sf::st_as_sfc(md_model_bbox(), crs = input$entity_srid), silent = TRUE) # Convert WKT to sfc object
+               print(bbox_polygon)
+               if(!is(bbox_polygon, "try-error")){
+                 print(sf::st_is_valid(bbox_polygon))
+                 if(sf::st_is_valid(bbox_polygon)){
+                   bbox_coords <- sf::st_bbox(bbox_polygon) # Get bounding box (xmin, ymin, xmax, ymax)
+                   # Draw bounding box on the map
+                   leafletProxy("entity_map") %>%
+                     clearShapes() %>% # Clear previous drawings
+                     addRectangles(
+                       lng1 = bbox_coords["xmin"], lat1 = bbox_coords["ymin"],
+                       lng2 = bbox_coords["xmax"], lat2 = bbox_coords["ymax"],
+                       color = "blue", fillOpacity = 0.2
+                     ) %>%
+                     setView(
+                       lng = mean(c(bbox_coords["xmin"], bbox_coords["xmax"])),
+                       lat = mean(c(bbox_coords["ymin"], bbox_coords["ymax"])),
+                       zoom = 2
+                     )
+                 }else{
+                   md_model_bbox(md_model_bbox())
+                   WARN(sprintf("Invalid geometry: %s", md_model_bbox()))
+                   leafletProxy("entity_map") %>% clearShapes()
+                 }
+               }else{
+                 md_model_bbox(md_model_bbox())
+                 WARN(sprintf("Invalid geometry: %s", md_model_bbox()))
+                 leafletProxy("entity_map") %>% clearShapes()
+               }
+               
+               #re-fill provenance statement
+               updateTextInput(session, inputId = "entity_prov_statement", value = md_model_draft()$provenance$statement)
+               
+               #re-fill data
+               #TODO
+               updateSelectInput(session, inputId = "entity_data_access", selected = md_model_draft()$data$access)
+             },
+             "featuretype" = {
+               updateTextInput(session, inputId = "featuretype_identifier", value = md_model_draft()$id)
+             }
+      )
+    }
+    
     #check_model
     check_model = function(type, model, validate = TRUE){
       INFO(sprintf("Check %s validity", type))
       req(!is.null(type))
       INFO("Copying view to model")
+      
+      tab_to_restore = isolate({current_tab()})
+      
       switch(type,
              "contact" = {
                contact = model
@@ -804,6 +931,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
                contact$setWebsiteUrl(input$contact_websiteurl)
                contact$setWebsiteName(input$contact_websitename)
                md_model_draft(contact$clone(deep = T))
+               print(contact)
              },
              "entity" = {
                entity = model
@@ -885,6 +1013,19 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
           )
         )
       }
+      
+      #session on Flushed to update the current tab
+      session$onFlushed(function() {
+        if (!is.null(tab_to_restore)) {
+          INFO(sprintf("Selecting %s tab '%s'", type, tab_to_restore))
+          updateTabsetPanel(
+            session,
+            paste0(type,"_form"),
+            selected = tab_to_restore
+          )
+        }
+      }, once = TRUE)
+      
     }
     
     #render_field_elements_table
@@ -1085,39 +1226,35 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
       )
     })
     
-    # registerUpdate = function(){
-    #   req(!is.null(md_model_draft()))
-    #   licenses = cached_licenses()
-    #   session$onFlushed(function() {
-    #     updateSelectizeInput(
-    #       session,
-    #       "entity_right_license",
-    #       choices = licenses,
-    #       selected = if(!is.null(appConfig$module_options$metadata_editor$licenses$default)) appConfig$module_options$metadata_editor$licenses$default else "cc-by-4.0",
-    #       server = TRUE
-    #     )
-    #     
-    #   }, once = TRUE)
-    # }
-    
-    #meta_editor (form)
-    output$meta_editor <- renderUI({
-      print("render meta editor")
+    #meta editor
+    output$meta_editor_form <- renderUI({
+      WARN("Render meta editor form")
       req(!is.null(md_model_type()))
-      handle_metadata_form(type = md_model_type(), model = if(md_model_draft_mode() == "edition") md_model_draft() else NULL)
+      handle_metadata_form(type = md_model_type())
     })
     
-    #meta_editor_footer (action buttons + validation status)
-    output$meta_editor_footer <- renderUI({
-      req(!is.null(md_model_type()))
-      valid = md_model_draft_valid()
-      
+    #meta editor ACTIONS (check/save)
+    output$meta_editor_actions <- renderUI({
       tagList(
-        bs4Dash::actionButton(inputId = ns("check_model"), label = i18n()$t("MD_EDITOR_CHECK")),
-        bs4Dash::actionButton(inputId = ns("save_model"), label = i18n()$t("MD_EDITOR_SAVE"), style= if(is.null(valid) || (is.logical(valid) & !valid)) "display:none;" else {NULL}),br(),
-        uiOutput(ns("meta_editor_validation_status"))
+        uiOutput(ns("check_model_ui")),
+        uiOutput(ns("save_model_ui"))
       )
-      
+    })
+    output$check_model_ui <- renderUI({
+      bs4Dash::actionButton(
+        inputId = ns("check_model"), 
+        label = i18n()$t("MD_EDITOR_CHECK"),
+        style = "float:left;"
+      )
+    })
+    output$save_model_ui <- renderUI({
+      req(isTRUE(md_model_draft_valid()))
+      bs4Dash::actionButton(
+        inputId = ns("save_model"),
+        label = i18n()$t("MD_EDITOR_SAVE"),
+        status = "primary",
+        style = "float:right;"
+      )
     })
     
     #meta_editor_validation_status
@@ -1134,13 +1271,64 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
         )
       }
     })
-
+    
+    #meta_table (geoflow pivot table format rendered as RHandsontable)
+    output$meta_table <- rhandsontable::renderRHandsontable({
+      req(!is.null(md_model_type()))
+      metatbl = NULL
+      if(length(md_model())==0){
+        WARN("No row in metadata table, creating an empty dataframe")
+        metatbl = switch(md_model_type(),
+                         "contact" = geoflow_contact$new()$asDataFrame(),
+                         "entity" = geoflow_entity$new()$asDataFrame(),
+                         "featuretype" = geoflow_featuretype$new()$asDataFrame()
+        )
+      }else{
+        INFO("Convert md_model to dataframe")
+        metatbl = do.call("rbind", lapply(md_model(), function(x){x$asDataFrame()}))
+        INFO("Conversion done!")
+      }
+      print(metatbl)
+      out_tbl <- rhandsontable::rhandsontable(
+        metatbl, 
+        readOnly = TRUE
+      ) %>%
+        hot_context_menu(allowRowEdit = FALSE, allowColEdit = FALSE) %>%
+        hot_cols(
+          fixedColumnsLeft = 1,
+          colWidths = 200,
+          manualColumnResize = TRUE
+        )
+      out_tbl
+    })
+    
+    #validation (model agnostic)
+    output$validation_issues_table <- DT::renderDT(server = FALSE, {
+      DT::datatable(
+        md_model_draft_validation_report(), 
+        escape = FALSE,
+        rownames = FALSE,
+        options = list(
+          dom = 't',
+          ordering=F
+        )
+      )
+    })
+    output$validation_issues_table_wrapper <-renderUI({
+      if(!is.null(md_model_draft_validation_report())){
+        DTOutput(ns("validation_issues_table"))
+      }else{
+        tags$em(i18n()$t("MD_EDITOR_NOVALIDATIONISSUES"))
+      }
+    })
+      
     #metadata editor wrapper
     output$meta_editor_wrapper <- renderUI({
+      
       #triggered on md_model_type / md_model_draft_mode changes
       print("render meta editor WRAPPER") 
       req(!is.null(md_model_type()))
-      
+
       #UI
       shiny::tagList(
         fluidRow(
@@ -1163,12 +1351,18 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
                                           "featuretype" = i18n()$t("MD_EDITOR_D_EDIT")
                                           )," ", md_model_draft_idx())
               ),
-              uiOutput(ns("meta_editor")),
-              uiOutput(ns("meta_editor_footer"))
+              #meta editor FORM - not reloaded through the UI
+              uiOutput(ns("meta_editor_form")),
+              #meta editor ACTIONS
+              uiOutput(ns("meta_editor_actions")),
+              br(), br(),
+              #meta editor VALIDATION STATUS
+              uiOutput(ns("meta_editor_validation_status"))
             ),
             tabPanel(
               value = paste0("tabbox_", md_model_type(), "_form_validator"),
               title = i18n()$t("MD_EDITOR_VALIDATION_REPORT"),
+              #meta editor VALIDATION REPORT
               uiOutput(ns("validation_issues_table_wrapper"))
             )
           ),
@@ -1258,58 +1452,9 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
                      selectize = FALSE
       )
     })
-    
-
-    #meta_table (geoflow pivot table format rendered as RHandsontable)
-    output$meta_table <- rhandsontable::renderRHandsontable({
-      req(!is.null(md_model_type()))
-      metatbl = NULL
-      if(length(md_model())==0){
-        WARN("No row in metadata table, creating an empty dataframe")
-        metatbl = switch(md_model_type(),
-          "contact" = geoflow_contact$new()$asDataFrame(),
-          "entity" = geoflow_entity$new()$asDataFrame(),
-          "featuretype" = geoflow_featuretype$new()$asDataFrame()
-        )
-      }else{
-        INFO("Convert md_model to dataframe")
-        metatbl = do.call("rbind", lapply(md_model(), function(x){x$asDataFrame()}))
-        INFO("Conversion done!")
-      }
-      print(metatbl)
-      out_tbl <- rhandsontable::rhandsontable(
-        metatbl, 
-        readOnly = TRUE
-      ) %>%
-        hot_context_menu(allowRowEdit = FALSE, allowColEdit = FALSE) %>%
-        hot_cols(
-          fixedColumnsLeft = 1,
-          colWidths = 200,
-          manualColumnResize = TRUE
-        )
-      out_tbl
-    })
-    
+  
     #RENDERERS
-    #validation (model agnostic)
-    output$validation_issues_table <- DT::renderDT(server = FALSE, {
-      DT::datatable(
-        md_model_draft_validation_report(), 
-        escape = FALSE,
-        rownames = FALSE,
-        options = list(
-          dom = 't',
-          ordering=F
-        )
-      )
-    })
-    output$validation_issues_table_wrapper <-renderUI({
-      if(!is.null(md_model_draft_validation_report())){
-        DTOutput(ns("validation_issues_table"))
-      }else{
-        tags$em(i18n()$t("MD_EDITOR_NOVALIDATIONISSUES"))
-      }
-    })
+    
     #entity
     #entity -> Identifier
     output$entity_identifiers_table <- DT::renderDT(server = FALSE, {
@@ -1319,7 +1464,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
         btn_remove_id = ns("entity_identifier_button_remove")
       )
     })
-
+  
     #entity -> Title
     output$entity_titles_table <- DT::renderDT(server = FALSE, {
       render_field_elements_table(
@@ -1339,34 +1484,6 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
     })
     
     #entity -> Contact
-    output$entity_contact_wrapper <- renderUI({
-      if(is.null(ref_contacts())){
-        textInput(ns("entity_contact"), i18n()$t("MD_EDITOR_C_ONE"),value = "", width = NULL, placeholder = i18n()$t("MD_EDITOR_C_ONE"))
-      }else{
-        selectInput(ns("entity_contact"),
-                       label = i18n()$t("MD_EDITOR_C_ONE"),
-                       multiple = F,
-                       choices = {
-                         setNames(
-                           sapply(ref_contacts(), function(x){x$identifiers[[1]]}), 
-                           nm = sapply(ref_contacts(), function(x){
-                             if(nzchar(x$firstName) & !is.na(x$firstName) & nzchar(x$lastName) & !is.na(x$lastName)){
-                               paste(x$firstName, x$lastName)
-                             }else{
-                               if(nzchar(x$organizationName)){
-                                 x$organizationName
-                               }else{
-                                 if(length(x$identifiers)>0) x$identifiers[[1]] else "?"
-                               }
-                             }
-                           })
-                         )
-                       },
-                       selected = NULL,
-                       selectize = FALSE
-        )
-      }
-    })
     output$entity_contacts_table <- DT::renderDT(server = FALSE, {
       render_field_elements_table(
         field = "contacts",
@@ -1395,7 +1512,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
       }
       jsTreeR::jstree(hierarchy$children, theme = "proton", checkboxes = T, checkWithText = T, multiple = T, selectLeavesOnly = T)
     })
-    
+
     output$entity_vocabulary_section <- renderUI({
       # This only rerenders when vocabulary selection changes, NOT when meta_editor rerenders
       if(input$entity_vocabulary_server != "custom"){
@@ -1424,14 +1541,14 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
         )
       }
     })
-    
-    
+
+
     output$entity_vocabulary_custom_keyword_table <- DT::renderDT(server = FALSE, {
       req(!is.null(md_model_subject_draft()))
       DT::datatable(
         do.call("rbind", lapply(md_model_subject_draft()$keywords, function(kwd){
           data.frame(keyword = kwd$name, uri = if(!is.null(kwd$uri)) kwd$uri else "")
-        })), 
+        })),
         escape = FALSE,
         rownames = FALSE,
         options = list(
@@ -1441,13 +1558,14 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
       )
     })
     output$entity_vocabulary_custom_keyword_table_wrapper <-renderUI({
+      req(!is.null(md_model_subject_draft()))
       if(input$entity_vocabulary_server == "custom" & length(md_model_subject_draft()$keywords)>0){
         DTOutput(ns("entity_vocabulary_custom_keyword_table"))
-      }else{NULL}  
+      }else{NULL}
     })
     output$entity_subjects_table <- DT::renderDT(server = FALSE, {
       render_field_elements_table(
-        field = "subjects", 
+        field = "subjects",
         field_model = "kvp",
         field_key = "key", field_value = "keywords", field_value_object_field = "name",
         field_value_list = TRUE, field_value_list_strategy = "collapse",
@@ -1473,7 +1591,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
         btn_remove_id = ns("entity_type_button_remove")
       )
     })
-
+  
     #entity -> SpatialCoverage
     output$entity_map <- renderLeaflet({
       leaflet() %>%
@@ -1536,14 +1654,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
           ns("entity_right"),
           label = i18n()$t("MD_EDITOR_E_RIGHT_LICENSE"),
           multiple = F,
-          choices = {
-            licenses = zen4R::get_licenses()
-            licenses = setNames(licenses$id, nm = licenses$title)
-            if(!is.null(appConfig$module_options$metadata_editor$licenses$choices)){
-              licenses = licenses[licenses %in% appConfig$module_options$metadata_editor$licenses$choices]
-            }
-            licenses
-          },
+          choices = licenses,
           selected = if(!is.null(appConfig$module_options$metadata_editor$licenses$default)) appConfig$module_options$metadata_editor$licenses$default else "cc-by-4.0",
           selectize = TRUE
         )
@@ -1703,8 +1814,484 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
       )
     })
     
+    #entity contacts cloud tree
+    loadCloudTree(id = "entity_contacts_load_tree", config = appConfig, auth_api = auth_api(), leaves_only = TRUE, output = output, trigger = contact_tree_trigger)
     
-    #EVENTS
+    #FORM EVENTS
+    
+    #SPECIFIC FORM EVENTS
+    #entity specific form events
+    #----------------------------
+    #events entity -> Identifier
+    observeEvent(input$entity_identifier_button_add,{
+      WARN(sprintf("Add entity identifier '%s'", input$entity_identifier))
+      entity = md_model_draft()
+      entity$setIdentifier(
+        key = input$entity_identifier_type,
+        id = input$entity_identifier
+      )
+      check_model(type = md_model_type(), model = entity)
+    }, ignoreInit = TRUE)
+    observeEvent(input$entity_identifier_button_remove,{
+      WARN("Remove entity identifier")
+      handle_field_element_remove_event(field = "identifiers", input_btn_remove = input$entity_identifier_button_remove)
+    }, ignoreInit = TRUE)
+    
+    #events entity -> Title
+    observeEvent(input$entity_title_button_add,{
+      entity = md_model_draft()
+      entity$setTitle(
+        key = input$entity_title_type,
+        title = input$entity_title
+      )
+      check_model(type = md_model_type(), model = entity)
+    }, ignoreInit = TRUE)
+    observeEvent(input$entity_title_button_remove,{
+      handle_field_element_remove_event(field = "titles", input_btn_remove = input$entity_title_button_remove)
+    }, ignoreInit = TRUE)
+    #events entity -> Description
+    observeEvent(input$entity_description_button_add,{
+      entity = md_model_draft()
+      entity$setDescription(
+        key = input$entity_description_type,
+        description = input$entity_description
+      )
+      check_model(type = md_model_type(), model = entity)
+    }, ignoreInit = TRUE)
+    observeEvent(input$entity_description_button_remove,{
+      handle_field_element_remove_event(field = "descriptions", input_btn_remove = input$entity_description_button_remove)
+    },ignoreInit = TRUE)
+    #events entity -> Creator
+    observeEvent(input$entity_contact_load,{
+      shiny::showModal(
+        shiny::modalDialog(
+          title = i18n()$t("MD_EDITOR_LOAD_CONTACTS"),
+          if(appConfig$auth){
+            tabsetPanel(
+              id = "entity_contact_load_modes",
+              tabPanel(i18n()$t("MD_EDITOR_MODE_CLOUD"),
+                       tagList(
+                         jsTreeR::jstreeOutput(ns("entity_contacts_load_tree")),
+                         actionButton(ns("entity_contacts_load_tree_select"), label = i18n()$t("MD_EDITOR_SELECT"), status = "primary", style = "float:right"),
+                         actionButton(ns("entity_contacts_load_tree_cancel"), label = i18n()$t("MD_EDITOR_CANCEL"), style = "float:right")
+                       )
+              ),
+              tabPanel(i18n()$t("MD_EDITOR_MODE_LOCAL"),
+                       tagList(
+                         fileInput(ns("entity_contacts_local_file"), label = i18n()$t("MD_EDITOR_FILENAME"),multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = i18n()$t("MD_EDITOR_CHOOSEFILE")),
+                         actionButton(ns("entity_contacts_local_file_select"), label = i18n()$t("MD_EDITOR_SELECT"), status = "primary", style = "float:right"),
+                         actionButton(ns("entity_contacts_local_file_cancel"), label = i18n()$t("MD_EDITOR_CANCEL"), style = "float:right")
+                       )
+              )
+            )
+          }else{
+            tabsetPanel(
+              id = "entity_contact_load_modes",
+              tabPanel(i18n()$t("MD_EDITOR_MODE_LOCAL"),
+                       tagList(
+                         fileInput(ns("entity_contacts_local_file"), label = i18n()$t("MD_EDITOR_FILENAME"),multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = i18n()$t("MD_EDITOR_CHOOSEFILE")),
+                         actionButton(ns("entity_contacts_local_file_select"), label = i18n()$t("MD_EDITOR_SELECT"), status = "primary", style = "float:right"),
+                         actionButton(ns("entity_contacts_local_file_cancel"), label = i18n()$t("MD_EDITOR_CANCEL"), style = "float:right")
+                       )
+              )
+            )
+          },
+          easyClose = TRUE, footer = NULL 
+        )
+      )
+    }, ignoreInit = TRUE)
+    observeEvent(input$entity_contacts_local_file_cancel, {
+      shiny::removeModal()
+    }, ignoreInit = TRUE)
+    observeEvent(input$entity_contacts_load_tree_cancel,{
+      shiny::removeModal()
+    }, ignoreInit = TRUE)
+    observeEvent(input$entity_contacts_load_tree_select,{
+      
+      selected_resource = input$entity_contacts_load_tree_selected
+      
+      config = list()
+      config$profile$id = "load_ocs_contacts"
+      config$software$input$ocs = auth_api()
+      config = geoflow::add_config_logger(config)
+      contact_handler = geoflow::geoflow_handler$new(yaml = system.file("metadata/contact", "contact_handler_ocs.yml", package = "geoflow"))
+      contacts = contact_handler$fun(
+        handler = contact_handler,
+        source = selected_resource[[1]]$data,
+        config = config
+      )
+      ref_contacts(contacts)
+      shiny::removeModal()
+      
+    }, ignoreInit = TRUE)
+
+    observeEvent(input$entity_contacts_local_file_select,{
+      
+      req(!is.null(input$entity_contacts_local_file))
+      
+      config = list()
+      config$profile$id = "load_local_contacts"
+      config = geoflow::add_config_logger(config)
+      contact_handler = switch(mime::guess_type(input$entity_contacts_local_file$datapath),
+                               "text/csv" = geoflow::geoflow_handler$new(yaml = system.file("metadata/contact", "contact_handler_csv.yml", package = "geoflow")),
+                               "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" = geoflow::geoflow_handler$new(yaml = system.file("metadata/contact", "contact_handler_excel.yml", package = "geoflow")),
+                               "application/vn.ms-excel" = geoflow::geoflow_handler$new(yaml = system.file("metadata/contact", "contact_handler_excel.yml", package = "geoflow"))
+      )
+      contacts = contact_handler$fun(
+        handler = contact_handler,
+        source = input$entity_contacts_local_file$datapath,
+        config = config
+      )
+      ref_contacts(contacts)
+      shiny::removeModal()
+
+    }, ignoreInit = TRUE)
+    
+    
+    observeEvent(ref_contacts(),{
+      shiny::updateSelectInput(session, inputId = "entity_contact", choices = get_contact_names(ref_contacts()))
+    }, ignoreNULL = TRUE)
+    
+    observeEvent(input$entity_contact_button_add,{
+      WARN("Adding contact")
+      print(input$entity_contact)
+      entity = md_model_draft()
+      contact = geoflow_contact$new()
+      contact$setRole(input$entity_contact_type)
+      contact$setIdentifier("id", input$entity_contact)
+      entity$addContact(contact)
+      check_model(type = md_model_type(), model = entity)
+    }, ignoreInit = TRUE)
+    observeEvent(input$entity_contact_button_remove,{
+      handle_field_element_remove_event(field = "contacts", input_btn_remove = input$entity_contact_button_remove)
+    }, ignoreInit = TRUE)
+    #events entity -> Subject
+    #custom vocab
+    observeEvent(input$custom_vocab_keyword_button_add,{
+      INFO("Add a keyword for custom vocab")
+      if(is.null(md_model_subject_draft())){
+        md_model_subject_draft(geoflow_subject$new())
+      }
+      subj = md_model_subject_draft()
+      subj$setKey(input$entity_subject_type)
+      if(input$custom_vocab_thesaurus_name != "") subj$setName(input$custom_vocab_thesaurus_name)
+      if(input$custom_vocab_thesaurus_uri != "") subj$setUri(input$custom_vocab_thesaurus_uri)
+      subj$addKeyword(
+        keyword = input$custom_vocab_keyword_name,
+        uri = if(!is.null(input$custom_vocab_keyword_uri) & input$custom_vocab_keyword_uri != "") input$custom_vocab_keyword_uri else NULL
+      )
+      md_model_subject_draft(subj$clone(deep = T))
+    }, ignoreInit = TRUE)
+    observeEvent(input$custom_vocab_keyword_button_clear,{
+      INFO("Clear subject model draft")
+      md_model_subject_draft(NULL)
+    }, ignoreInit = TRUE)
+    #existing vocab
+    observeEvent(input$entity_vocabulary_server,{
+      req(input$entity_vocabulary_server != "custom")
+      md_model_subject_draft(NULL)
+      vocabs = geoflow::list_vocabularies(T)
+      vocab = vocabs[sapply(vocabs, function(x){
+        x$id == input$entity_vocabulary_server
+      })][[1]]
+      md_model_subject_selection(vocab)
+    }, ignoreInit = TRUE)
+    observe({
+      req(!is.null(md_model_subject_selection()))
+      kwds = sapply(input$entity_vocabulary_tree_checked, function(x){x$text})
+      kwds = kwds[kwds != ""]
+      if(length(kwds)>0){
+        WARN("NO KEYWORDS!!!!!!!!!!!!!!")
+        if(is.null(md_model_subject_draft())){
+          md_model_subject_draft(geoflow_subject$new())
+        }
+        subj = md_model_subject_draft()
+        subj$setKey(input$entity_subject_type)
+        subj$setName(md_model_subject_selection()$def)
+        subj$setUri(md_model_subject_selection()$id) #we put here the vocabulary Id
+        subj$keywords = lapply(kwds, function(x){geoflow_keyword$new(name = x)})
+        md_model_subject_draft(subj)
+      }
+    })
+    observeEvent(input$entity_subject_button_add,{
+      INFO("Add subject to entity")
+      entity = md_model_draft()
+      subj = md_model_subject_draft()
+      if(!is.null(subj)){
+        same_subject = sapply(entity$subjects, function(x){
+          pred = x$key == subj$key
+          if(!is.null(x$name) & !is.null(subj$name)) pred = pred & x$name == subj$name
+          pred
+        })
+        if(any(same_subject)){
+          entity$subjects[[which(same_subject)]] <- subj
+        }else{
+          entity$addSubject(subj)
+        }
+        md_model_draft(entity$clone(deep = T))
+        md_model_subject_draft(NULL)
+      }
+    }, ignoreInit = TRUE)
+    observeEvent(input$entity_subject_button_remove,{
+      md_model_subject_draft(NULL)
+      md_model_subject_selection(NULL)
+      handle_field_element_remove_event(field = "subjects", input_btn_remove = input$entity_subject_button_remove)
+    }, ignoreInit = TRUE)
+    #events entity -> Date
+    observeEvent(input$entity_date_button_add,{
+      entity = md_model_draft()
+      entity$addDate(
+        dateType = input$entity_date_type,
+        date = input$entity_date
+      )
+      check_model(type = md_model_type(), model = entity)
+    }, ignoreInit = TRUE)
+    observeEvent(input$entity_date_button_remove,{
+      handle_field_element_remove_event(field = "dates", input_btn_remove = input$entity_date_button_remove)  
+    }, ignoreInit = TRUE)
+    #events entity -> Type
+    observeEvent(input$entity_type_button_add,{
+      entity = md_model_draft()
+      entity$setType(
+        key = input$entity_resource_type,
+        type = input$entity_resource
+      )
+      check_model(type = md_model_type(), model = entity)
+    }, ignoreInit = TRUE)
+    observeEvent(input$entity_type_button_remove,{
+      handle_field_element_remove_event(field = "types", input_btn_remove = input$entity_type_button_remove)  
+    }, ignoreInit = TRUE)
+    #events entity -> Language
+    observeEvent(input$entity_language,{
+      entity = md_model_draft()
+      entity$setLanguage(input$entity_language)
+      md_model_draft(entity$clone(deep = T))
+    }, ignoreInit = TRUE)
+    #events entity -> SpatialCoverage
+    observeEvent(input$entity_map_draw_new_feature, {
+      feature <- input$entity_map_draw_new_feature
+      if (feature$geometry$type == "Polygon") {
+        coords <- feature$geometry$coordinates[[1]]
+        bbox_polygon <- sf::st_polygon(list(matrix(unlist(coords), ncol = 2, byrow = TRUE)))
+        bbox_sfc <- sf::st_sfc(bbox_polygon) # Convert to sfc
+        md_model_bbox(sf::st_as_text(bbox_sfc)) # Convert to WKT
+        entity = md_model_draft()
+        entity$setSrid(input$entity_srid)
+        entity$setSpatialBbox(wkt = md_model_bbox())
+        entity$setSpatialExtent(wkt = md_model_bbox())
+      }
+    }, ignoreInit = TRUE)
+    observeEvent(input$entity_wkt,{
+      # Parse WKT and extract bounding box coordinates
+      bbox_polygon <- try(sf::st_as_sfc(input$entity_wkt, crs = input$entity_srid), silent = TRUE) # Convert WKT to sfc object
+      print(bbox_polygon)
+      if(!is(bbox_polygon, "try-error")){
+        print(sf::st_is_valid(bbox_polygon))
+        if(sf::st_is_valid(bbox_polygon)){
+          bbox_coords <- sf::st_bbox(bbox_polygon) # Get bounding box (xmin, ymin, xmax, ymax)
+          md_model_bbox(input$entity_wkt)
+          # Draw bounding box on the map
+          leafletProxy("entity_map") %>%
+            clearShapes() %>% # Clear previous drawings
+            addRectangles(
+              lng1 = bbox_coords["xmin"], lat1 = bbox_coords["ymin"],
+              lng2 = bbox_coords["xmax"], lat2 = bbox_coords["ymax"],
+              color = "blue", fillOpacity = 0.2
+            ) %>%
+            setView(
+              lng = mean(c(bbox_coords["xmin"], bbox_coords["xmax"])),
+              lat = mean(c(bbox_coords["ymin"], bbox_coords["ymax"])),
+              zoom = 2
+            )
+        }else{
+          md_model_bbox(input$entity_wkt)
+          WARN(sprintf("Invalid geometry: %s", input$entity_wkt))
+          leafletProxy("entity_map") %>% clearShapes()
+        }
+      }else{
+        md_model_bbox(input$entity_wkt)
+        WARN(sprintf("Invalid geometry: %s", input$entity_wkt))
+        leafletProxy("entity_map") %>% clearShapes()
+      }
+    }, ignoreInit = TRUE)
+    #events entity -> TemporalCoverage
+    observeEvent(input$entity_temporalcoverage,{
+      time = input$entity_temporalcoverage
+      if(any(!is.na(time))){
+        entity = md_model_draft()
+        if(any(is.na(time))){
+          time = time[!is.na(time)]
+          entity$setTemporalExtent(str = time)
+        }else{
+          entity$setTemporalExtent(str = paste0(time, collapse="/"))
+        }
+        md_model_draft(entity$clone(deep = T))
+      }
+    }, ignoreInit = TRUE)
+    #events entity -> Relation
+    observeEvent(input$entity_relation_button_add,{
+      entity = md_model_draft()
+      rel = geoflow_relation$new()
+      rel$setKey(input$entity_relation_type)
+      rel$setName(input$entity_relation_name)
+      if(input$entity_relation_description != "") rel$setDescription(input$entity_relation_description)
+      rel$setLink(input$entity_relation_link)
+      entity$addRelation(rel)
+      md_model_draft(entity$clone(deep = T))
+    }, ignoreInit = TRUE)
+    observeEvent(input$entity_relation_button_remove,{
+      handle_field_element_remove_event(field = "relations", input_btn_remove = input$entity_relation_button_remove)
+    }, ignoreInit = TRUE)
+    #events entity -> Rights
+    observeEvent(input$entity_right_button_add,{
+      entity = md_model_draft()
+      right = geoflow_right$new()
+      right$setKey(input$entity_right_type)
+      right$setValues(input$entity_right)
+      WARN("Adding license...")
+      entity$addRight(right)
+      md_model_draft(entity$clone(deep = T))
+    }, ignoreInit = TRUE, autoDestroy = TRUE)
+    observeEvent(input$entity_right_button_remove,{
+      handle_field_element_remove_event(field = "rights", input_btn_remove = input$entity_right_button_remove)
+    }, ignoreInit = TRUE)
+    #events entity -> Format
+    observeEvent(input$entity_format_button_add,{
+      entity = md_model_draft()
+      form = geoflow_format$new()
+      form$setKey(input$entity_format_type)
+      form$setName(input$entity_format_name)
+      if(input$entity_format_description != "") form$setDescription(input$entity_format_description)
+      if(input$entity_format_link != "") form$setUri(input$entity_format_link)
+      entity$addFormat(form)
+      md_model_draft(entity$clone(deep = T))
+    }, ignoreInit = TRUE)
+    observeEvent(input$entity_format_button_remove,{
+      handle_field_element_remove_event(field = "formats", input_btn_remove = input$entity_format_button_remove)
+    }, ignoreInit = TRUE)
+    
+    #events entity -> Provenance
+    observeEvent(input$entity_prov_process_button_add,{
+      entity = md_model_draft()
+      prov = geoflow_provenance$new()
+      if(!is.null(entity$provenance)){
+        prov = entity$provenance
+      }
+      prov$setStatement(input$entity_prov_statement)
+      process = geoflow_process$new()
+      process$setRationale(input$entity_prov_process_rationale)
+      process$setDescription(input$entity_prov_process_description)
+      prov$addProcess(process)
+      entity$setProvenance(prov)
+      md_model_draft(entity$clone(deep = T))
+    }, ignoreInit = TRUE)
+    observeEvent(input$entity_prov_process_button_remove,{
+      handle_field_element_remove_event(field = "provenance", object_field = "processes", input_btn_remove = input$entity_prov_process_button_remove)
+    }, ignoreInit = TRUE)
+    #events entity -> Data
+    observeEvent(input$entity_data_source_button_add,{
+      entity = md_model_draft()
+      edata = geoflow_data$new() 
+      if(!is.null(entity$data)){
+        edata = entity$data
+      }
+      source = input$entity_data_source_name
+      if(!is.null(input$entity_data_source_uri)) if(nzchar(input$entity_data_source_uri)){
+        attr(source, "uri") <- input$entity_data_source_uri
+      }
+      if(!is.null(source)) if(nzchar(source)){
+        edata$addSource(source)
+        entity$setData(edata)
+        md_model_draft(entity$clone(deep = T))
+      }
+    }, ignoreInit = TRUE)
+    observeEvent(input$entity_data_source_button_remove,{
+      handle_field_element_remove_event(field = "data", object_field = "source", input_btn_remove = input$entity_data_source_button_remove)
+    }, ignoreInit = TRUE)
+    observeEvent(input$entity_data_parameter_button_add,{
+      entity = md_model_draft()
+      edata = geoflow_data$new() 
+      if(!is.null(entity$data)){
+        edata = entity$data
+      }
+      fieldname = input$entity_data_parameter_fieldname
+      alias = input$entity_data_parameter_alias
+      if(!nzchar(alias)) alias = fieldname
+      regexp = input$entity_data_parameter_regexp
+      defaultValue = input$entity_data_parameter_defaultvalue
+      if(nzchar(fieldname) & nzchar(regexp) & nzchar(defaultValue)){
+        edata$setParameter(alias, fieldname, regexp, defaultValue)
+        entity$setData(edata)
+        md_model_draft(entity$clone(deep = T))
+      }
+    }, ignoreInit = TRUE)
+    observeEvent(input$entity_data_parameter_button_remove,{
+      handle_field_element_remove_event(field = "data", object_field = "parameters", input_btn_remove = input$entity_data_parameter_button_remove)
+    }, ignoreInit = TRUE)
+    #contact specific form events
+    #----------------------------
+    observeEvent(input$contact_identifier_button_add,{
+      contact = md_model_draft()
+      contact$setIdentifier(
+        key = input$contact_identifier_type,
+        id = input$contact_identifier
+      )
+      check_model(type = md_model_type(), model = contact)
+    }, ignoreInit = TRUE)
+    observeEvent(input$contact_identifier_button_remove,{
+      row <- as.numeric(input$contact_identifier_button_remove)
+      contact <- md_model_draft()
+      if (!is.null(contact$identifiers) && length(contact$identifiers) > 0 && !is.na(row) && row >= 1 && row <= length(contact$identifiers)) {
+        contact$identifiers <- contact$identifiers[-row]
+      } else {
+        contact$identifiers <- list()
+      }
+      if(length(contact$identifiers)==0) contact$identifiers = list()
+      check_model(type = md_model_type(), model = contact)
+    }, ignoreInit = TRUE)
+    #dictionary/featuretype specific form events
+    #-------------------------------------------
+    #events featuretype -> member
+    observeEvent(input$featuretype_member_button_add,{
+      ft = md_model_draft()
+      fm = geoflow::geoflow_featuremember$new(
+        type = input$featuremember_type,
+        code = input$featuremember_code,
+        name = input$featuremember_name,
+        def = input$featuremember_definition,
+        defSource = input$featuremember_definitionsource,
+        minOccurs = input$featuremember_minoccurs,
+        maxOccurs = input$featuremember_maxoccurs,
+        uom = input$featuremember_measurementunit,
+        registerId = input$featuremember_registerid,
+        registerScript = input$featuremember_registerscript
+      )
+      ft$addMember(fm)
+      check_model(type = md_model_type(), model = ft)
+    }, ignoreInit = TRUE)
+    observeEvent(input$featuretype_member_button_remove,{
+      handle_field_element_remove_event(field = "members", input_btn_remove = input$featuretype_member_button_remove)  
+    }, ignoreInit = TRUE)
+
+    
+    #CORE EVENTS
+    observeEvent(
+      list(md_model_draft_valid(), md_model_draft_mode()),
+      {
+        if(isTRUE(md_model_draft_valid())){
+          shinyjs::show("save_model_wrapper")
+        }else{
+          shinyjs::hide("save_model_wrapper")
+        }
+      },
+      ignoreInit = TRUE
+    )
+    #TODO main event to update inputs (those needed, some textInputs eg. processes statement, selectInputs, eg. contacts)
+    observeEvent(md_model_draft_mode(),{
+      WARN("Observing change on the model draft mode (creation -> edition, or edition -> creation)")
+      update_metadata_form()
+    }, ignoreInit = TRUE)
+    
     #core - check_metadata
     observeEvent(input$check_model,{
       WARN("Check model")
@@ -1718,7 +2305,6 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
       req(!is.null(md_model_type()))
       if(md_model_type()=="entity"){
         md_model_subject_draft(NULL)
-        md_model_bbox(NULL)
       }
       qa_errors = md_model_draft_validation_report()
       save_model = TRUE
@@ -1748,6 +2334,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
               "featuretype" = if(!is.null(md_model_draft()$id)) md_model_draft()$id else NULL
             )
           })
+
       }
       
     })
@@ -1760,12 +2347,12 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
         }else{
           input$meta_editor_entry_selector %in% c(x$id,"?") 
         }
-        
       })
       selected_entry = md_model()[has_entry][[1]]
       md_model_draft_idx(which(has_entry))
       entry = selected_entry$clone(deep = TRUE)
       md_model_draft(entry)
+      
       if(is(entry, "geoflow_entity")){
         #spatial information
         bbox = entry$spatial_bbox
@@ -1781,12 +2368,9 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
           geom_wkt = sf::st_as_text(geom)
           md_model_bbox(geom_wkt)
         }
-        
-        #data dir
-        if(!is.null(entry$data$dir)){
-          updateSelectInput(inputId = "entity_data_type", selected = "dir")
-        }
       }
+      
+      update_metadata_form()
     })
     
     #entities
@@ -1808,6 +2392,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
       md_model_draft_idx(1L)
     })
     observeEvent(input$load_entity_table, {
+      entity_tree_trigger(entity_tree_trigger() + 1)
       shiny::showModal(
         shiny::modalDialog(
           title = i18n()$t("MD_EDITOR_LOAD_ENTITIES"),
@@ -1845,69 +2430,78 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
           easyClose = FALSE, footer = NULL 
         )
       )
+      
+      observeEvent(input$entities_load_tree_leavesonly_cancel,{
+        shiny::removeModal()
+      }, ignoreInit = TRUE)
+      
+      observeEvent(input$entities_load_tree_leavesonly_select,{
+        selected_resource = input$entities_load_tree_leavesonly_selected
+        
+        config = list()
+        config$profile$id = "load_ocs_entities"
+        config$software$input$ocs = auth_api()
+        config = geoflow::add_config_logger(config)
+        entity_handler = geoflow::geoflow_handler$new(yaml = system.file("metadata/entity", "entity_handler_ocs.yml", package = "geoflow"))
+        entities = entity_handler$fun(
+          handler = entity_handler,
+          source = selected_resource[[1]]$data,
+          config = config
+        )
+        md_model_type("entity")
+        md_model(entities)
+        md_model_draft_mode("edition")
+        updateSelectInput(inputId = "meta_editor_entry_selector", selected = NULL)
+        
+        shiny::removeModal()
+
+      },ignoreInit = TRUE)
+      
+      observeEvent(input$entities_local_file_cancel,{
+        shiny::removeModal()
+      }, ignoreInit = TRUE)
+      
+      observeEvent(input$entities_local_file_select,{
+        req(!is.null(input$entities_local_file))
+        
+        config = list()
+        config$profile$id = "load_local_entities"
+        config = geoflow::add_config_logger(config)
+        entity_handler = switch(mime::guess_type(input$entities_local_file$datapath),
+                                "text/csv" = geoflow::geoflow_handler$new(yaml = system.file("metadata/entity", "entity_handler_csv.yml", package = "geoflow")),
+                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" = geoflow::geoflow_handler$new(yaml = system.file("metadata/entity", "entity_handler_excel.yml", package = "geoflow")),
+                                "application/vn.ms-excel" = geoflow::geoflow_handler$new(yaml = system.file("metadata/entity", "entity_handler_excel.yml", package = "geoflow"))
+        )
+        entities = entity_handler$fun(
+          handler = entity_handler,
+          source = input$entities_local_file$datapath,
+          config = config
+        )
+        md_model_type("entity")
+        md_model(entities)
+        md_model_draft_mode("edition")#triggers twice the render model
+        updateSelectInput(inputId = "meta_editor_entry_selector", selected = NULL)
+        
+        shiny::removeModal()
+      }, ignoreInit = TRUE)
+      
     })
+    loadCloudTree(id = "entities_load_tree", config = appConfig, auth_api = auth_api(), leaves_only = FALSE, output = output, trigger = entity_tree_trigger)
+    loadCloudTree(id = "entities_load_tree_leavesonly", config = appConfig, auth_api = auth_api(), leaves_only = TRUE, output = output, trigger = entity_tree_trigger)
     
-    loadCloudTree(id = "entities_load_tree", config = appConfig, auth_api = auth_api(), leaves_only = FALSE, output = output)
-    loadCloudTree(id = "entities_load_tree_leavesonly", config = appConfig, auth_api = auth_api(), leaves_only = TRUE, output = output)
-    
-    observeEvent(input$entities_local_file_cancel,{
-      shiny::removeModal()
-    })
-    observeEvent(input$entities_load_tree_leavesonly_cancel,{
-      shiny::removeModal()
-    })
-    observeEvent(input$entities_load_tree_leavesonly_select,{
-      selected_resource = input$entities_load_tree_leavesonly_selected
-      
-      config = list()
-      config$profile$id = "load_ocs_entities"
-      config$software$input$ocs = auth_api()
-      config = geoflow::add_config_logger(config)
-      entity_handler = geoflow::geoflow_handler$new(yaml = system.file("metadata/entity", "entity_handler_ocs.yml", package = "geoflow"))
-      entities = entity_handler$fun(
-        handler = entity_handler,
-        source = selected_resource[[1]]$data,
-        config = config
-      )
-      md_model_type("entity")
-      md_model(entities)
-      md_model_draft_mode("edition")#triggers twice the render model
-      updateSelectInput(inputId = "meta_editor_entry_selector", selected = NULL)
-      
-      shiny::removeModal()
-      loadCloudTree(id = "entities_load_tree_leavesonly", config = appConfig, auth_api = auth_api(), leaves_only = TRUE, output = output)
-    })
-    observeEvent(input$entities_local_file_select,{
-      req(!is.null(input$entities_local_file))
-      
-      config = list()
-      config$profile$id = "load_local_entities"
-      config = geoflow::add_config_logger(config)
-      entity_handler = switch(mime::guess_type(input$entities_local_file$datapath),
-                               "text/csv" = geoflow::geoflow_handler$new(yaml = system.file("metadata/entity", "entity_handler_csv.yml", package = "geoflow")),
-                               "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" = geoflow::geoflow_handler$new(yaml = system.file("metadata/entity", "entity_handler_excel.yml", package = "geoflow")),
-                               "application/vn.ms-excel" = geoflow::geoflow_handler$new(yaml = system.file("metadata/entity", "entity_handler_excel.yml", package = "geoflow"))
-      )
-      entities = entity_handler$fun(
-        handler = entity_handler,
-        source = input$entities_local_file$datapath,
-        config = config
-      )
-      md_model_type("entity")
-      md_model(entities)
-      md_model_draft_mode("edition")#triggers twice the render model
-      updateSelectInput(inputId = "meta_editor_entry_selector", selected = NULL)
-      
-      shiny::removeModal()
-      
-    })
+    #create_entity
     observeEvent(input$create_entity, {
-      md_model_draft( eval(parse(text = sprintf("geoflow::geoflow_%s$new()", md_model_type()))) )
+      INFO("Creating a new entity")
+      md_model_type("entity")
+      entity = geoflow::geoflow_entity$new()
+      entity$data = geoflow::geoflow_data$new()
+      md_model_draft(entity)
       md_model_draft_idx(length(md_model())+1)
       md_model_draft_mode("creation")
       md_model_draft_valid(NULL)
       md_model_draft_validation_report(NULL)
     })
+    #entity download CSV
     output$download_entity_table_csv <- downloadHandler(
       filename = function() {
         "new_entities.csv"
@@ -1917,6 +2511,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
         readr::write_csv(metatbl, file)
       }
     )
+    #entity download Excel
     output$download_entity_table_excel <- downloadHandler(
       filename = function() {
         "new_entities.xlsx"
@@ -1926,7 +2521,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
         writexl::write_xlsx(metatbl, file)
       }
     )
-    
+    #entity upload OCS
     output$entities_load_tree_upload_action <- renderUI({
       if(length(input$entities_load_tree_selected)>0){
         actionButton(ns("entities_load_tree_upload"), label = i18n()$t("MD_EDITOR_UPLOAD"), status = "primary", style = "float:right")
@@ -1940,6 +2535,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
       #method only available for Cloud interaction
       cloud_overwriting_danger(FALSE)
       req(appConfig$auth)
+      entity_tree_trigger(entity_tree_trigger() + 1)
       shiny::showModal(
         shiny::modalDialog(
           title = i18n()$t("MD_EDITOR_E_CLOUD_UPLOAD"),
@@ -1953,57 +2549,59 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
           easyClose = FALSE, footer = uiOutput(ns("overwriting_file_danger")) 
         )
       )
-    })
-    observe({
-      if(length(input$entities_load_tree_selected)>0){
-        selected_resource = input$entities_load_tree_selected[[1]]
-        if(selected_resource$type == "file"){
-          shiny::updateTextInput(inputId = "entity_table_filename", value = basename(selected_resource$data))
-          cloud_overwriting_danger(TRUE)
-        }else if(selected_resource$type == "folder"){
-          files = auth_api()$listFiles(relPath = selected_resource$data)
-          if(input$entity_table_filename %in% files$name){
+      
+      observe({
+        if(length(input$entities_load_tree_selected)>0){
+          selected_resource = input$entities_load_tree_selected[[1]]
+          if(selected_resource$type == "file"){
+            shiny::updateTextInput(inputId = "entity_table_filename", value = basename(selected_resource$data))
             cloud_overwriting_danger(TRUE)
-          }else{
-            cloud_overwriting_danger(FALSE)
+          }else if(selected_resource$type == "folder"){
+            files = auth_api()$listFiles(relPath = selected_resource$data)
+            if(input$entity_table_filename %in% files$name){
+              cloud_overwriting_danger(TRUE)
+            }else{
+              cloud_overwriting_danger(FALSE)
+            }
           }
         }
-      }
-    })
-    observeEvent(input$entities_load_tree_cancel,{
-      shiny::removeModal()
-      cloud_overwriting_danger(FALSE)
-    })
-    observeEvent(input$entities_load_tree_upload,{
-      req(length(input$entities_load_tree_selected)>0)
-      selected_resource = input$entities_load_tree_selected[[1]]
-      
-      metatbl = do.call("rbind", lapply(md_model(), function(x){x$asDataFrame()}))
-      switch(mime::guess_type(input$entity_table_filename),
-             "text/csv" = {
-               readr::write_csv(metatbl, file.path(tempdir(), input$entity_table_filename))
-             },
-             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" = {
-               writexl::write_xlsx(metatbl, file.path(tempdir(), input$entity_table_filename))
-             }
-      )
-      uploaded = auth_api()$uploadFile(
-        filename = file.path(tempdir(), input$entity_table_filename),
-        relPath = if(selected_resource$type == "folder"){
-          selected_resource$data
-        }else if(selected_resource$type == "file"){
-          dirname(selected_resource$data)
+      })
+      observeEvent(input$entities_load_tree_cancel,{
+        shiny::removeModal()
+        cloud_overwriting_danger(FALSE)
+      },ignoreInit = TRUE)
+      observeEvent(input$entities_load_tree_upload,{
+        req(length(input$entities_load_tree_selected)>0)
+        selected_resource = input$entities_load_tree_selected[[1]]
+        
+        metatbl = do.call("rbind", lapply(md_model(), function(x){x$asDataFrame()}))
+        switch(mime::guess_type(input$entity_table_filename),
+               "text/csv" = {
+                 readr::write_csv(metatbl, file.path(tempdir(), input$entity_table_filename))
+               },
+               "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" = {
+                 writexl::write_xlsx(metatbl, file.path(tempdir(), input$entity_table_filename))
+               }
+        )
+        uploaded = auth_api()$uploadFile(
+          filename = file.path(tempdir(), input$entity_table_filename),
+          relPath = if(selected_resource$type == "folder"){
+            selected_resource$data
+          }else if(selected_resource$type == "file"){
+            dirname(selected_resource$data)
+          }
+        )
+        if(!is(uploaded, "try-error")){
+          postMessage(msg = i18n()$t("MD_EDITOR_E_CLOUD_UPLOAD_SUCCESS"), type = "success")
+        }else{
+          postMessage(msg = i18n()$t("MD_EDITOR_E_CLOUD_UPLOAD_ERROR"), type = "error")
         }
-      )
-      if(!is(uploaded, "try-error")){
-        postMessage(msg = i18n()$t("MD_EDITOR_E_CLOUD_UPLOAD_SUCCESS"), type = "success")
-      }else{
-        postMessage(msg = i18n()$t("MD_EDITOR_E_CLOUD_UPLOAD_ERROR"), type = "error")
-      }
-      shiny::removeModal()
-      loadCloudTree(id = "entities_load_tree", config = appConfig, auth_api = auth_api(), leaves_only = FALSE, output = output)
-      cloud_overwriting_danger(FALSE)
+        shiny::removeModal()
+        cloud_overwriting_danger(FALSE)
+      },ignoreInit = TRUE)
+      
     })
+    
     
     #contacts
     observeEvent(input$create_contact_table, {
@@ -2023,6 +2621,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
       md_model_draft_idx(1L)
     })
     observeEvent(input$load_contact_table, {
+      contact_tree_trigger(contact_tree_trigger() + 1)
       shiny::showModal(
         shiny::modalDialog(
           title = i18n()$t("MD_EDITOR_LOAD_CONTACTS"),
@@ -2059,69 +2658,73 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
           easyClose = FALSE, footer = NULL 
         )
       )
-    })
-    
-    loadCloudTree(id = "contacts_load_tree", config = appConfig, auth_api = auth_api(), leaves_only = FALSE, output = output)
-    loadCloudTree(id = "contacts_load_tree_leavesonly", config = appConfig, auth_api = auth_api(), leaves_only = TRUE, output = output)
-    
-    observeEvent(input$contacts_local_file_cancel, {
-      shiny::removeModal()
-    })
-    observeEvent(input$contacts_load_tree_leavesonly_cancel,{
-      shiny::removeModal()
-    })
-    observeEvent(input$contacts_load_tree_leavesonly_select,{
-      selected_resource = input$contacts_load_tree_leavesonly_selected
-      
-      config = list()
-      config$profile$id = "load_ocs_contacts"
-      config$software$input$ocs = auth_api()
-      config = geoflow::add_config_logger(config)
-      contact_handler = geoflow::geoflow_handler$new(yaml = system.file("metadata/contact", "contact_handler_ocs.yml", package = "geoflow"))
-      contacts = contact_handler$fun(
-        handler = contact_handler,
-        source = selected_resource[[1]]$data,
-        config = config
-      )
-      md_model_type("contact")
-      md_model(contacts)
-      md_model_draft_mode("edition")#triggers twice the render model
-      updateSelectInput(inputId = "meta_editor_entry_selector", selected = NULL)
 
-      shiny::removeModal()
-      loadCloudTree(id = "contacts_load_tree_leavesonly", config = appConfig, auth_api = auth_api(), leaves_only = TRUE, output = output)
+      observeEvent(input$contacts_load_tree_leavesonly_cancel,{
+        shiny::removeModal()
+      },ignoreInit = TRUE)
+      observeEvent(input$contacts_load_tree_leavesonly_select,{
+        selected_resource = input$contacts_load_tree_leavesonly_selected
+        
+        config = list()
+        config$profile$id = "load_ocs_contacts"
+        config$software$input$ocs = auth_api()
+        config = geoflow::add_config_logger(config)
+        contact_handler = geoflow::geoflow_handler$new(yaml = system.file("metadata/contact", "contact_handler_ocs.yml", package = "geoflow"))
+        contacts = contact_handler$fun(
+          handler = contact_handler,
+          source = selected_resource[[1]]$data,
+          config = config
+        )
+        md_model_type("contact")
+        md_model(contacts)
+        md_model_draft_mode("edition")#triggers twice the render model
+        updateSelectInput(inputId = "meta_editor_entry_selector", selected = NULL)
+        
+        shiny::removeModal()
+        
+      },ignoreInit = TRUE)
+      observeEvent(input$contacts_local_file_cancel, {
+        shiny::removeModal()
+      },ignoreInit = TRUE)
+      observeEvent(input$contacts_local_file_select,{
+        req(!is.null(input$contacts_local_file))
+        
+        config = list()
+        config$profile$id = "load_local_contacts"
+        config = geoflow::add_config_logger(config)
+        contact_handler = switch(mime::guess_type(input$contacts_local_file$datapath),
+                                 "text/csv" = geoflow::geoflow_handler$new(yaml = system.file("metadata/contact", "contact_handler_csv.yml", package = "geoflow")),
+                                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" = geoflow::geoflow_handler$new(yaml = system.file("metadata/contact", "contact_handler_excel.yml", package = "geoflow")),
+                                 "application/vn.ms-excel" = geoflow::geoflow_handler$new(yaml = system.file("metadata/contact", "contact_handler_excel.yml", package = "geoflow"))
+        )
+        contacts = contact_handler$fun(
+          handler = contact_handler,
+          source = input$contacts_local_file$datapath,
+          config = config
+        )
+        md_model_type("contact")
+        md_model(contacts)
+        md_model_draft_mode("edition")#triggers twice the render model
+        updateSelectInput(inputId = "meta_editor_entry_selector", selected = NULL)
+        
+        shiny::removeModal()
+        
+      },ignoreInit = TRUE)
     })
-    observeEvent(input$contacts_local_file_select,{
-      req(!is.null(input$contacts_local_file))
-      
-      config = list()
-      config$profile$id = "load_local_contacts"
-      config = geoflow::add_config_logger(config)
-      contact_handler = switch(mime::guess_type(input$contacts_local_file$datapath),
-                               "text/csv" = geoflow::geoflow_handler$new(yaml = system.file("metadata/contact", "contact_handler_csv.yml", package = "geoflow")),
-                               "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" = geoflow::geoflow_handler$new(yaml = system.file("metadata/contact", "contact_handler_excel.yml", package = "geoflow")),
-                               "application/vn.ms-excel" = geoflow::geoflow_handler$new(yaml = system.file("metadata/contact", "contact_handler_excel.yml", package = "geoflow"))
-      )
-      contacts = contact_handler$fun(
-        handler = contact_handler,
-        source = input$contacts_local_file$datapath,
-        config = config
-      )
-      md_model_type("contact")
-      md_model(contacts)
-      md_model_draft_mode("edition")#triggers twice the render model
-      updateSelectInput(inputId = "meta_editor_entry_selector", selected = NULL)
-      
-      shiny::removeModal()
-      
-    })
+    loadCloudTree(id = "contacts_load_tree", config = appConfig, auth_api = auth_api(), leaves_only = FALSE, output = output, trigger = contact_tree_trigger)
+    loadCloudTree(id = "contacts_load_tree_leavesonly", config = appConfig, auth_api = auth_api(), leaves_only = TRUE, output = output, trigger = contact_tree_trigger)
+    
+    #create contact
     observeEvent(input$create_contact,{
-      md_model_draft( eval(parse(text = sprintf("geoflow::geoflow_%s$new()", md_model_type()))) )
+      md_model_type("contact")
+      contact = geoflow::geoflow_contact$new()
+      md_model_draft(contact)
       md_model_draft_idx(length(md_model())+1)
       md_model_draft_mode("creation")
       md_model_draft_valid(NULL)
       md_model_draft_validation_report(NULL)
     })
+    #contacts download CSV
     output$download_contact_table_csv <- downloadHandler(
       filename = function() {
         "new_contacts.csv"
@@ -2131,6 +2734,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
         readr::write_csv(metatbl, file)
       }
     )
+    #contacts download Excel
     output$download_contact_table_excel <- downloadHandler(
       filename = function() {
         "new_contacts.xlsx"
@@ -2140,6 +2744,8 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
         writexl::write_xlsx(metatbl, file)
       }
     )
+    
+    #contacts upload OCS
     output$contacts_load_tree_upload_action <- renderUI({
       if(length(input$contacts_load_tree_selected)>0){
         actionButton(ns("contacts_load_tree_upload"), label = i18n()$t("MD_EDITOR_UPLOAD"), status = "primary", style = "float:right")
@@ -2153,6 +2759,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
       #method only available for Cloud interaction
       cloud_overwriting_danger(FALSE)
       req(appConfig$auth)
+      contact_tree_trigger(contact_tree_trigger() + 1)
       shiny::showModal(
         shiny::modalDialog(
           title = i18n()$t("MD_EDITOR_C_CLOUD_UPLOAD"),
@@ -2166,59 +2773,59 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
           easyClose = FALSE, footer = uiOutput(ns("overwriting_file_danger")) 
         )
       )
-    })
-    observe({
-      if(length(input$contacts_load_tree_selected)>0){
-        selected_resource = input$contacts_load_tree_selected[[1]]
-        if(selected_resource$type == "file"){
-          shiny::updateTextInput(inputId = "contact_table_filename", value = basename(selected_resource$data))
-          cloud_overwriting_danger(TRUE)
-        }else if(selected_resource$type == "folder"){
-          files = auth_api()$listFiles(relPath = selected_resource$data)
-          if(input$contact_table_filename %in% files$name){
+      
+      observe({
+        if(length(input$contacts_load_tree_selected)>0){
+          selected_resource = input$contacts_load_tree_selected[[1]]
+          if(selected_resource$type == "file"){
+            shiny::updateTextInput(inputId = "contact_table_filename", value = basename(selected_resource$data))
             cloud_overwriting_danger(TRUE)
-          }else{
-            cloud_overwriting_danger(FALSE)
+          }else if(selected_resource$type == "folder"){
+            files = auth_api()$listFiles(relPath = selected_resource$data)
+            if(input$contact_table_filename %in% files$name){
+              cloud_overwriting_danger(TRUE)
+            }else{
+              cloud_overwriting_danger(FALSE)
+            }
           }
         }
-      }
-    })
-    observeEvent(input$contacts_load_tree_cancel,{
-      shiny::removeModal()
-      jsTreeR::jstreeDestroy(session = session, id = ns("contacts_load_tree"))
-      cloud_overwriting_danger(FALSE)
-    })
-    observeEvent(input$contacts_load_tree_upload,{
-      req(length(input$contacts_load_tree_selected)>0)
-      selected_resource = input$contacts_load_tree_selected[[1]]
-      
-      metatbl = do.call("rbind", lapply(md_model(), function(x){x$asDataFrame()}))
-      switch(mime::guess_type(input$contact_table_filename),
-             "text/csv" = {
-               readr::write_csv(metatbl, file.path(tempdir(), input$contact_table_filename))
-             },
-             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" = {
-               writexl::write_xlsx(metatbl, file.path(tempdir(), input$contact_table_filename))
-             }
-      )
-      uploaded = try(auth_api()$uploadFile(
-        filename = file.path(tempdir(), input$contact_table_filename),
-        relPath = if(selected_resource$type == "folder"){
-          selected_resource$data
-        }else if(selected_resource$type == "file"){
-          dirname(selected_resource$data)
+      })
+      observeEvent(input$contacts_load_tree_cancel,{
+        shiny::removeModal()
+        jsTreeR::jstreeDestroy(session = session, id = ns("contacts_load_tree"))
+        cloud_overwriting_danger(FALSE)
+      },ignoreInit = TRUE)
+      observeEvent(input$contacts_load_tree_upload,{
+        req(length(input$contacts_load_tree_selected)>0)
+        selected_resource = input$contacts_load_tree_selected[[1]]
+        
+        metatbl = do.call("rbind", lapply(md_model(), function(x){x$asDataFrame()}))
+        switch(mime::guess_type(input$contact_table_filename),
+               "text/csv" = {
+                 readr::write_csv(metatbl, file.path(tempdir(), input$contact_table_filename))
+               },
+               "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" = {
+                 writexl::write_xlsx(metatbl, file.path(tempdir(), input$contact_table_filename))
+               }
+        )
+        uploaded = try(auth_api()$uploadFile(
+          filename = file.path(tempdir(), input$contact_table_filename),
+          relPath = if(selected_resource$type == "folder"){
+            selected_resource$data
+          }else if(selected_resource$type == "file"){
+            dirname(selected_resource$data)
+          }
+        ))
+        if(!is(uploaded, "try-error")){
+          postMessage(msg = i18n()$t("MD_EDITOR_C_CLOUD_UPLOAD_SUCCESS"), type = "success")
+        }else{
+          postMessage(msg = i18n()$t("MD_EDITOR_C_CLOUD_UPLOAD_ERROR"), type = "error")
         }
-      ))
-      if(!is(uploaded, "try-error")){
-        postMessage(msg = i18n()$t("MD_EDITOR_C_CLOUD_UPLOAD_SUCCESS"), type = "success")
-      }else{
-        postMessage(msg = i18n()$t("MD_EDITOR_C_CLOUD_UPLOAD_ERROR"), type = "error")
-      }
-      shiny::removeModal()
-      loadCloudTree(id = "contacts_load_tree", config = appConfig, auth_api = auth_api(), leaves_only = FALSE, output = output)
-      cloud_overwriting_danger(FALSE)
+        shiny::removeModal()
+        cloud_overwriting_danger(FALSE)
+      },ignoreInit = TRUE)
+      
     })
-    
     
     #dictionary
     observeEvent(input$create_dictionary_table, {
@@ -2229,6 +2836,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
       md_model_draft_idx(1L)
     })
     observeEvent(input$load_dictionary_table, {
+      dictionary_tree_trigger(dictionary_tree_trigger()+1)
       shiny::showModal(
         shiny::modalDialog(
           title = i18n()$t("MD_EDITOR_LOAD_DICTIONARY"),
@@ -2265,68 +2873,72 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
           easyClose = FALSE, footer = NULL 
         )
       )
+      
+      observeEvent(input$featuretypes_load_tree_leavesonly_cancel,{
+        shiny::removeModal()
+      }, ignoreInit = TRUE)
+      observeEvent(input$featuretypes_load_tree_leavesonly_select,{
+        selected_resource = input$featuretypes_load_tree_leavesonly_selected
+        
+        config = list()
+        config$profile$id = "load_ocs_featuretypes"
+        config$software$input$ocs = auth_api()
+        config = geoflow::add_config_logger(config)
+        dictionary_handler = geoflow::geoflow_handler$new(yaml = system.file("metadata/dictionary", "dictionary_handler_ocs.yml", package = "geoflow"))
+        dict = dictionary_handler$fun(
+          handler = dictionary_handler,
+          source = selected_resource[[1]]$data,
+          config = config
+        )
+        md_model_type("featuretype")
+        md_model(dict$featuretypes)
+        md_model_draft_mode("edition")#triggers twice the render model
+        updateSelectInput(inputId = "meta_editor_entry_selector", selected = NULL)
+        
+        shiny::removeModal()
+  
+      }, ignoreInit = TRUE)
+      observeEvent(input$featuretypes_local_file_cancel, {
+        shiny::removeModal()
+      }, ignoreInit = TRUE)
+      observeEvent(input$featuretypes_local_file_select,{
+        req(!is.null(input$featuretypes_local_file))
+        print(input$featuretypes_local_file)
+        
+        config = list()
+        config$profile$id = "load_local_featuretypes"
+        config = geoflow::add_config_logger(config)
+        dictionary_handler = switch(mime::guess_type(input$featuretypes_local_file$datapath),
+                                    "text/csv" = geoflow::geoflow_handler$new(yaml = system.file("metadata/dictionary", "dictionary_handler_csv.yml", package = "geoflow")),
+                                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" = geoflow::geoflow_handler$new(yaml = system.file("metadata/dictionary", "dictionary_handler_excel.yml", package = "geoflow")),
+                                    "application/vn.ms-excel" = geoflow::geoflow_handler$new(yaml = system.file("metadata/dictionary", "dictionary_handler_excel.yml", package = "geoflow"))
+        )
+        dict = dictionary_handler$fun(
+          handler = dictionary_handler,
+          source = input$featuretypes_local_file$datapath,
+          config = config
+        )
+        md_model_type("featuretype")
+        md_model(dict$featuretypes)
+        md_model_draft_mode("edition")#triggers twice the render model
+        updateSelectInput(inputId = "meta_editor_entry_selector", selected = NULL)
+        
+        shiny::removeModal()
+        
+      }, ignoreInit = TRUE)
     })
+    loadCloudTree(id = "featuretypes_load_tree", config = appConfig, auth_api = auth_api(), leaves_only = FALSE, output = output, trigger = dictionary_tree_trigger)
+    loadCloudTree(id = "featuretypes_load_tree_leavesonly", config = appConfig, auth_api = auth_api(), leaves_only = TRUE, output = output, trigger = dictionary_tree_trigger)
     
-    loadCloudTree(id = "featuretypes_load_tree", config = appConfig, auth_api = auth_api(), leaves_only = FALSE, output = output)
-    loadCloudTree(id = "featuretypes_load_tree_leavesonly", config = appConfig, auth_api = auth_api(), leaves_only = TRUE, output = output)
-    
-    observeEvent(input$featuretypes_local_file_cancel, {
-      shiny::removeModal()
-    })
-    observeEvent(input$featuretypes_load_tree_leavesonly_cancel,{
-      shiny::removeModal()
-    })
-    observeEvent(input$featuretypes_load_tree_leavesonly_select,{
-      selected_resource = input$featuretypes_load_tree_leavesonly_selected
-      
-      config = list()
-      config$profile$id = "load_ocs_featuretypes"
-      config$software$input$ocs = auth_api()
-      config = geoflow::add_config_logger(config)
-      dictionary_handler = geoflow::geoflow_handler$new(yaml = system.file("metadata/dictionary", "dictionary_handler_ocs.yml", package = "geoflow"))
-      dict = dictionary_handler$fun(
-        handler = dictionary_handler,
-        source = selected_resource[[1]]$data,
-        config = config
-      )
-      md_model_type("featuretype")
-      md_model(dict$featuretypes)
-      md_model_draft_mode("edition")#triggers twice the render model
-      updateSelectInput(inputId = "meta_editor_entry_selector", selected = NULL)
-      
-      shiny::removeModal()
-      loadCloudTree(id = "featuretypes_load_tree_leavesonly", config = appConfig, auth_api = auth_api(), leaves_only = TRUE, output = output)
-    })
-    observeEvent(input$featuretypes_local_file_select,{
-      req(!is.null(input$featuretypes_local_file))
-      print(input$featuretypes_local_file)
-      
-      config = list()
-      config$profile$id = "load_local_featuretypes"
-      config = geoflow::add_config_logger(config)
-      dictionary_handler = switch(mime::guess_type(input$featuretypes_local_file$datapath),
-                              "text/csv" = geoflow::geoflow_handler$new(yaml = system.file("metadata/dictionary", "dictionary_handler_csv.yml", package = "geoflow")),
-                              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" = geoflow::geoflow_handler$new(yaml = system.file("metadata/dictionary", "dictionary_handler_excel.yml", package = "geoflow")),
-                              "application/vn.ms-excel" = geoflow::geoflow_handler$new(yaml = system.file("metadata/dictionary", "dictionary_handler_excel.yml", package = "geoflow"))
-      )
-      dict = dictionary_handler$fun(
-        handler = dictionary_handler,
-        source = input$featuretypes_local_file$datapath,
-        config = config
-      )
-      md_model_type("featuretype")
-      md_model(dict$featuretypes)
-      md_model_draft_mode("edition")#triggers twice the render model
-      updateSelectInput(inputId = "meta_editor_entry_selector", selected = NULL)
-      
-      shiny::removeModal()
-      
-    })
+    #create dictionary
     observeEvent(input$create_dictionary,{
-      md_model_draft( eval(parse(text = sprintf("geoflow::geoflow_%s$new()", md_model_type()))) )
+      md_model_type("featuretype")
+      ft = geoflow::geoflow_featuretype$new()
+      md_model_draft(ft)
       md_model_draft_idx(length(md_model())+1)
       md_model_draft_mode("creation")
     })
+    #dictionary download CSV
     output$download_featuretype_table_csv <- downloadHandler(
       filename = function() {
         "new_dictionary.csv"
@@ -2336,6 +2948,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
         readr::write_csv(metatbl, file)
       }
     )
+    #dictionary download Excel
     output$download_featuretype_table_excel <- downloadHandler(
       filename = function() {
         "new_dictionary.xlsx"
@@ -2345,6 +2958,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
         writexl::write_xlsx(metatbl, file)
       }
     )
+    #dictionary upload OCS
     output$featuretypes_load_tree_upload_action <- renderUI({
       if(length(input$featuretypes_load_tree_selected)>0){
         actionButton(ns("featuretypes_load_tree_upload"), label = i18n()$t("MD_EDITOR_UPLOAD"), status = "primary", style = "float:right")
@@ -2358,6 +2972,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
       #method only available for Cloud interaction
       cloud_overwriting_danger(FALSE)
       req(appConfig$auth)
+      dictionary_tree_trigger(dictionary_tree_trigger()+1)
       shiny::showModal(
         shiny::modalDialog(
           title = i18n()$t("MD_EDITOR_D_CLOUD_UPLOAD"),
@@ -2366,502 +2981,70 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
             hr(),
             jsTreeR::jstreeOutput(ns("featuretypes_load_tree")),
             uiOutput(ns("featuretypes_load_tree_upload_action")),
-            actionButton(ns("featuretypes_local_file_cancel"), label = i18n()$t("MD_EDITOR_CANCEL")),
             actionButton(ns("featuretypes_load_tree_cancel"), label = i18n()$t("MD_EDITOR_CANCEL"), style = "float:right")
           ),
           easyClose = FALSE, footer = uiOutput(ns("overwriting_file_danger")) 
         )
       )
-    })
-    observe({
-      if(length(input$featuretypes_load_tree_selected)>0){
-        req(length(input$featuretypes_load_tree_selected)>0)
-        selected_resource = input$featuretypes_load_tree_selected[[1]]
-        if(selected_resource$type == "file"){
-          shiny::updateTextInput(inputId = "featuretype_table_filename", value = basename(selected_resource$data))
-          cloud_overwriting_danger(TRUE)
-        }else if(selected_resource$type == "folder"){
-          files = auth_api()$listFiles(relPath = selected_resource$data)
-          if(input$featuretype_table_filename %in% files$name){
+      
+      observe({
+        if(length(input$featuretypes_load_tree_selected)>0){
+          req(length(input$featuretypes_load_tree_selected)>0)
+          selected_resource = input$featuretypes_load_tree_selected[[1]]
+          if(selected_resource$type == "file"){
+            shiny::updateTextInput(inputId = "featuretype_table_filename", value = basename(selected_resource$data))
             cloud_overwriting_danger(TRUE)
-          }else{
-            cloud_overwriting_danger(FALSE)
+          }else if(selected_resource$type == "folder"){
+            files = auth_api()$listFiles(relPath = selected_resource$data)
+            if(input$featuretype_table_filename %in% files$name){
+              cloud_overwriting_danger(TRUE)
+            }else{
+              cloud_overwriting_danger(FALSE)
+            }
           }
         }
-      }
-    })
-    observeEvent(input$featuretypes_local_file_cancel, {
-      shiny::removeModal()
-    })
-    observeEvent(input$featuretypes_load_tree_cancel,{
-      shiny::removeModal()
-      jsTreeR::jstreeDestroy(session = session, id = ns("featuretypes_load_tree"))
-      cloud_overwriting_danger(FALSE)
-    })
-    observeEvent(input$featuretypes_load_tree_upload,{
-      selected_resource = input$featuretypes_load_tree_selected[[1]]
-      
-      metatbl = do.call("rbind", lapply(md_model(), function(x){x$asDataFrame()}))
-      switch(mime::guess_type(input$featuretype_table_filename),
-             "text/csv" = {
-               readr::write_csv(metatbl, file.path(tempdir(), input$featuretype_table_filename))
-             },
-             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" = {
-               writexl::write_xlsx(metatbl, file.path(tempdir(), input$featuretype_table_filename))
-             }
-      )
-      uploaded = auth_api()$uploadFile(
-        filename = file.path(tempdir(), input$featuretype_table_filename),
-        relPath = if(selected_resource$type == "folder"){
-          selected_resource$data
-        }else if(selected_resource$type == "file"){
-          dirname(selected_resource$data)
-        }
-      )
-      if(!is(uploaded, "try-error")){
-        postMessage(msg = i18n()$t("MD_EDITOR_D_CLOUD_UPLOAD_SUCCESS"), type = "success")
-      }else{
-        postMessage(msg = i18n()$t("MD_EDITOR_D_CLOUD_UPLOAD_ERROR"), type = "error")
-      }
-      shiny::removeModal()
-      loadCloudTree(id = "featuretypes_load_tree", config = appConfig, auth_api = auth_api(), leaves_only = FALSE, output = output)
-      cloud_overwriting_danger(FALSE)
-    })
-    
-    #SPECIFIC FORM EVENTS
-    #entity specific form events
-    #----------------------------
-    #events entity -> Identifier
-    observeEvent(input$entity_identifier_button_add,{
-      entity = md_model_draft()
-      entity$setIdentifier(
-        key = input$entity_identifier_type,
-        id = input$entity_identifier
-      )
-      check_model(type = md_model_type(), model = entity)
-    })
-    observeEvent(input$entity_identifier_button_remove,{
-      handle_field_element_remove_event(field = "identifiers", input_btn_remove = input$entity_identifier_button_remove)
-    })
-    #events entity -> Title
-    observeEvent(input$entity_title_button_add,{
-      entity = md_model_draft()
-      entity$setTitle(
-        key = input$entity_title_type,
-        title = input$entity_title
-      )
-      check_model(type = md_model_type(), model = entity)
-    })
-    observeEvent(input$entity_title_button_remove,{
-      handle_field_element_remove_event(field = "titles", input_btn_remove = input$entity_title_button_remove)
-    })
-    #events entity -> Description
-    observeEvent(input$entity_description_button_add,{
-      entity = md_model_draft()
-      entity$setDescription(
-        key = input$entity_description_type,
-        description = input$entity_description
-      )
-      check_model(type = md_model_type(), model = entity)
-    })
-    observeEvent(input$entity_description_button_remove,{
-      handle_field_element_remove_event(field = "descriptions", input_btn_remove = input$entity_description_button_remove)
-    })
-    #events entity -> Creator
-    observeEvent(input$entity_contact_load,{
-      shiny::showModal(
-        shiny::modalDialog(
-          title = i18n()$t("MD_EDITOR_LOAD_CONTACTS"),
-          if(appConfig$auth){
-            tabsetPanel(
-              id = "entity_contact_load_modes",
-              tabPanel(i18n()$t("MD_EDITOR_MODE_CLOUD"),
-                      tagList(
-                        jsTreeR::jstreeOutput(ns("entity_contacts_load_tree")),
-                        actionButton(ns("entity_contacts_load_tree_select"), label = i18n()$t("MD_EDITOR_SELECT"), status = "primary", style = "float:right"),
-                        actionButton(ns("entity_contacts_load_tree_cancel"), label = i18n()$t("MD_EDITOR_CANCEL"), style = "float:right")
-                      )
-              ),
-              tabPanel(i18n()$t("MD_EDITOR_MODE_LOCAL"),
-                       tagList(
-                         fileInput(ns("entity_contacts_local_file"), label = i18n()$t("MD_EDITOR_FILENAME"),multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = i18n()$t("MD_EDITOR_CHOOSEFILE")),
-                         actionButton(ns("entity_contacts_local_file_select"), label = i18n()$t("MD_EDITOR_SELECT"), status = "primary", style = "float:right"),
-                         actionButton(ns("entity_contacts_local_file_cancel"), label = i18n()$t("MD_EDITOR_CANCEL"), style = "float:right")
-                       )
-              )
-            )
-          }else{
-            tabsetPanel(
-              id = "entity_contact_load_modes",
-              tabPanel(i18n()$t("MD_EDITOR_MODE_LOCAL"),
-                      tagList(
-                        fileInput(ns("entity_contacts_local_file"), label = i18n()$t("MD_EDITOR_FILENAME"),multiple = FALSE,accept = c(".xlsx",".xls",".csv"),buttonLabel = i18n()$t("MD_EDITOR_CHOOSEFILE")),
-                        actionButton(ns("entity_contacts_local_file_select"), label = i18n()$t("MD_EDITOR_SELECT"), status = "primary", style = "float:right"),
-                        actionButton(ns("entity_contacts_local_file_cancel"), label = i18n()$t("MD_EDITOR_CANCEL"), style = "float:right")
-                      )
-              )
-            )
-          },
-          easyClose = TRUE, footer = NULL 
-        )
-      )
-    })
-    
-    loadCloudTree(id = "entity_contacts_load_tree", config = appConfig, auth_api = auth_api(), leaves_only = TRUE, output = output)
-   
-    observeEvent(input$entity_contacts_local_file_cancel, {
-      shiny::removeModal()
-    })
-    observeEvent(input$entity_contacts_load_tree_cancel,{
-      shiny::removeModal()
-    })
-    
-    observeEvent(input$entity_contacts_load_tree_select,{
-      selected_resource = input$entity_contacts_load_tree_selected
-      
-      config = list()
-      config$profile$id = "load_ocs_contacts"
-      config$software$input$ocs = auth_api()
-      config = geoflow::add_config_logger(config)
-      contact_handler = geoflow::geoflow_handler$new(yaml = system.file("metadata/contact", "contact_handler_ocs.yml", package = "geoflow"))
-      contacts = contact_handler$fun(
-        handler = contact_handler,
-        source = selected_resource[[1]]$data,
-        config = config
-      )
-      ref_contacts(contacts)
-      shiny::removeModal()
-    })
-    observeEvent(input$entity_contacts_local_file_select,{
-      req(!is.null(input$entity_contacts_local_file))
-      
-      config = list()
-      config$profile$id = "load_local_contacts"
-      config = geoflow::add_config_logger(config)
-      contact_handler = switch(mime::guess_type(input$entity_contacts_local_file$datapath),
-        "text/csv" = geoflow::geoflow_handler$new(yaml = system.file("metadata/contact", "contact_handler_csv.yml", package = "geoflow")),
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" = geoflow::geoflow_handler$new(yaml = system.file("metadata/contact", "contact_handler_excel.yml", package = "geoflow")),
-        "application/vn.ms-excel" = geoflow::geoflow_handler$new(yaml = system.file("metadata/contact", "contact_handler_excel.yml", package = "geoflow"))
-      )
-      contacts = contact_handler$fun(
-        handler = contact_handler,
-        source = input$entity_contacts_local_file$datapath,
-        config = config
-      )
-      ref_contacts(contacts)
-      shiny::removeModal()
-      
-    })
-    observeEvent(input$entity_contact_button_add,{
-      entity = md_model_draft()
-      contact = geoflow_contact$new()
-      contact$setRole(input$entity_contact_type)
-      contact$setIdentifier("id", input$entity_contact)
-      entity$addContact(contact)
-      check_model(type = md_model_type(), model = entity)
-    })
-    observeEvent(input$entity_contact_button_remove,{
-      handle_field_element_remove_event(field = "contacts", input_btn_remove = input$entity_contact_button_remove)
-    })
-    #events entity -> Subject
-    #custom vocab
-    observeEvent(input$custom_vocab_keyword_button_add,{
-      INFO("Add a keyword for custom vocab")
-      if(is.null(md_model_subject_draft())){
-        md_model_subject_draft(geoflow_subject$new())
-      }
-      subj = md_model_subject_draft()
-      subj$setKey(input$entity_subject_type)
-      if(input$custom_vocab_thesaurus_name != "") subj$setName(input$custom_vocab_thesaurus_name)
-      if(input$custom_vocab_thesaurus_uri != "") subj$setUri(input$custom_vocab_thesaurus_uri)
-      subj$addKeyword(
-        keyword = input$custom_vocab_keyword_name,
-        uri = if(!is.null(input$custom_vocab_keyword_uri) & input$custom_vocab_keyword_uri != "") input$custom_vocab_keyword_uri else NULL
-      )
-      md_model_subject_draft(subj$clone(deep = T))
-    })
-    observeEvent(input$custom_vocab_keyword_button_clear,{
-      INFO("Clear subject model draft")
-      md_model_subject_draft(NULL)
-    })
-    #existing vocab
-    observeEvent(input$entity_vocabulary_server,{
-      req(input$entity_vocabulary_server != "custom")
-      md_model_subject_draft(NULL)
-      vocabs = geoflow::list_vocabularies(T) 
-      vocab = vocabs[sapply(vocabs, function(x){
-        x$id == input$entity_vocabulary_server
-      })][[1]]
-      md_model_subject_selection(vocab)
-    })
-    observe({
-      req(!is.null(md_model_subject_selection()))
-      if(is.null(md_model_subject_draft())){
-        md_model_subject_draft(geoflow_subject$new())
-      }
-      subj = md_model_subject_draft()
-      subj$setKey(input$entity_subject_type)
-      subj$setName(md_model_subject_selection()$def)
-      subj$setUri(md_model_subject_selection()$id) #we put here the vocabulary Id
-      kwds = sapply(input$entity_vocabulary_tree_checked, function(x){x$text})
-      kwds = kwds[kwds != ""]
-      subj$keywords = lapply(kwds, function(x){geoflow_keyword$new(name = x)})
-      md_model_subject_draft(subj)
-    })
-    observeEvent(input$entity_subject_button_add,{
-      INFO("Add subject to entity")
-      entity = md_model_draft()
-      subj = md_model_subject_draft()
-      same_subject = sapply(entity$subjects, function(x){
-        pred = x$key == subj$key
-        if(!is.null(x$name) & !is.null(subj$name)) pred = pred & x$name == subj$name
-        pred
       })
-      if(any(same_subject)){
-        entity$subjects[[which(same_subject)]] <- subj
-      }else{
-        entity$addSubject(subj)
-      }
-      md_model_draft(entity$clone(deep = T))
-      md_model_subject_draft(NULL)
-    })
-    observeEvent(input$entity_subject_button_remove,{
-      md_model_subject_draft(NULL)
-      md_model_subject_selection(NULL)
-      handle_field_element_remove_event(field = "subjects", input_btn_remove = input$entity_subject_button_remove)  
-    })
-    #events entity -> Date
-    observeEvent(input$entity_date_button_add,{
-      entity = md_model_draft()
-      entity$addDate(
-        dateType = input$entity_date_type,
-        date = input$entity_date
-      )
-      check_model(type = md_model_type(), model = entity)
-    })
-    observeEvent(input$entity_date_button_remove,{
-      handle_field_element_remove_event(field = "dates", input_btn_remove = input$entity_date_button_remove)  
-    })
-    #events entity -> Type
-    observeEvent(input$entity_type_button_add,{
-      entity = md_model_draft()
-      entity$setType(
-        key = input$entity_resource_type,
-        type = input$entity_resource
-      )
-      check_model(type = md_model_type(), model = entity)
-    })
-    observeEvent(input$entity_type_button_remove,{
-      handle_field_element_remove_event(field = "types", input_btn_remove = input$entity_type_button_remove)  
-    })
-    #events entity -> Language
-    observeEvent(input$entity_language,{
-      entity = md_model_draft()
-      entity$setLanguage(input$entity_language)
-      md_model_draft(entity$clone(deep = T))
-    })
-    #events entity -> SpatialCoverage
-    observeEvent(input$entity_map_draw_new_feature, {
-      feature <- input$entity_map_draw_new_feature
-      if (feature$geometry$type == "Polygon") {
-        coords <- feature$geometry$coordinates[[1]]
-        bbox_polygon <- sf::st_polygon(list(matrix(unlist(coords), ncol = 2, byrow = TRUE)))
-        bbox_sfc <- sf::st_sfc(bbox_polygon) # Convert to sfc
-        md_model_bbox(sf::st_as_text(bbox_sfc)) # Convert to WKT
-        entity = md_model_draft()
-        entity$setSrid(input$entity_srid)
-        entity$setSpatialBbox(wkt = md_model_bbox())
-        entity$setSpatialExtent(wkt = md_model_bbox())
-      }
-    })
-    observeEvent(input$entity_wkt,{
-      # Parse WKT and extract bounding box coordinates
-      bbox_polygon <- try(sf::st_as_sfc(input$entity_wkt, crs = input$entity_srid), silent = TRUE) # Convert WKT to sfc object
-      if(!is(bbox_polygon, "try-error")){
-        if(sf::st_is_valid(bbox_polygon)){
-          bbox_coords <- sf::st_bbox(bbox_polygon) # Get bounding box (xmin, ymin, xmax, ymax)
-          md_model_bbox(input$entity_wkt)
-          # Draw bounding box on the map
-          leafletProxy("entity_map") %>%
-            clearShapes() %>% # Clear previous drawings
-            addRectangles(
-              lng1 = bbox_coords["xmin"], lat1 = bbox_coords["ymin"],
-              lng2 = bbox_coords["xmax"], lat2 = bbox_coords["ymax"],
-              color = "blue", fillOpacity = 0.2
-            ) %>%
-            setView(
-              lng = mean(c(bbox_coords["xmin"], bbox_coords["xmax"])),
-              lat = mean(c(bbox_coords["ymin"], bbox_coords["ymax"])),
-              zoom = 2
-            )
+      observeEvent(input$featuretypes_local_file_cancel, {
+        shiny::removeModal()
+      }, ignoreInit = TRUE)
+      observeEvent(input$featuretypes_load_tree_cancel,{
+        shiny::removeModal()
+        jsTreeR::jstreeDestroy(session = session, id = ns("featuretypes_load_tree"))
+        cloud_overwriting_danger(FALSE)
+      }, ignoreInit = TRUE)
+      observeEvent(input$featuretypes_load_tree_upload,{
+        selected_resource = input$featuretypes_load_tree_selected[[1]]
+        
+        metatbl = do.call("rbind", lapply(md_model(), function(x){x$asDataFrame()}))
+        switch(mime::guess_type(input$featuretype_table_filename),
+               "text/csv" = {
+                 readr::write_csv(metatbl, file.path(tempdir(), input$featuretype_table_filename))
+               },
+               "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" = {
+                 writexl::write_xlsx(metatbl, file.path(tempdir(), input$featuretype_table_filename))
+               }
+        )
+        uploaded = auth_api()$uploadFile(
+          filename = file.path(tempdir(), input$featuretype_table_filename),
+          relPath = if(selected_resource$type == "folder"){
+            selected_resource$data
+          }else if(selected_resource$type == "file"){
+            dirname(selected_resource$data)
+          }
+        )
+        if(!is(uploaded, "try-error")){
+          postMessage(msg = i18n()$t("MD_EDITOR_D_CLOUD_UPLOAD_SUCCESS"), type = "success")
         }else{
-          md_model_bbox(input$entity_wkt)
-          WARN(sprintf("Invalid geometry: %s", input$entity_wkt))
-          leafletProxy("entity_map") %>% clearShapes()
+          postMessage(msg = i18n()$t("MD_EDITOR_D_CLOUD_UPLOAD_ERROR"), type = "error")
         }
-      }else{
-        md_model_bbox(input$entity_wkt)
-        WARN(sprintf("Invalid geometry: %s", input$entity_wkt))
-        leafletProxy("entity_map") %>% clearShapes()
-      }
-    })
-    #events entity -> TemporalCoverage
-    observeEvent(input$entity_temporalcoverage,{
-      time = input$entity_temporalcoverage
-      if(any(!is.na(time))){
-        entity = md_model_draft()
-        if(any(is.na(time))){
-          time = time[!is.na(time)]
-          entity$setTemporalExtent(str = time)
-        }else{
-          entity$setTemporalExtent(str = paste0(time, collapse="/"))
-        }
-        md_model_draft(entity$clone(deep = T))
-      }
-    })
-    #events entity -> Relation
-    observeEvent(input$entity_relation_button_add,{
-      entity = md_model_draft()
-      rel = geoflow_relation$new()
-      rel$setKey(input$entity_relation_type)
-      rel$setName(input$entity_relation_name)
-      if(input$entity_relation_description != "") rel$setDescription(input$entity_relation_description)
-      rel$setLink(input$entity_relation_link)
-      entity$addRelation(rel)
-      md_model_draft(entity$clone(deep = T))
-    })
-    observeEvent(input$entity_relation_button_remove,{
-      handle_field_element_remove_event(field = "relations", input_btn_remove = input$entity_relation_button_remove)
-    })
-    #events entity -> Rights
-    observeEvent(input$entity_right_button_add,{
-      entity = md_model_draft()
-      right = geoflow_right$new()
-      right$setKey(input$entity_right_type)
-      right$setValues(input$entity_right)
-      entity$addRight(right)
-      md_model_draft(entity$clone(deep = T))
-    })
-    observeEvent(input$entity_right_button_remove,{
-      handle_field_element_remove_event(field = "rights", input_btn_remove = input$entity_right_button_remove)
-    })
-    #events entity -> Format
-    observeEvent(input$entity_format_button_add,{
-      entity = md_model_draft()
-      form = geoflow_format$new()
-      form$setKey(input$entity_format_type)
-      form$setName(input$entity_format_name)
-      if(input$entity_format_description != "") form$setDescription(input$entity_format_description)
-      if(input$entity_format_link != "") form$setUri(input$entity_format_link)
-      entity$addFormat(form)
-      md_model_draft(entity$clone(deep = T))
-    })
-    observeEvent(input$entity_format_button_remove,{
-      handle_field_element_remove_event(field = "formats", input_btn_remove = input$entity_format_button_remove)
+        shiny::removeModal()
+        cloud_overwriting_danger(FALSE)
+      }, ignoreInit = TRUE)
+      
     })
     
-    #events entity -> Provenance
-    observeEvent(input$entity_prov_process_button_add,{
-      entity = md_model_draft()
-      prov = geoflow_provenance$new()
-      if(!is.null(entity$provenance)){
-        prov = entity$provenance
-      }
-      prov$setStatement(input$entity_prov_statement)
-      process = geoflow_process$new()
-      process$setRationale(input$entity_prov_process_rationale)
-      process$setDescription(input$entity_prov_process_description)
-      prov$addProcess(process)
-      entity$setProvenance(prov)
-      md_model_draft(entity$clone(deep = T))
-    })
-    observeEvent(input$entity_prov_process_button_remove,{
-      handle_field_element_remove_event(field = "provenance", object_field = "processes", input_btn_remove = input$entity_prov_process_button_remove)
-    })
-    #events entity -> Data
-    observeEvent(input$entity_data_source_button_add,{
-      entity = md_model_draft()
-      edata = geoflow_data$new() 
-      if(!is.null(entity$data)){
-        edata = entity$data
-      }
-      source = input$entity_data_source_name
-      if(!is.null(input$entity_data_source_uri)) if(nzchar(input$entity_data_source_uri)){
-        attr(source, "uri") <- input$entity_data_source_uri
-      }
-      if(!is.null(source)) if(nzchar(source)){
-        edata$addSource(source)
-        entity$setData(edata)
-        md_model_draft(entity$clone(deep = T))
-      }
-    })
-    observeEvent(input$entity_data_source_button_remove,{
-      handle_field_element_remove_event(field = "data", object_field = "source", input_btn_remove = input$entity_data_source_button_remove)
-    })
-    observeEvent(input$entity_data_parameter_button_add,{
-      entity = md_model_draft()
-      edata = geoflow_data$new() 
-      if(!is.null(entity$data)){
-        edata = entity$data
-      }
-      fieldname = input$entity_data_parameter_fieldname
-      alias = input$entity_data_parameter_alias
-      if(!nzchar(alias)) alias = fieldname
-      regexp = input$entity_data_parameter_regexp
-      defaultValue = input$entity_data_parameter_defaultvalue
-      if(nzchar(fieldname) & nzchar(regexp) & nzchar(defaultValue)){
-        edata$setParameter(alias, fieldname, regexp, defaultValue)
-        entity$setData(edata)
-        md_model_draft(entity$clone(deep = T))
-      }
-    })
-    observeEvent(input$entity_data_parameter_button_remove,{
-      handle_field_element_remove_event(field = "data", object_field = "parameters", input_btn_remove = input$entity_data_parameter_button_remove)
-    })
-    #contact specific form events
-    #----------------------------
-    observeEvent(input$contact_identifier_button_add,{
-      contact = md_model_draft()
-      contact$setIdentifier(
-        key = input$contact_identifier_type,
-        id = input$contact_identifier
-      )
-      check_model(type = md_model_type(), model = contact)
-    })
-    observeEvent(input$contact_identifier_button_remove,{
-      row <- as.numeric(input$contact_identifier_button_remove)
-      contact <- md_model_draft()
-      if (!is.null(contact$identifiers) && length(contact$identifiers) > 0 && !is.na(row) && row >= 1 && row <= length(contact$identifiers)) {
-        contact$identifiers <- contact$identifiers[-row]
-      } else {
-        contact$identifiers <- list()
-      }
-      if(length(contact$identifiers)==0) contact$identifiers = list()
-      check_model(type = md_model_type(), model = contact)
-    })
-    #dictionary/featuretype specific form events
-    #-------------------------------------------
-    #events featuretype -> member
-    observeEvent(input$featuretype_member_button_add,{
-      ft = md_model_draft()
-      fm = geoflow::geoflow_featuremember$new(
-        type = input$featuremember_type,
-        code = input$featuremember_code,
-        name = input$featuremember_name,
-        def = input$featuremember_definition,
-        defSource = input$featuremember_definitionsource,
-        minOccurs = input$featuremember_minoccurs,
-        maxOccurs = input$featuremember_maxoccurs,
-        uom = input$featuremember_measurementunit,
-        registerId = input$featuremember_registerid,
-        registerScript = input$featuremember_registerscript
-      )
-      ft$addMember(fm)
-      check_model(type = md_model_type(), model = ft)
-    })
-    observeEvent(input$featuretype_member_button_remove,{
-      handle_field_element_remove_event(field = "members", input_btn_remove = input$featuretype_member_button_remove)  
-    })
+    
+    
     
     #Miscs
     output$overwriting_file_danger <- renderUI({
