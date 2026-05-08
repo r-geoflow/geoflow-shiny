@@ -30,7 +30,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
     md_model_draft_valid <- reactiveVal(NULL)
     md_model_draft_validation_report <- reactiveVal(NULL)
     md_model_subject_selection <- reactiveVal(NULL)
-    md_model_subject_draft <- reactiveVal(NULL)
+    md_model_subject_draft <- reactiveVal(geoflow_subject$new())
     md_model_bbox <- reactiveVal(NULL)
     
     cache_vocabs <- reactiveVal(list())
@@ -209,57 +209,70 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
                                        selected = "theme",
                                        selectize = FALSE
               )),
-              column(6, selectizeInput(ns("entity_vocabulary_server"),
+              column(6, selectInput(ns("entity_vocabulary_server"),
                                        label = i18n()$t("MD_EDITOR_E_VOCABULARY"),
                                        multiple = F,
-                                       choices = NULL,
-                                       options = list(
-                                         options = {
-                                           vocabs = geoflow::list_vocabularies()
-                                           vocabs = data.frame(
-                                             id = c(vocabs$id, "custom"),
-                                             label = c(vocabs$def, i18n()$t("MD_EDITOR_E_VOCABULARY_CUSTOM")),
-                                             connection = c(vocabs$connection, "success")
-                                           )
-                                           if(!is.null(appConfig$module_options$metadata_editor$subjects$choices)){
-                                             vocabs = vocabs[vocabs$id %in% appConfig$module_options$metadata_editor$subjects$choices | vocabs$id == "custom",]
-                                           }
-                                           lapply(seq_len(nrow(vocabs)), function(i) {
-                                             as.list(vocabs[i, ])
-                                           })
-                                         },
-                                         valueField  = "id",
-                                         labelField  = "label",
-                                         searchField = c("id", "label"),
-                                         render = I(paste0("
-                                          {
-                                            item: function(item, escape) {
-                                              if (item.connection == 'success') {
-                                                return '<div class=\"option\">' + escape(item.label) + '</div>';
-                                              } else {
-                                                return '<div class=\"option\">' + escape(item.label) + '</br><span style=\"color:red;\"><em>",i18n()$t("MD_EDITOR_E_SUBJECT_ERROR"),"</em></span></div>';
-                                              }
-                                            },
-                                            option: function(item, escape) {
-                                              console.log(item);
-                                              if (item.connection == 'success') {
-                                                return '<div class=\"option\">' + escape(item.label) + '</div>';
-                                              } else {
-                                                return '<div class=\"option disabled\">' + escape(item.label) + '</br><span style=\"color:red;margin-left:5px;\"><em>",i18n()$t("MD_EDITOR_E_SUBJECT_ERROR"),"</em></span></div>';
-                                              }
-                                            }
-                                          }
-                                        ")),
-                                         onInitialize = I(paste0('function() { 
-                                          this.setValue("',
-                                           if(!is.null(appConfig$module_options$metadata_editor$subjects$default)) appConfig$module_options$metadata_editor$subjects$default else "custom",
-                                          '"); 
-                                          this.$dropdown.on(\'mousedown\', \'.disabled\', function(e) {
-                                            e.preventDefault();
-                                            return false;
-                                          });
-                                          }'))
-                                       )
+                                       choices = {
+                                         vocabs = geoflow::list_vocabularies()
+                                         vocabs = data.frame(
+                                           id = c(vocabs$id, "custom"),
+                                           label = c(vocabs$def, i18n()$t("MD_EDITOR_E_VOCABULARY_CUSTOM")),
+                                           connection = c(vocabs$connection, "success")
+                                         )
+                                         if(!is.null(appConfig$module_options$metadata_editor$subjects$choices)){
+                                           vocabs = vocabs[vocabs$id %in% appConfig$module_options$metadata_editor$subjects$choices | vocabs$id == "custom",]
+                                         }
+                                         setNames(vocabs$id, nm = vocabs$label)
+                                       },
+                                       selected = if(!is.null(appConfig$module_options$metadata_editor$subjects$default)) appConfig$module_options$metadata_editor$subjects$default else "custom"
+                                       # options = list(
+                                       #   options = {
+                                       #     vocabs = geoflow::list_vocabularies()
+                                       #     vocabs = data.frame(
+                                       #       id = c(vocabs$id, "custom"),
+                                       #       label = c(vocabs$def, i18n()$t("MD_EDITOR_E_VOCABULARY_CUSTOM")),
+                                       #       connection = c(vocabs$connection, "success")
+                                       #     )
+                                       #     if(!is.null(appConfig$module_options$metadata_editor$subjects$choices)){
+                                       #       vocabs = vocabs[vocabs$id %in% appConfig$module_options$metadata_editor$subjects$choices | vocabs$id == "custom",]
+                                       #     }
+                                       #     lapply(seq_len(nrow(vocabs)), function(i) {
+                                       #       as.list(vocabs[i, ])
+                                       #     })
+                                       #   },
+                                       #   valueField  = "id",
+                                       #   labelField  = "label",
+                                       #   searchField = c("id", "label"),
+                                       #   render = I(paste0("
+                                       #    {
+                                       #      item: function(item, escape) {
+                                       #        if (item.connection == 'success') {
+                                       #          return '<div class=\"option\">' + escape(item.label) + '</div>';
+                                       #        } else {
+                                       #          return '<div class=\"option\">' + escape(item.label) + '</br><span style=\"color:red;\"><em>",i18n()$t("MD_EDITOR_E_SUBJECT_ERROR"),"</em></span></div>';
+                                       #        }
+                                       #      },
+                                       #      option: function(item, escape) {
+                                       #        console.log(item);
+                                       #        if (item.connection == 'success') {
+                                       #          return '<div class=\"option\">' + escape(item.label) + '</div>';
+                                       #        } else {
+                                       #          return '<div class=\"option disabled\">' + escape(item.label) + '</br><span style=\"color:red;margin-left:5px;\"><em>",i18n()$t("MD_EDITOR_E_SUBJECT_ERROR"),"</em></span></div>';
+                                       #        }
+                                       #      }
+                                       #    }
+                                       #  ")),
+                                       #   #if(!is.null(appConfig$module_options$metadata_editor$subjects$default)) appConfig$module_options$metadata_editor$subjects$default else "custom",
+                                       #   onInitialize = I(paste0('function() { 
+                                       #    this.setValue("',
+                                       #      "custom",
+                                       #    '"); 
+                                       #    this.$dropdown.on(\'mousedown\', \'.disabled\', function(e) {
+                                       #      e.preventDefault();
+                                       #      return false;
+                                       #    });
+                                       #    }'))
+                                       # )
                                        
               ))
             ),
@@ -523,7 +536,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
                                           choices = {
                                             geoflow::geoflow_data$new()$getAllowedSourceTypes()
                                           },
-                                          selected = NA,
+                                          selected = "gpkg",
                                           selectize = FALSE
                     ))
                   ),
@@ -556,7 +569,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
                     column(4, textInput(ns("entity_data_featuretype"),
                                           label = i18n()$t("MD_EDITOR_E_DATA_FT"),
                                           width = NULL,
-                                          value = NULL,
+                                          value = "",
                                           placeholder = "Feature type"
                     )),
                   )
@@ -579,7 +592,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
                                           choices = {
                                             geoflow::geoflow_data$new()$getAllowedUploadTypes()
                                           },
-                                          selected = NULL,
+                                          selected = "gpkg",
                                           selectize = FALSE
                     ))
                   ),
@@ -588,7 +601,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
                     column(6, textInput(
                       ns("entity_data_uploadsource"),
                       label = i18n()$t("MD_EDITOR_E_DATA_UPLOAD_SOURCE"),
-                      value = NULL,
+                      value = "",
                       width = NULL,
                       placeholder = i18n()$t("MD_EDITOR_E_DATA_UPLOAD_SOURCE")
                     ))
@@ -596,44 +609,47 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
                 ),
                 bs4Dash::accordionItem(
                   title = tags$span(icon("upload"), icon("globe"), " ", paste0(i18n()$t("MD_EDITOR_E_DATA_UPLOAD_CONFIGURATION"), " - GeoServer")),
-                  h6(i18n()$t("MD_EDITOR_E_DATA_LAYER_IDENTIFICATION")),
-                  fluidRow(
-                    column(6,textInput(ns("entity_data_layername"),
-                                       label = i18n()$t("MD_EDITOR_NAME"),
-                                       value = NULL,
-                                       width = NULL,
-                                       placeholder = i18n()$t("MD_EDITOR_NAME")
-                    )),
-                    column(6,textInput(ns("entity_data_layeruri"),
-                                       label = i18n()$t("MD_EDITOR_URI"),
-                                       value = NULL,
-                                       width = NULL,
-                                       placeholder = i18n()$t("MD_EDITOR_URI")
-                    ))
-                  ),
-                  fluidRow(
-                    column(12,textInput(ns("entity_data_layertitle"),
-                                        label = i18n()$t("MD_EDITOR_TITLE"),
-                                        value = NULL,
-                                        width = NULL,
-                                        placeholder = i18n()$t("MD_EDITOR_TITLE")
-                    ))
-                  ),
-                  fluidRow(
-                    column(12,textAreaInput(
-                      ns("entity_data_layerdesc"),
-                      label = i18n()$t("MD_EDITOR_DESCRIPTION"),
-                      value = NULL,
-                      width = NULL,
-                      placeholder = i18n()$t("MD_EDITOR_DESCRIPTION")
-                    ))
+                  div(
+                    id = ns("entity_data_layer_identification"),
+                    h6(i18n()$t("MD_EDITOR_E_DATA_LAYER_IDENTIFICATION")),
+                    fluidRow(
+                      column(6,textInput(ns("entity_data_layername"),
+                                         label = i18n()$t("MD_EDITOR_NAME"),
+                                         value = "",
+                                         width = NULL,
+                                         placeholder = i18n()$t("MD_EDITOR_NAME")
+                      )),
+                      column(6,textInput(ns("entity_data_layeruri"),
+                                         label = i18n()$t("MD_EDITOR_URI"),
+                                         value = "",
+                                         width = NULL,
+                                         placeholder = i18n()$t("MD_EDITOR_URI")
+                      ))
+                    ),
+                    fluidRow(
+                      column(12,textInput(ns("entity_data_layertitle"),
+                                          label = i18n()$t("MD_EDITOR_TITLE"),
+                                          value = "",
+                                          width = NULL,
+                                          placeholder = i18n()$t("MD_EDITOR_TITLE")
+                      ))
+                    ),
+                    fluidRow(
+                      column(12,textAreaInput(
+                        ns("entity_data_layerdesc"),
+                        label = i18n()$t("MD_EDITOR_DESCRIPTION"),
+                        value = "",
+                        width = NULL,
+                        placeholder = i18n()$t("MD_EDITOR_DESCRIPTION")
+                      ))
+                    )
                   ),
                   h6("SQL View layer settings"),
                   fluidRow(
                     column(12, textAreaInput(
                       ns("entity_data_sql"),
                       label = i18n()$t("MD_EDITOR_E_DATA_VIEWSQL"),
-                      value = NULL,
+                      value = "",
                       width = NULL,
                       placeholder = i18n()$t("MD_EDITOR_E_DATA_VIEWSQL")
                     ))
@@ -642,7 +658,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
                     column(6, textInput(
                       ns("entity_data_geometry_field"),
                       label = i18n()$t("MD_EDITOR_E_DATA_GEOMETRY_FIELD"),
-                      value = NULL,
+                      value = "",
                       width = NULL,
                       placeholder = i18n()$t("MD_EDITOR_E_DATA_GEOMETRY_FIELD")
                     )),
@@ -686,12 +702,12 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
                     )
                   ),
                   uiOutput(ns("entity_data_parameters_table_wrapper"))
-                ),
-                bs4Dash::accordionItem(
-                  title = tags$span(icon("upload"), icon("cloud"), " ", paste0(i18n()$t("MD_EDITOR_E_DATA_UPLOAD_CONFIGURATION")," - Cloud")),
-                  fluidRow(
-                  )
                 )
+                # bs4Dash::accordionItem(
+                #   title = tags$span(icon("upload"), icon("cloud"), " ", paste0(i18n()$t("MD_EDITOR_E_DATA_UPLOAD_CONFIGURATION")," - Cloud")),
+                #   fluidRow(
+                #   )
+                # )
               )
             )
           )
@@ -863,42 +879,62 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
                #re-fill SpatialCoverage WKT
                shinyWidgets::updateTextInputIcon(session, inputId = "entity_wkt", value = md_model_bbox())
                #re-fill map widget (TODO --> doesn't work)
-               bbox_polygon <- try(sf::st_as_sfc(md_model_bbox(), crs = input$entity_srid), silent = TRUE) # Convert WKT to sfc object
-               print(bbox_polygon)
-               if(!is(bbox_polygon, "try-error")){
-                 print(sf::st_is_valid(bbox_polygon))
-                 if(sf::st_is_valid(bbox_polygon)){
-                   bbox_coords <- sf::st_bbox(bbox_polygon) # Get bounding box (xmin, ymin, xmax, ymax)
-                   # Draw bounding box on the map
-                   leafletProxy("entity_map") %>%
-                     clearShapes() %>% # Clear previous drawings
-                     addRectangles(
-                       lng1 = bbox_coords["xmin"], lat1 = bbox_coords["ymin"],
-                       lng2 = bbox_coords["xmax"], lat2 = bbox_coords["ymax"],
-                       color = "blue", fillOpacity = 0.2
-                     ) %>%
-                     setView(
-                       lng = mean(c(bbox_coords["xmin"], bbox_coords["xmax"])),
-                       lat = mean(c(bbox_coords["ymin"], bbox_coords["ymax"])),
-                       zoom = 2
-                     )
-                 }else{
-                   md_model_bbox(md_model_bbox())
-                   WARN(sprintf("Invalid geometry: %s", md_model_bbox()))
-                   leafletProxy("entity_map") %>% clearShapes()
-                 }
-               }else{
-                 md_model_bbox(md_model_bbox())
-                 WARN(sprintf("Invalid geometry: %s", md_model_bbox()))
-                 leafletProxy("entity_map") %>% clearShapes()
-               }
-               
+               # bbox_polygon <- try(sf::st_as_sfc(md_model_bbox(), crs = input$entity_srid), silent = TRUE) # Convert WKT to sfc object
+               # print(bbox_polygon)
+               # if(!is(bbox_polygon, "try-error")){
+               #   print(sf::st_is_valid(bbox_polygon))
+               #   if(sf::st_is_valid(bbox_polygon)){
+               #     bbox_coords <- sf::st_bbox(bbox_polygon) # Get bounding box (xmin, ymin, xmax, ymax)
+               #     # Draw bounding box on the map
+               #     leafletProxy("entity_map") %>%
+               #       clearShapes() %>% # Clear previous drawings
+               #       addRectangles(
+               #         lng1 = bbox_coords["xmin"], lat1 = bbox_coords["ymin"],
+               #         lng2 = bbox_coords["xmax"], lat2 = bbox_coords["ymax"],
+               #         color = "blue", fillOpacity = 0.2
+               #       ) %>%
+               #       setView(
+               #         lng = mean(c(bbox_coords["xmin"], bbox_coords["xmax"])),
+               #         lat = mean(c(bbox_coords["ymin"], bbox_coords["ymax"])),
+               #         zoom = 2
+               #       )
+               #   }else{
+               #     md_model_bbox(md_model_bbox())
+               #     WARN(sprintf("Invalid geometry: %s", md_model_bbox()))
+               #     leafletProxy("entity_map") %>% clearShapes()
+               #   }
+               # }else{
+               #   md_model_bbox(md_model_bbox())
+               #   WARN(sprintf("Invalid geometry: %s", md_model_bbox()))
+               #   leafletProxy("entity_map") %>% clearShapes()
+               # }
+               # 
                #re-fill provenance statement
                updateTextInput(session, inputId = "entity_prov_statement", value = md_model_draft()$provenance$statement)
                
                #re-fill data
-               #TODO
+               #data access & information
                updateSelectInput(session, inputId = "entity_data_access", selected = md_model_draft()$data$access)
+               if(!is.null(md_model_draft()$data$dir)){
+                 updateSelectInput(session, inputId = "entity_data_type", selected = "dir")
+                 updateTextInput(session, inputId = "entity_data_dir", value = md_model_draft()$data$dir)
+               }else{
+                 updateSelectInput(session, inputId = "entity_data_type", selected = "source")
+               }
+               updateSelectInput(session, inputId = "entity_data_sourcetype", selected = md_model_draft()$data$sourceType)
+               updateTextAreaInput(session, inputId = "entity_data_sourcesql", value = md_model_draft()$data$sourceSql)
+               #data characteristics
+               updateSelectInput(session, inputId = "entity_data_spatialrepresentationtype", selected = md_model_draft()$data$spatialRepresentationType)
+               updateTextInput(session, inputId = "entity_data_featuretype", value = md_model_draft()$data$featureType)
+               #data upload
+               updateSelectInput(session, inputId = "entity_data_upload", selected = md_model_draft()$data$upload)
+               updateSelectInput(session, inputId = "entity_data_uploadtype", selected = md_model_draft()$data$uploadType)
+               if(length(md_model_draft()$data$uploadSource)>0) updateTextInput(session, inputId = "entity_data_uploadsource", value = md_model_draft()$data$uploadSource[[1]])
+               #data upload - geoserver
+               updateTextAreaInput(session, inputId = "entity_data_sql", value = md_model_draft()$data$sql)
+               updateTextInput(session, inputId = "entity_data_geometry_field", value = md_model_draft()$data$geometryField)
+               updateSelectInput(session, inputId = "entity_data_geometry_type", selected = md_model_draft()$data$geometryType)
+               
              },
              "featuretype" = {
                updateTextInput(session, inputId = "featuretype_identifier", value = md_model_draft()$id)
@@ -956,6 +992,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
                if(nzchar(input$entity_data_spatialrepresentationtype)) entity$data$setSpatialRepresentationType(input$entity_data_spatialrepresentationtype)
                if(nzchar(input$entity_data_featuretype)) entity$data$setFeatureType(input$entity_data_featuretype)
                #=> data -> upload fields
+               entity$data$setUpload(input$entity_data_upload)
                if(nzchar(input$entity_data_uploadtype)) entity$data$setUploadType(input$entity_data_uploadtype)
                if(nzchar(input$entity_data_uploadsource)) entity$data$setUploadSource(input$entity_data_uploadsource)
                #=> data -> Geoserver fields
@@ -1105,7 +1142,8 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
         )
       }
       names(tbl)[length(names(tbl))] <- i18n()$t("MD_EDITOR_ACTIONS")
-      if(nrow(tbl)>0) DT::datatable(
+      
+      DT::datatable(
         tbl,
         escape = FALSE,
         rownames = FALSE,
@@ -1326,7 +1364,6 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
     output$meta_editor_wrapper <- renderUI({
       
       #triggered on md_model_type / md_model_draft_mode changes
-      print("render meta editor WRAPPER") 
       req(!is.null(md_model_type()))
 
       #UI
@@ -1496,7 +1533,6 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
     
     #entity -> Subject
     output$entity_vocabulary_tree <- jsTreeR::renderJstree({
-      print(sprintf("renderJStree for '%s'", input$entity_vocabulary_server))
       req(input$entity_vocabulary_server != "custom")
       cached_vocabs = cache_vocabs()
       hierarchy = cached_vocabs[[input$entity_vocabulary_server]]
@@ -1514,6 +1550,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
     })
 
     output$entity_vocabulary_section <- renderUI({
+      WARN("Rendering Vocabulary section")
       # This only rerenders when vocabulary selection changes, NOT when meta_editor rerenders
       if(input$entity_vocabulary_server != "custom"){
         vocabs = geoflow::list_vocabularies()
@@ -1745,24 +1782,32 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
     })
     #entity -> Data
     output$entity_data_type_entry <- renderUI({
-      if(input$entity_data_type == "source"){
-        tagList(
-          fluidRow(
-            column(4,textInput(ns("entity_data_source_name"), i18n()$t("MD_EDITOR_E_DATA_SOURCE_NAME"),value = NULL, width = NULL)),
-            column(6,textInput(ns("entity_data_source_uri"), i18n()$t("MD_EDITOR_E_DATA_SOURCE_URL"),value = NULL, width = NULL)),
-            column(1,
-                   actionButton(ns("entity_data_source_button_add"), title=i18n()$t("MD_EDITOR_E_DATA_SOURCE_ADD"),size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;")
-            )
-          ),
-          hr(),
-          uiOutput(ns("entity_data_sources_table_wrapper"))
-        )
-      }else if(input$entity_data_type == "dir"){
-        fluidRow(
-          column(12,textInput(ns("entity_data_dir"), i18n()$t("MD_EDITOR_E_DATA_SOURCE_DIRECTORY"),value = if(!is.null(md_model_draft())) md_model_draft()$data$dir else NULL, width = NULL)),
-        )
-      }
+      tagList(
+        uiOutput(ns("entity_data_type_source_ui")),
+        uiOutput(ns("entity_data_type_dir_ui"))
+      )
     })
+    output$entity_data_type_source_ui <- renderUI({
+      req(input$entity_data_type == "source")
+     tagList(
+        fluidRow(
+          column(4,textInput(ns("entity_data_source_name"), i18n()$t("MD_EDITOR_E_DATA_SOURCE_NAME"),value = NULL, width = NULL)),
+          column(6,textInput(ns("entity_data_source_uri"), i18n()$t("MD_EDITOR_E_DATA_SOURCE_URL"),value = NULL, width = NULL)),
+          column(1,
+                 actionButton(ns("entity_data_source_button_add"), title=i18n()$t("MD_EDITOR_E_DATA_SOURCE_ADD"),size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;")
+          )
+        ),
+        hr(),
+        uiOutput(ns("entity_data_sources_table_wrapper"))
+      )
+    })
+    output$entity_data_type_dir_ui <- renderUI({
+      req(input$entity_data_type == "dir")
+      fluidRow(
+        column(12,textInput(ns("entity_data_dir"), i18n()$t("MD_EDITOR_E_DATA_SOURCE_DIRECTORY"),value = "", width = NULL)),
+      )
+    })
+    
     output$entity_data_sources_table <- DT::renderDT(server = FALSE, {
       render_field_elements_table(
         field = "data",
@@ -1805,7 +1850,6 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
     #dictionary/featuretype
     #featuretype -> members
     output$featuretype_members_table <- DT::renderDT(server = FALSE, {
-      print("testing")
       render_field_elements_table(
         field = "members",
         field_model = "kvp",
@@ -1953,8 +1997,6 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
     }, ignoreNULL = TRUE)
     
     observeEvent(input$entity_contact_button_add,{
-      WARN("Adding contact")
-      print(input$entity_contact)
       entity = md_model_draft()
       contact = geoflow_contact$new()
       contact$setRole(input$entity_contact_type)
@@ -1984,57 +2026,75 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
     }, ignoreInit = TRUE)
     observeEvent(input$custom_vocab_keyword_button_clear,{
       INFO("Clear subject model draft")
-      md_model_subject_draft(NULL)
+      md_model_subject_draft(geoflow_subject$new())
     }, ignoreInit = TRUE)
     #existing vocab
     observeEvent(input$entity_vocabulary_server,{
-      req(input$entity_vocabulary_server != "custom")
-      md_model_subject_draft(NULL)
-      vocabs = geoflow::list_vocabularies(T)
-      vocab = vocabs[sapply(vocabs, function(x){
-        x$id == input$entity_vocabulary_server
-      })][[1]]
-      md_model_subject_selection(vocab)
-    }, ignoreInit = TRUE)
-    observe({
+      req(
+        !is.null(input$entity_vocabulary_server),
+        nzchar(input$entity_vocabulary_server),
+        input$entity_vocabulary_server != "custom"
+      )
+      
+      vocabs <- geoflow::list_vocabularies(TRUE)
+      
+      idx <- which(
+        sapply(vocabs, function(x){
+          identical(x$id, input$entity_vocabulary_server)
+        })
+      )
+      
+      req(length(idx) == 1)
+      
+      md_model_subject_draft(geoflow_subject$new())
+      
+      md_model_subject_selection(vocabs[[idx]])
+      # req(input$entity_vocabulary_server != "custom")
+      # md_model_subject_draft(NULL)
+      # vocabs = geoflow::list_vocabularies(T)
+      # vocab = vocabs[sapply(vocabs, function(x){
+      #   x$id == input$entity_vocabulary_server
+      # })][[1]]
+      # md_model_subject_selection(vocab)
+    },ignoreInit = TRUE)
+    observeEvent(input$entity_vocabulary_tree_checked,{
       req(!is.null(md_model_subject_selection()))
       kwds = sapply(input$entity_vocabulary_tree_checked, function(x){x$text})
       kwds = kwds[kwds != ""]
       if(length(kwds)>0){
-        WARN("NO KEYWORDS!!!!!!!!!!!!!!")
-        if(is.null(md_model_subject_draft())){
-          md_model_subject_draft(geoflow_subject$new())
-        }
         subj = md_model_subject_draft()
         subj$setKey(input$entity_subject_type)
         subj$setName(md_model_subject_selection()$def)
         subj$setUri(md_model_subject_selection()$id) #we put here the vocabulary Id
         subj$keywords = lapply(kwds, function(x){geoflow_keyword$new(name = x)})
-        md_model_subject_draft(subj)
+        md_model_subject_draft(subj$clone(deep = TRUE))
+      }else{
+        md_model_subject_draft(geoflow_subject$new())
       }
-    })
+    }, ignoreNULL = FALSE)
     observeEvent(input$entity_subject_button_add,{
       INFO("Add subject to entity")
       entity = md_model_draft()
       subj = md_model_subject_draft()
       if(!is.null(subj)){
-        same_subject = sapply(entity$subjects, function(x){
-          pred = x$key == subj$key
-          if(!is.null(x$name) & !is.null(subj$name)) pred = pred & x$name == subj$name
-          pred
-        })
-        if(any(same_subject)){
-          entity$subjects[[which(same_subject)]] <- subj
+        if(length(entity$subjects)>0){
+          same_subject = sapply(entity$subjects, function(x){
+            pred = x$key == subj$key
+            if(!is.null(x$name) & !is.null(subj$name)) pred = pred & x$name == subj$name
+            pred
+          })
+          if(any(same_subject)){
+            entity$subjects[[which(same_subject)]] <- subj
+          }else{
+            entity$addSubject(subj)
+          }
         }else{
           entity$addSubject(subj)
         }
         md_model_draft(entity$clone(deep = T))
-        md_model_subject_draft(NULL)
       }
     }, ignoreInit = TRUE)
     observeEvent(input$entity_subject_button_remove,{
-      md_model_subject_draft(NULL)
-      md_model_subject_selection(NULL)
       handle_field_element_remove_event(field = "subjects", input_btn_remove = input$entity_subject_button_remove)
     }, ignoreInit = TRUE)
     #events entity -> Date
@@ -2084,9 +2144,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
     observeEvent(input$entity_wkt,{
       # Parse WKT and extract bounding box coordinates
       bbox_polygon <- try(sf::st_as_sfc(input$entity_wkt, crs = input$entity_srid), silent = TRUE) # Convert WKT to sfc object
-      print(bbox_polygon)
       if(!is(bbox_polygon, "try-error")){
-        print(sf::st_is_valid(bbox_polygon))
         if(sf::st_is_valid(bbox_polygon)){
           bbox_coords <- sf::st_bbox(bbox_polygon) # Get bounding box (xmin, ymin, xmax, ymax)
           md_model_bbox(input$entity_wkt)
@@ -2189,6 +2247,15 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
       handle_field_element_remove_event(field = "provenance", object_field = "processes", input_btn_remove = input$entity_prov_process_button_remove)
     }, ignoreInit = TRUE)
     #events entity -> Data
+    observeEvent(input$entity_data_type,{
+      if(input$entity_data_type == "dir"){
+        shinyjs::hide(id = "entity_data_uploadsource")
+        shinyjs::hide(id = "entity_data_layer_identification")
+      }else{
+        shinyjs::show(id = "entity_data_uploadsource")
+        shinyjs::show(id = "entity_data_layer_identification")
+      }
+    })
     observeEvent(input$entity_data_source_button_add,{
       entity = md_model_draft()
       edata = geoflow_data$new() 
@@ -2299,13 +2366,10 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
     })
     #core - save_metadata
     observeEvent(input$save_model,{
-      WARN("Save model")
-      print(md_model_type())
       INFO(sprintf("Save %s to metadata table", md_model_type()))
       req(!is.null(md_model_type()))
-      if(md_model_type()=="entity"){
-        md_model_subject_draft(NULL)
-      }
+      
+      check_model(type = md_model_type(), model = md_model_draft())
       qa_errors = md_model_draft_validation_report()
       save_model = TRUE
       if(!is.null(qa_errors)) {
@@ -2317,7 +2381,6 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
       if(save_model){
         INFO("Saving model to metadata table")
         meta_elements = md_model()
-        print(length(meta_elements))
         if(md_model_draft_idx()==0){
           meta_elements[[length(meta_elements)+1]] = md_model_draft()
         }else{
@@ -2382,7 +2445,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
       md_model_draft_valid(NULL)
       md_model_draft_validation_report(NULL)
       md_model_subject_selection(NULL)
-      md_model_subject_draft(NULL)
+      md_model_subject_draft(geoflow_subject$new())
       md_model_bbox(NULL)
       md_model_type("entity")
       INFO(sprintf("Select editor for type '%s'", md_model_type()))
@@ -2611,9 +2674,6 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
       md_model_draft_mode("creation")
       md_model_draft_valid(NULL)
       md_model_draft_validation_report(NULL)
-      md_model_subject_selection(NULL)
-      md_model_subject_draft(NULL)
-      md_model_bbox(NULL)
       md_model_type("contact")
       INFO(sprintf("Select editor for type '%s'", md_model_type()))
       contact = geoflow::geoflow_contact$new()
@@ -2903,7 +2963,6 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
       }, ignoreInit = TRUE)
       observeEvent(input$featuretypes_local_file_select,{
         req(!is.null(input$featuretypes_local_file))
-        print(input$featuretypes_local_file)
         
         config = list()
         config$profile$id = "load_local_featuretypes"

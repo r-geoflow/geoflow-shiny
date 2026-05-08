@@ -3,6 +3,9 @@
 options(stringsAsFactors = FALSE)
 options(shiny.reactlog=TRUE) 
 
+options(shiny.fullstacktrace = TRUE)
+options(shiny.error = browser)
+
 #scripts
 #---------------------------------------------------------------------------------------
 source("assets/ui_utils.R")
