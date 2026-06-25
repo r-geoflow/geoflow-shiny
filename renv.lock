@@ -2563,9 +2563,9 @@
     },
     "geoflow": {
       "Package": "geoflow",
-      "Version": "1.2.9004",
+      "Version": "1.3.0",
       "Source": "GitHub",
-      "Date": "2026-05-08",
+      "Date": "2026-06-21",
       "Title": "Orchestrate Geospatial (Meta)Data Management Workflows and Manage FAIR Services",
       "Description": "An engine to facilitate the orchestration and execution of metadata-driven data management workflows, in compliance with 'FAIR'  (Findable, Accessible, Interoperable and Reusable) data management principles. By means of a pivot metadata model, relying on the 'DublinCore' standard (<https://dublincore.org/>),  a unique source of metadata can be used to operate multiple and inter-connected data management actions. Users can also customise their own workflows by creating specific actions  but the library comes with a set of native actions targeting common geographic information and data management, in particular actions oriented to the publication on the web of metadata  and data resources to provide standard discovery and access services. At first, default actions of the library were meant to focus on providing turn-key actions for geospatial (meta)data:  1) by creating manage geospatial (meta)data complying with 'ISO/TC211' (<https://committee.iso.org/home/tc211>) and 'OGC' (<https://www.ogc.org/standards/>) geographic information standards  (eg 19115/19119/19110/19139) and related best practices (eg. 'INSPIRE'); and 2) by facilitating extraction, reading and publishing of standard geospatial (meta)data within widely used software  that compound a Spatial Data Infrastructure ('SDI'), including spatial databases (eg. 'PostGIS'), metadata catalogues (eg. 'GeoNetwork', 'CSW' servers), data servers (eg. 'GeoServer'). The library was  then extended to actions for other domains: 1) biodiversity (meta)data standard management including handling of 'EML' metadata, and their management with 'DataOne' servers, 2) in situ sensors,  remote sensing and model outputs  (meta)data standard management by handling part of 'CF' conventions, 'NetCDF' data format and 'OPeNDAP' access protocol, and their management with 'Thredds' servers,  3) generic / domain agnostic (meta)data standard managers ('DublinCore', 'DataCite'), to facilitate the publication of data within (meta)data repositories such as 'Zenodo' (<https://zenodo.org>)  or DataVerse (<https://dataverse.org/>). The execution of several actions will then allow to cross-reference (meta)data resources in each action performed, offering a way to bind resources  between each other (eg. reference 'Zenodo' 'DOI' in 'GeoNetwork'/'GeoServer' metadata, or vice versa reference 'GeoNetwork'/'GeoServer' links in 'Zenodo' or 'EML' metadata). The use of standardized configuration files ('JSON' or 'YAML' formats) allow fully reproducible workflows to facilitate the work of data and information managers.",
       "Authors@R": "c( person(\"Emmanuel\", \"Blondel\", role = c(\"aut\", \"cre\", \"cph\"), email = \"emmanuel.blondel1@gmail.com\", comment = c(ORCID = \"0000-0002-5870-5762\")), person(\"Julien,\", \"Barde\", role = c(\"aut\"), comment = c(ORCID = \"0000-0002-3519-6141\")), person(\"Wilfried\", \"Heintz\", role = c(\"aut\"), comment = c(ORCID = \"0000-0002-9244-9766\")), person(\"Alexandre\", \"Bennici\", role = c(\"ctb\")), person(\"Sylvain\", \"Poulain\", role = c(\"ctb\")), person(\"Bastien\", \"Grasset\", role = c(\"ctb\")), person(\"Mathias\", \"Rouan\", role = c(\"ctb\")), person(\"Emilie\", \"Lerigoleur\", role = c(\"ctb\")), person(\"Yvan\", \"Le Bras\", role = c(\"ctb\")), person(\"Jeroen\", \"Ooms\", role = c(\"ctb\")) )",
@@ -2641,23 +2641,23 @@
       "RemoteHost": "api.github.com",
       "RemoteRepo": "geoflow",
       "RemoteUsername": "r-geoflow",
-      "RemoteRef": "HEAD",
-      "RemoteSha": "e75125bbc531a313712b0ec4d20fe2e30ddf2526",
+      "RemoteRef": "v1.3.0",
+      "RemoteSha": "0c554230670684e25231aa861f3b29c6df31a0b4",
       "NeedsCompilation": "no",
       "Author": "Emmanuel Blondel [aut, cre, cph] (ORCID: <https://orcid.org/0000-0002-5870-5762>), Julien, Barde [aut] (ORCID: <https://orcid.org/0000-0002-3519-6141>), Wilfried Heintz [aut] (ORCID: <https://orcid.org/0000-0002-9244-9766>), Alexandre Bennici [ctb], Sylvain Poulain [ctb], Bastien Grasset [ctb], Mathias Rouan [ctb], Emilie Lerigoleur [ctb], Yvan Le Bras [ctb], Jeroen Ooms [ctb]"
     },
     "geometa": {
       "Package": "geometa",
-      "Version": "0.9.3",
-      "Source": "Repository",
+      "Version": "0.10.1",
+      "Source": "GitHub",
       "Type": "Package",
       "Title": "Tools for Reading and Writing ISO/OGC Geographic Metadata",
-      "Date": "2025-11-16",
+      "Date": "2026-06-25",
       "Authors@R": "c( person(\"Emmanuel\", \"Blondel\", role = c(\"aut\", \"cre\"), email = \"emmanuel.blondel1@gmail.com\", comment = c(ORCID = \"0000-0002-5870-5762\")), person(\"R Consortium\", role = \"fnd\"))",
       "Maintainer": "Emmanuel Blondel <emmanuel.blondel1@gmail.com>",
       "Description": "Provides facilities to read, write and validate geographic metadata  defined with ISO TC211 / OGC ISO geographic information metadata standards, and  encoded using the ISO 19139 and ISO 19115-3 (XML) standard technical specifications.  This includes ISO 19110 (Feature cataloguing), 19115 (dataset metadata), 19119 (service metadata)  and 19136 (GML). Other interoperable schemas from the OGC are progressively supported  as well, such as the Sensor Web Enablement (SWE) Common Data Model, the OGC GML  Coverage Implementation Schema (GMLCOV), or the OGC GML Referenceable Grid (GMLRGRID).",
       "Depends": [
-        "R (>= 3.3.0)"
+        "R (>= 3.5)"
       ],
       "Imports": [
         "methods",
@@ -2667,7 +2667,8 @@
         "jsonlite",
         "keyring",
         "readr",
-        "crayon"
+        "crayon",
+        "digest"
       ],
       "Suggests": [
         "sf",
@@ -2684,9 +2685,16 @@
       "LazyLoad": "yes",
       "Encoding": "UTF-8",
       "RoxygenNote": "7.3.3",
+      "Roxygen": "list(r6 = TRUE)",
+      "LazyData": "true",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteRepo": "geometa",
+      "RemoteUsername": "eblondel",
+      "RemoteRef": "v0.10.1",
+      "RemoteSha": "a047f630e8b5059f905d60795a5e773c7b5da314",
       "NeedsCompilation": "no",
-      "Author": "Emmanuel Blondel [aut, cre] (ORCID: <https://orcid.org/0000-0002-5870-5762>), R Consortium [fnd]",
-      "Repository": "CRAN"
+      "Author": "Emmanuel Blondel [aut, cre] (ORCID: <https://orcid.org/0000-0002-5870-5762>), R Consortium [fnd]"
     },
     "geonapi": {
       "Package": "geonapi",
