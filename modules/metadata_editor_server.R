@@ -570,7 +570,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
                                           label = i18n()$t("MD_EDITOR_E_DATA_FT"),
                                           width = NULL,
                                           value = "",
-                                          placeholder = "Feature type"
+                                          placeholder = i18n()$t("MD_EDITOR_E_DATA_FT")
                     )),
                   )
                 ),
@@ -717,15 +717,15 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
           type = "pills", vertical = T,
           tabPanel(
             value = "dictionary_featuretype",
-            title = i18n()$t("MD_EDITOR_IDENTIFIER"),
+            title = i18n()$t("MD_EDITOR_D_FEATURETYPE"),
             fluidRow(
               column(12,
                 textInput(
                   inputId = ns("featuretype_identifier"),
-                  label = "Identifier",
+                  label = "",
                   value = NULL,
                   width = NULL,
-                  placeholder = i18n()$t("MD_EDITOR_IDENTIFIER")
+                  placeholder = i18n()$t("MD_EDITOR_D_FEATURETYPE")
                 )
               )
             )
