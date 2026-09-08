@@ -14,6 +14,7 @@ CFG_EDITOR,Configurations
 CFG_EDITOR_SUBTITLE,Créer une configuration
 CFG_EDITOR_CONFIG_CREATE,Créer une configuration
 CFG_EDITOR_CONFIG_LOAD,Charger une configuration
+CFG_EDITOR_CONFIG_LOAD_FROM_TEMPLATE,Charger une configuration à partir d'un modèle
 CFG_EDITOR_CONFIG_LOAD_SUCCESS,Configuration chargée avec succès
 CFG_EDITOR_CONFIG_LOAD_ERROR1,Erreur : fichier invalide
 CFG_EDITOR_CONFIG_LOAD_ERROR2,Erreur : configuration invalide
@@ -30,6 +31,8 @@ CFG_EDITOR_WARNING_ROW,Veuillez sélectionner la ligne que vous souhaitez modifi
 CFG_EDITOR_HANDLER,Gestionnaire
 CFG_EDITOR_SOURCE,Source
 CFG_EDITOR_FORMAT,Format
+CFG_EDITOR_TEMPLATE,Modèle
+CFG_EDITOR_TEMPLATE_EMPTY_LIST,Aucun modèle configuré
 CFG_EDITOR_FILENAME,Nom de fichier
 CFG_EDITOR_SAVE,Enregistrer
 CFG_EDITOR_UPLOAD,Téléverser

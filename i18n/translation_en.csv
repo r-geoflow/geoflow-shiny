@@ -14,6 +14,7 @@ CFG_EDITOR,Configurations
 CFG_EDITOR_SUBTITLE,Create a configuration
 CFG_EDITOR_CONFIG_CREATE,Create configuration
 CFG_EDITOR_CONFIG_LOAD,Load configuration
+CFG_EDITOR_CONFIG_LOAD_FROM_TEMPLATE,Load configuration from template
 CFG_EDITOR_CONFIG_LOAD_SUCCESS,Configuration successfully loaded
 CFG_EDITOR_CONFIG_LOAD_ERROR1,Error: invalid file
 CFG_EDITOR_CONFIG_LOAD_ERROR2,Error: invalid configuration
@@ -30,6 +31,8 @@ CFG_EDITOR_WARNING_ROW,Please select the row that you want to edit!
 CFG_EDITOR_HANDLER,Handler
 CFG_EDITOR_SOURCE,Source
 CFG_EDITOR_FORMAT,Format
+CFG_EDITOR_TEMPLATE,Template
+CFG_EDITOR_TEMPLATE_EMPTY_LIST,No template configured
 CFG_EDITOR_FILENAME,Filename
 CFG_EDITOR_SAVE,Save
 CFG_EDITOR_UPLOAD,Upload

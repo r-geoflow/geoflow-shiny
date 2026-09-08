@@ -157,6 +157,7 @@ config_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, geo
         footer = shiny::tagList(
           bs4Dash::actionButton(inputId = ns("create_config"), label = i18n()$t("CFG_EDITOR_CONFIG_CREATE")),
           bs4Dash::actionButton(inputId = ns("load_config"), label = i18n()$t("CFG_EDITOR_CONFIG_LOAD")),
+          bs4Dash::actionButton(inputId = ns("load_config_from_template"), label = i18n()$t("CFG_EDITOR_CONFIG_LOAD_FROM_TEMPLATE")),
           bs4Dash::actionButton(inputId = ns("save_config"), label = i18n()$t("CFG_EDITOR_CONFIG_SAVE"))
         )
       )
@@ -245,6 +246,93 @@ config_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, geo
   observeEvent(input$create_config,{
     tmpfile = tempfile(fileext = ".json")
     ctrl_config_file(tmpfile)
+  })
+  
+  #load config from template button event
+  observeEvent(input$load_config_from_template,{
+    
+    templates = NULL
+    if(length(appConfig$templates$configuration) > 0){
+      df <- data.frame(
+        name = vapply(appConfig$templates$configuration, `[[`, character(1), "name"),
+        file = vapply(appConfig$templates$configuration, `[[`, character(1), "file"),
+        url  = vapply(appConfig$templates$configuration, `[[`, character(1), "url"),
+        stringsAsFactors = FALSE
+      )
+      
+      # We don't need to expose the URL in the table
+      templates <- df[c("name","file")]
+      
+      templates$select <- sprintf(
+        '<button class="btn btn-sm btn-primary select-config-template"
+               data-url="%s">
+         Select
+       </button>',
+        htmltools::htmlEscape(df$url)
+      )
+    }
+    
+    shiny::showModal(
+      shiny::modalDialog(
+        title = i18n()$t("CFG_EDITOR_CONFIG_LOAD_FROM_TEMPLATE"),
+        if(length(appConfig$templates$configuration) == 0){
+          tags$span(i18n()$t("CFG_EDITOR_TEMPLATE_EMPTY_LIST"))
+        }else{
+          DT::DTOutput(ns("config_templates_table"))
+        },
+        footer = actionButton(ns("config_load_from_template_cancel"), label = i18n()$t("CFG_EDITOR_CANCEL"), style = "float:right")
+      )
+    )
+    
+    output$config_templates_table <- DT::renderDT({
+      DT::datatable(
+        templates,
+        escape = FALSE,
+        rownames = FALSE,
+        selection = "none",
+        options = list(
+          dom = "t",
+          pageLength = 10,
+          ordering = FALSE,
+          columnDefs = list(
+            list(className = "text-center", targets = 1)
+          )
+        ),
+        colnames = c(i18n()$t("CFG_EDITOR_TEMPLATE"), i18n()$t("CFG_EDITOR_FILENAME"), "")
+      )
+    })
+    
+  })
+  observeEvent(input$config_template_selected,{
+    req(!is.null(input$config_template_selected))
+    req(input$config_template_selected != "")
+    
+    #read template
+    filepath <- appConfig$templates$configuration[sapply(appConfig$templates$configuration, function(x){x$url == input$config_template_selected})][[1]]$file
+    config <- try(switch(mime::guess_type(filepath),
+                         "application/json" = jsonlite::read_json(input$config_template_selected),
+                         "application/yaml" = yaml::read_yaml(input$config_template_selected)
+    ))
+    if(is(config, "try-error")){
+      postMessage(msg = i18n()$t("CFG_EDITOR_CONFIG_LOAD_ERROR1"), type = "error")
+      return(NULL)
+    }
+    
+    attr(config, "filepath") <- filepath
+    #load configuration UI
+    ctrl_config_file(attr(config, "filepath"))
+    loaded = loadConfigurationUI(config)
+    if(is(loaded, "try-error")){
+      postMessage(msg = i18n()$t("CFG_EDITOR_CONFIG_LOAD_ERROR2"), type = "error")
+      return(NULL)
+    }
+    
+    shiny::removeModal()
+    postMessage(msg = i18n()$t("CFG_EDITOR_CONFIG_LOAD_SUCCESS"), type = "success")
+    shiny::removeModal()
+  })
+  observeEvent(input$config_load_from_template_cancel,{
+    shiny::removeModal()
   })
   
   #load config button event
