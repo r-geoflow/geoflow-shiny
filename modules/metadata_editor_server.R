@@ -1211,8 +1211,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
           icon = icon("users"),
           footer = shiny::tagList(
             bs4Dash::actionButton(inputId = ns("create_contact_table"), label = i18n()$t("MD_EDITOR_TABLE_CREATE")),
-            bs4Dash::actionButton(inputId = ns("load_contact_table"), label = i18n()$t("MD_EDITOR_TABLE_LOAD")),
-            bs4Dash::actionButton(inputId = ns("create_contact"), label = i18n()$t("MD_EDITOR_C_CREATE"))
+            bs4Dash::actionButton(inputId = ns("load_contact_table"), label = i18n()$t("MD_EDITOR_TABLE_LOAD"))
           )
         ),
         bs4Dash::bs4ValueBox(
@@ -1223,8 +1222,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
           icon = icon("table"),
           footer = shiny::tagList(
             bs4Dash::actionButton(inputId = ns("create_entity_table"), label = i18n()$t("MD_EDITOR_TABLE_CREATE")),
-            bs4Dash::actionButton(inputId = ns("load_entity_table"), label = i18n()$t("MD_EDITOR_TABLE_LOAD")),
-            bs4Dash::actionButton(inputId = ns("create_entity"), label = i18n()$t("MD_EDITOR_E_CREATE"))
+            bs4Dash::actionButton(inputId = ns("load_entity_table"), label = i18n()$t("MD_EDITOR_TABLE_LOAD"))
           )
         ),
         bs4Dash::bs4ValueBox(
@@ -1235,8 +1233,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
           icon = icon("table-list"),
           footer = shiny::tagList(
             bs4Dash::actionButton(inputId = ns("create_dictionary_table"), label = i18n()$t("MD_EDITOR_TABLE_CREATE")),
-            bs4Dash::actionButton(inputId = ns("load_dictionary_table"), label = i18n()$t("MD_EDITOR_TABLE_LOAD")),
-            bs4Dash::actionButton(inputId = ns("create_dictionary"), label = i18n()$t("MD_EDITOR_D_CREATE"))
+            bs4Dash::actionButton(inputId = ns("load_dictionary_table"), label = i18n()$t("MD_EDITOR_TABLE_LOAD"))
           )
         )
       )
@@ -1490,6 +1487,20 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
       )
     })
   
+    #meta_editor_entry_new_wrapper (for handling creation of a new entry)
+    output$meta_editor_entry_new_wrapper <- renderUI({
+      
+      req(!is.null(md_model_type()))
+      req(length(md_model())>0)
+      
+      switch(md_model_type(),
+         "contact" = bs4Dash::actionButton(inputId = ns("create_contact"), label = i18n()$t("MD_EDITOR_C_CREATE")),
+         "entity" = bs4Dash::actionButton(inputId = ns("create_entity"), label = i18n()$t("MD_EDITOR_E_CREATE")),
+         "dictionary" = bs4Dash::actionButton(inputId = ns("create_dictionary"), label = i18n()$t("MD_EDITOR_D_CREATE"))
+      )
+      
+    })
+    
     #RENDERERS
     
     #entity
