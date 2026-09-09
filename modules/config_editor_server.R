@@ -1018,16 +1018,47 @@ config_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, geo
     title = ifelse(new,i18n()$t("CFG_EDITOR_ADD"),i18n()$t("CFG_EDITOR_MODIFY"))
     i18n_key_suffix <- ifelse(new, "ADD", "MODIFY")
     form_action <- tolower(title)
-    showModal(modalDialog(title = i18n()$t(sprintf("CFG_EDITOR_METADATA_C_%s", i18n_key_suffix)),
-                          selectInput(ns("contact_form_handler"), i18n()$t("CFG_EDITOR_HANDLER"),choices=geoflow::list_contact_handlers()$id, selected = handler),
-                          textInput(ns("contact_form_source"), i18n()$t("CFG_EDITOR_SOURCE"), value = source),
-                          actionButton(ns("contact_form_cancel"), i18n()$t("CFG_EDITOR_CANCEL")),
-                          actionButton(ns(sprintf("contact_%s_go", form_action)), title, style = "float:right"),
-                          easyClose = FALSE, footer = NULL ))
+    showModal(
+      modalDialog(
+        title = i18n()$t(sprintf("CFG_EDITOR_METADATA_C_%s", i18n_key_suffix)),
+        uiOutput(ns("contact_file_selector")),
+        selectInput(ns("contact_form_handler"), i18n()$t("CFG_EDITOR_HANDLER"),choices=geoflow::list_contact_handlers()$id, selected = handler),
+        textInput(ns("contact_form_source"), i18n()$t("CFG_EDITOR_SOURCE"), value = source),
+        actionButton(ns("contact_form_cancel"), i18n()$t("CFG_EDITOR_CANCEL")),
+        actionButton(ns(sprintf("contact_%s_go", form_action)), title, style = "float:right"),
+        easyClose = FALSE, footer = NULL
+      )
+    )
   }
   observeEvent(input$contact_form_cancel, {
     removeModal()
   })
+  #contact file selector (for now limited to cloud when geoflow-shiny operates on OCS)
+  output$contact_file_selector <- renderUI({
+    if(appConfig$auth){
+      tabsetPanel(
+        id = "load_contact_file",
+        tabPanel(i18n()$t("CFG_EDITOR_MODE_CLOUD"),
+                 tagList(
+                   jsTreeR::jstreeOutput(ns("contact_load_tree_leavesonly")),
+                   hr()
+                 )
+        )
+      )
+    }else{
+      tags$div()
+    }
+  })
+  loadCloudTree(id = "contact_load_tree_leavesonly", config = appConfig, auth_api = auth_api(), 
+                mime_types = c(".csv", ".xlsx", ".xls"), leaves_only = TRUE, output = output)
+  
+  observeEvent(input$contact_load_tree_leavesonly_selected,{
+    req(length(input$contact_load_tree_leavesonly_selected)>0)
+    selected_resource = input$contact_load_tree_leavesonly_selected
+    shiny::updateSelectInput(inputId = "contact_form_handler", selected = "ocs")
+    shiny::updateTextInput(inputId = "contact_form_source", value = selected_resource[[1]]$data)
+  })
+  
   #contact/add
   observeEvent(input$add_contact,{
     showContactModal(new = TRUE)
@@ -1088,6 +1119,7 @@ config_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, geo
     i18n_key_suffix <- ifelse(new, "ADD", "MODIFY")
     form_action <- tolower(title)
     showModal(modalDialog(title = i18n()$t(sprintf("CFG_EDITOR_METADATA_E_%s", i18n_key_suffix)),
+                          uiOutput(ns("entity_file_selector")),
                           selectInput(ns("entity_form_handler"), i18n()$t("CFG_EDITOR_HANDLER"),choices=geoflow::list_entity_handlers()$id, selected = handler),
                           textInput(ns("entity_form_source"), i18n()$t("CFG_EDITOR_SOURCE"), value = source),
                           actionButton(ns("entity_form_cancel"), i18n()$t("CFG_EDITOR_CANCEL")),
@@ -1096,6 +1128,31 @@ config_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, geo
   }
   observeEvent(input$entity_form_cancel, {
     removeModal()
+  })
+  #entity file selector (for now limited to cloud when geoflow-shiny operates on OCS)
+  output$entity_file_selector <- renderUI({
+    if(appConfig$auth){
+      tabsetPanel(
+        id = "load_entity_file",
+        tabPanel(i18n()$t("CFG_EDITOR_MODE_CLOUD"),
+                 tagList(
+                   jsTreeR::jstreeOutput(ns("entity_load_tree_leavesonly")),
+                   hr()
+                 )
+        )
+      )
+    }else{
+      tags$div()
+    }
+  })
+  loadCloudTree(id = "entity_load_tree_leavesonly", config = appConfig, auth_api = auth_api(), 
+                mime_types = c(".csv", ".xlsx", ".xls"), leaves_only = TRUE, output = output)
+  
+  observeEvent(input$entity_load_tree_leavesonly_selected,{
+    req(length(input$entity_load_tree_leavesonly_selected)>0)
+    selected_resource = input$entity_load_tree_leavesonly_selected
+    shiny::updateSelectInput(inputId = "entity_form_handler", selected = "ocs")
+    shiny::updateTextInput(inputId = "entity_form_source", value = selected_resource[[1]]$data)
   })
   #entity/add
   observeEvent(input$add_entity,{
@@ -1157,6 +1214,7 @@ config_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, geo
     i18n_key_suffix <- ifelse(new, "ADD", "MODIFY")
     form_action <- tolower(title)
     showModal(modalDialog(title = i18n()$t(sprintf("CFG_EDITOR_METADATA_D_%s", i18n_key_suffix)),
+                          uiOutput(ns("dictionary_file_selector")),
                           selectInput(ns("dictionary_form_handler"), i18n()$t("CFG_EDITOR_HANDLER"),choices=geoflow::list_dictionary_handlers()$id, selected = handler),
                           textInput(ns("dictionary_form_source"), i18n()$t("CFG_EDITOR_SOURCE"), value = source),
                           actionButton(ns("dictionary_form_cancel"), i18n()$t("CFG_EDITOR_CANCEL")),
@@ -1165,6 +1223,31 @@ config_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, geo
   }
   observeEvent(input$dictionary_form_cancel,{
     removeModal()
+  })
+  #dictionary file selector (for now limited to cloud when geoflow-shiny operates on OCS)
+  output$dictionary_file_selector <- renderUI({
+    if(appConfig$auth){
+      tabsetPanel(
+        id = "load_dictionary_file",
+        tabPanel(i18n()$t("CFG_EDITOR_MODE_CLOUD"),
+                 tagList(
+                   jsTreeR::jstreeOutput(ns("dictionary_load_tree_leavesonly")),
+                   hr()
+                 )
+        )
+      )
+    }else{
+      tags$div()
+    }
+  })
+  loadCloudTree(id = "dictionary_load_tree_leavesonly", config = appConfig, auth_api = auth_api(), 
+                mime_types = c(".csv", ".xlsx", ".xls"), leaves_only = TRUE, output = output)
+  
+  observeEvent(input$dictionary_load_tree_leavesonly_selected,{
+    req(length(input$dictionary_load_tree_leavesonly_selected)>0)
+    selected_resource = input$dictionary_load_tree_leavesonly_selected
+    shiny::updateSelectInput(inputId = "dictionary_form_handler", selected = "ocs")
+    shiny::updateTextInput(inputId = "dictionary_form_source", value = selected_resource[[1]]$data)
   })
   #dictionary/add
   observeEvent(input$add_dictionary,{
