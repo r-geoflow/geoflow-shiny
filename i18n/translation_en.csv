@@ -152,6 +152,8 @@ MD_EDITOR_TABLE_LOAD,Load table
 MD_EDITOR_NOVALIDATIONISSUES,No validation issues
 MD_EDITOR_C_NEW,Create new contact
 MD_EDITOR_C_EDIT,Edit contact
+MD_EDITOR_C_FILE_LOAD_SUCCESS,Contact file successfully loaded
+MD_EDITOR_C_FILE_LOAD_ERROR,Error during contact file load
 MD_EDITOR_C,Contacts
 MD_EDITOR_C_ONE,Contact
 MD_EDITOR_C_SUBTITLE,Create contacts to attach to datasets
@@ -179,6 +181,8 @@ MD_EDITOR_C_CLOUD_UPLOAD_SUCCESS, Contacts file successfully uploaded to cloud!
 MD_EDITOR_C_CLOUD_UPLOAD_ERROR, Error while upload contacts file to cloud!
 MD_EDITOR_E_NEW,Create new entity
 MD_EDITOR_E_EDIT,Edit entity
+MD_EDITOR_E_FILE_LOAD_SUCCESS,Entity file successfully loaded
+MD_EDITOR_E_FILE_LOAD_ERROR,Error during entity file load
 MD_EDITOR_E,Entities,
 MD_EDITOR_E_SUBTITLE,Create entities to describe datasets
 MD_EDITOR_E_CREATE,Create entity
@@ -276,6 +280,8 @@ MD_EDITOR_E_WKT_VALID,Valid geometry
 MD_EDITOR_E_WKT_INVALID,Invalid geometry
 MD_EDITOR_D_NEW,Create new dictionary
 MD_EDITOR_D_EDIT,Edit dictionary
+MD_EDITOR_D_FILE_LOAD_SUCCESS,Dictionary file successfully loaded
+MD_EDITOR_D_FILE_LOAD_ERROR,Error during dictionary file load
 MD_EDITOR_D,Dictionary
 MD_EDITOR_D_FEATURETYPE,Feature type
 MD_EDITOR_D_SUBTITLE,Create a data dictionary

@@ -1973,7 +1973,8 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
       contacts = contact_handler$fun(
         handler = contact_handler,
         source = selected_resource[[1]]$data,
-        config = config
+        config = config,
+        validate = FALSE
       )
       ref_contacts(contacts)
       shiny::removeModal()
@@ -2512,21 +2513,37 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
       observeEvent(input$entities_load_tree_leavesonly_select,{
         selected_resource = input$entities_load_tree_leavesonly_selected
         
-        config = list()
-        config$profile$id = "load_ocs_entities"
-        config$software$input$ocs = auth_api()
-        config = geoflow::add_config_logger(config)
-        entity_handler = geoflow::geoflow_handler$new(yaml = system.file("metadata/entity", "entity_handler_ocs.yml", package = "geoflow"))
-        entities = entity_handler$fun(
-          handler = entity_handler,
-          source = selected_resource[[1]]$data,
-          config = config
-        )
-        md_model_type("entity")
-        md_model(entities)
-        md_model_draft_mode("edition")
-        updateSelectInput(inputId = "meta_editor_entry_selector", selected = NULL)
+        temp_filepath <- auth_api()$downloadFile(relPath = dirname(selected_resource[[1]]$data), filename = selected_resource[[1]]$text, outdir = tempdir())
         
+        #first check structure, if structure is not ok we provide an error message
+        entity_source = switch(mime::guess_type(temp_filepath),
+                                "text/csv" = readr::read_csv(temp_filepath),
+                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" = readxl::read_excel(temp_filepath),
+                                "application/vn.ms-excel" = readxl::read_excel(temp_filepath)
+        )
+        entity_validator = geoflow::geoflow_validator_entities$new(source = as.data.frame(entity_source))
+        is_structure_valid = entity_validator$validate_structure()
+        if(!is_structure_valid){
+          postMessage(msg = paste0(i18n()$t("MD_EDITOR_E_FILE_LOAD_ERROR"),": ", attr(is_structure_valid, "message")), type = "error")
+        }else{
+        
+          config = list()
+          config$profile$id = "load_ocs_entities"
+          config$software$input$ocs = auth_api()
+          config = geoflow::add_config_logger(config)
+          entity_handler = geoflow::geoflow_handler$new(yaml = system.file("metadata/entity", "entity_handler_ocs.yml", package = "geoflow"))
+          entities = entity_handler$fun(
+            handler = entity_handler,
+            source = selected_resource[[1]]$data,
+            config = config,
+            validate = FALSE
+          )
+          md_model_type("entity")
+          md_model(entities)
+          md_model_draft_mode("edition")
+          updateSelectInput(inputId = "meta_editor_entry_selector", selected = NULL)
+          postMessage(msg = i18n()$t("MD_EDITOR_E_FILE_LOAD_SUCCESS"), type = "success")
+        }
         shiny::removeModal()
 
       },ignoreInit = TRUE)
@@ -2538,24 +2555,38 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
       observeEvent(input$entities_local_file_select,{
         req(!is.null(input$entities_local_file))
         
-        config = list()
-        config$profile$id = "load_local_entities"
-        config = geoflow::add_config_logger(config)
-        entity_handler = switch(mime::guess_type(input$entities_local_file$datapath),
-                                "text/csv" = geoflow::geoflow_handler$new(yaml = system.file("metadata/entity", "entity_handler_csv.yml", package = "geoflow")),
-                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" = geoflow::geoflow_handler$new(yaml = system.file("metadata/entity", "entity_handler_excel.yml", package = "geoflow")),
-                                "application/vn.ms-excel" = geoflow::geoflow_handler$new(yaml = system.file("metadata/entity", "entity_handler_excel.yml", package = "geoflow"))
+        #first check structure, if structure is not ok we provide an error message
+        entity_source = switch(mime::guess_type(input$entities_local_file$datapath),
+                               "text/csv" = readr::read_csv(input$entities_local_file$datapath),
+                               "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" = readxl::read_excel(input$entities_local_file$datapath),
+                               "application/vn.ms-excel" = readxl::read_excel(input$entities_local_file$datapath)
         )
-        entities = entity_handler$fun(
-          handler = entity_handler,
-          source = input$entities_local_file$datapath,
-          config = config
-        )
-        md_model_type("entity")
-        md_model(entities)
-        md_model_draft_mode("edition")#triggers twice the render model
-        updateSelectInput(inputId = "meta_editor_entry_selector", selected = NULL)
-        
+        entity_validator = geoflow::geoflow_validator_entities$new(source = as.data.frame(entity_source))
+        is_structure_valid = entity_validator$validate_structure()
+        if(!is_structure_valid){
+          postMessage(msg = paste0(i18n()$t("MD_EDITOR_E_FILE_LOAD_ERROR"),": ", attr(is_structure_valid, "message")), type = "error")
+        }else{
+          config = list()
+          config$profile$id = "load_local_entities"
+          config = geoflow::add_config_logger(config)
+          config$software$input$ocs = auth_api()
+          entity_handler = switch(mime::guess_type(input$entities_local_file$datapath),
+                                  "text/csv" = geoflow::geoflow_handler$new(yaml = system.file("metadata/entity", "entity_handler_csv.yml", package = "geoflow")),
+                                  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" = geoflow::geoflow_handler$new(yaml = system.file("metadata/entity", "entity_handler_excel.yml", package = "geoflow")),
+                                  "application/vn.ms-excel" = geoflow::geoflow_handler$new(yaml = system.file("metadata/entity", "entity_handler_excel.yml", package = "geoflow"))
+          )
+          entities = entity_handler$fun(
+            handler = entity_handler,
+            source = input$entities_local_file$datapath,
+            config = config,
+            validate = FALSE
+          )
+          md_model_type("entity")
+          md_model(entities)
+          md_model_draft_mode("edition")#triggers twice the render model
+          updateSelectInput(inputId = "meta_editor_entry_selector", selected = NULL)
+          postMessage(msg = i18n()$t("MD_EDITOR_E_FILE_LOAD_SUCCESS"), type = "success")
+        }
         shiny::removeModal()
       }, ignoreInit = TRUE)
       
@@ -2736,21 +2767,35 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
       observeEvent(input$contacts_load_tree_leavesonly_select,{
         selected_resource = input$contacts_load_tree_leavesonly_selected
         
-        config = list()
-        config$profile$id = "load_ocs_contacts"
-        config$software$input$ocs = auth_api()
-        config = geoflow::add_config_logger(config)
-        contact_handler = geoflow::geoflow_handler$new(yaml = system.file("metadata/contact", "contact_handler_ocs.yml", package = "geoflow"))
-        contacts = contact_handler$fun(
-          handler = contact_handler,
-          source = selected_resource[[1]]$data,
-          config = config
-        )
-        md_model_type("contact")
-        md_model(contacts)
-        md_model_draft_mode("edition")#triggers twice the render model
-        updateSelectInput(inputId = "meta_editor_entry_selector", selected = NULL)
+        temp_filepath <- auth_api()$downloadFile(relPath = dirname(selected_resource[[1]]$data), filename = selected_resource[[1]]$text, outdir = tempdir())
         
+        #first check structure, if structure is not ok we provide an error message
+        contact_source = switch(mime::guess_type(temp_filepath),
+                                "text/csv" = readr::read_csv(temp_filepath),
+                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" = readxl::read_excel(temp_filepath),
+                                "application/vn.ms-excel" = readxl::read_excel(temp_filepath)
+        )
+        contact_validator = geoflow::geoflow_validator_contacts$new(source = as.data.frame(contact_source))
+        is_structure_valid = contact_validator$validate_structure()
+        if(!is_structure_valid){
+          postMessage(msg = paste0(i18n()$t("MD_EDITOR_C_FILE_LOAD_ERROR"),": ", attr(is_structure_valid, "message")), type = "error")
+        }else{
+          config = list()
+          config$profile$id = "load_ocs_contacts"
+          config$software$input$ocs = auth_api()
+          config = geoflow::add_config_logger(config)
+          contact_handler = geoflow::geoflow_handler$new(yaml = system.file("metadata/contact", "contact_handler_ocs.yml", package = "geoflow"))
+          contacts = contact_handler$fun(
+            handler = contact_handler,
+            source = selected_resource[[1]]$data,
+            config = config
+          )
+          md_model_type("contact")
+          md_model(contacts)
+          md_model_draft_mode("edition")#triggers twice the render model
+          updateSelectInput(inputId = "meta_editor_entry_selector", selected = NULL)
+          postMessage(msg = i18n()$t("MD_EDITOR_C_FILE_LOAD_SUCCESS"), type = "success")
+        }
         shiny::removeModal()
         
       },ignoreInit = TRUE)
@@ -2760,23 +2805,38 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
       observeEvent(input$contacts_local_file_select,{
         req(!is.null(input$contacts_local_file))
         
-        config = list()
-        config$profile$id = "load_local_contacts"
-        config = geoflow::add_config_logger(config)
-        contact_handler = switch(mime::guess_type(input$contacts_local_file$datapath),
-                                 "text/csv" = geoflow::geoflow_handler$new(yaml = system.file("metadata/contact", "contact_handler_csv.yml", package = "geoflow")),
-                                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" = geoflow::geoflow_handler$new(yaml = system.file("metadata/contact", "contact_handler_excel.yml", package = "geoflow")),
-                                 "application/vn.ms-excel" = geoflow::geoflow_handler$new(yaml = system.file("metadata/contact", "contact_handler_excel.yml", package = "geoflow"))
+        #first check structure, if structure is not ok we provide an error message
+        contact_source = switch(mime::guess_type(input$contacts_local_file$datapath),
+                               "text/csv" = readr::read_csv(input$contacts_local_file$datapath),
+                               "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" = readxl::read_excel(input$contacts_local_file$datapath),
+                               "application/vn.ms-excel" = readxl::read_excel(input$contacts_local_file$datapath)
         )
-        contacts = contact_handler$fun(
-          handler = contact_handler,
-          source = input$contacts_local_file$datapath,
-          config = config
-        )
-        md_model_type("contact")
-        md_model(contacts)
-        md_model_draft_mode("edition")#triggers twice the render model
-        updateSelectInput(inputId = "meta_editor_entry_selector", selected = NULL)
+        contact_validator = geoflow::geoflow_validator_contacts$new(source = as.data.frame(contact_source))
+        is_structure_valid = contact_validator$validate_structure()
+        if(!is_structure_valid){
+          postMessage(msg = paste0(i18n()$t("MD_EDITOR_C_FILE_LOAD_ERROR"),": ", attr(is_structure_valid, "message")), type = "error")
+        }else{
+          config = list()
+          config$profile$id = "load_local_contacts"
+          config = geoflow::add_config_logger(config)
+          config$software$input$ocs = auth_api()
+          contact_handler = switch(mime::guess_type(input$contacts_local_file$datapath),
+                                   "text/csv" = geoflow::geoflow_handler$new(yaml = system.file("metadata/contact", "contact_handler_csv.yml", package = "geoflow")),
+                                   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" = geoflow::geoflow_handler$new(yaml = system.file("metadata/contact", "contact_handler_excel.yml", package = "geoflow")),
+                                   "application/vn.ms-excel" = geoflow::geoflow_handler$new(yaml = system.file("metadata/contact", "contact_handler_excel.yml", package = "geoflow"))
+          )
+          contacts = contact_handler$fun(
+            handler = contact_handler,
+            source = input$contacts_local_file$datapath,
+            config = config,
+            validate = FALSE
+          )
+          md_model_type("contact")
+          md_model(contacts)
+          md_model_draft_mode("edition")#triggers twice the render model
+          updateSelectInput(inputId = "meta_editor_entry_selector", selected = NULL)
+          postMessage(msg = i18n()$t("MD_EDITOR_C_FILE_LOAD_SUCCESS"), type = "success")
+        }
         
         shiny::removeModal()
         
@@ -2951,21 +3011,36 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
       observeEvent(input$featuretypes_load_tree_leavesonly_select,{
         selected_resource = input$featuretypes_load_tree_leavesonly_selected
         
-        config = list()
-        config$profile$id = "load_ocs_featuretypes"
-        config$software$input$ocs = auth_api()
-        config = geoflow::add_config_logger(config)
-        dictionary_handler = geoflow::geoflow_handler$new(yaml = system.file("metadata/dictionary", "dictionary_handler_ocs.yml", package = "geoflow"))
-        dict = dictionary_handler$fun(
-          handler = dictionary_handler,
-          source = selected_resource[[1]]$data,
-          config = config
-        )
-        md_model_type("featuretype")
-        md_model(dict$featuretypes)
-        md_model_draft_mode("edition")#triggers twice the render model
-        updateSelectInput(inputId = "meta_editor_entry_selector", selected = NULL)
+        temp_filepath <- auth_api()$downloadFile(relPath = dirname(selected_resource[[1]]$data), filename = selected_resource[[1]]$text, outdir = tempdir())
         
+        #first check structure, if structure is not ok we provide an error message
+        featuretypes_source = switch(mime::guess_type(temp_filepath),
+                               "text/csv" = readr::read_csv(temp_filepath),
+                               "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" = readxl::read_excel(temp_filepath),
+                               "application/vn.ms-excel" = readxl::read_excel(temp_filepath)
+        )
+        featuretypes_validator = geoflow::geoflow_validator_dictionary$new(source = as.data.frame(featuretypes_source))
+        is_structure_valid = featuretypes_validator$validate_structure()
+        if(!is_structure_valid){
+          postMessage(msg = paste0(i18n()$t("MD_EDITOR_E_FILE_LOAD_ERROR"),": ", attr(is_structure_valid, "message")), type = "error")
+        }else{
+          config = list()
+          config$profile$id = "load_ocs_featuretypes"
+          config$software$input$ocs = auth_api()
+          config = geoflow::add_config_logger(config)
+          dictionary_handler = geoflow::geoflow_handler$new(yaml = system.file("metadata/dictionary", "dictionary_handler_ocs.yml", package = "geoflow"))
+          dict = dictionary_handler$fun(
+            handler = dictionary_handler,
+            source = selected_resource[[1]]$data,
+            config = config,
+            validate = FALSE
+          )
+          md_model_type("featuretype")
+          md_model(dict$featuretypes)
+          md_model_draft_mode("edition")#triggers twice the render model
+          updateSelectInput(inputId = "meta_editor_entry_selector", selected = NULL)
+          postMessage(msg = i18n()$t("MD_EDITOR_D_FILE_LOAD_SUCCESS"), type = "success")
+        }
         shiny::removeModal()
   
       }, ignoreInit = TRUE)
@@ -2975,24 +3050,38 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
       observeEvent(input$featuretypes_local_file_select,{
         req(!is.null(input$featuretypes_local_file))
         
-        config = list()
-        config$profile$id = "load_local_featuretypes"
-        config = geoflow::add_config_logger(config)
-        dictionary_handler = switch(mime::guess_type(input$featuretypes_local_file$datapath),
-                                    "text/csv" = geoflow::geoflow_handler$new(yaml = system.file("metadata/dictionary", "dictionary_handler_csv.yml", package = "geoflow")),
-                                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" = geoflow::geoflow_handler$new(yaml = system.file("metadata/dictionary", "dictionary_handler_excel.yml", package = "geoflow")),
-                                    "application/vn.ms-excel" = geoflow::geoflow_handler$new(yaml = system.file("metadata/dictionary", "dictionary_handler_excel.yml", package = "geoflow"))
+        #first check structure, if structure is not ok we provide an error message
+        featuretypes_source = switch(mime::guess_type(input$featuretypes_local_file$datapath),
+                               "text/csv" = readr::read_csv(input$featuretypes_local_file$datapath),
+                               "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" = readxl::read_excel(input$featuretypes_local_file$datapath),
+                               "application/vn.ms-excel" = readxl::read_excel(input$featuretypes_local_file$datapath)
         )
-        dict = dictionary_handler$fun(
-          handler = dictionary_handler,
-          source = input$featuretypes_local_file$datapath,
-          config = config
-        )
-        md_model_type("featuretype")
-        md_model(dict$featuretypes)
-        md_model_draft_mode("edition")#triggers twice the render model
-        updateSelectInput(inputId = "meta_editor_entry_selector", selected = NULL)
+        featuretypes_validator = geoflow::geoflow_validator_dictionary$new(source = as.data.frame(featuretypes_source))
+        is_structure_valid = featuretypes_validator$validate_structure()
+        if(!is_structure_valid){
+          postMessage(msg = paste0(i18n()$t("MD_EDITOR_D_FILE_LOAD_ERROR"),": ", attr(is_structure_valid, "message")), type = "error")
+        }else{
         
+          config = list()
+          config$profile$id = "load_local_featuretypes"
+          config = geoflow::add_config_logger(config)
+          dictionary_handler = switch(mime::guess_type(input$featuretypes_local_file$datapath),
+                                      "text/csv" = geoflow::geoflow_handler$new(yaml = system.file("metadata/dictionary", "dictionary_handler_csv.yml", package = "geoflow")),
+                                      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" = geoflow::geoflow_handler$new(yaml = system.file("metadata/dictionary", "dictionary_handler_excel.yml", package = "geoflow")),
+                                      "application/vn.ms-excel" = geoflow::geoflow_handler$new(yaml = system.file("metadata/dictionary", "dictionary_handler_excel.yml", package = "geoflow"))
+          )
+          dict = dictionary_handler$fun(
+            handler = dictionary_handler,
+            source = input$featuretypes_local_file$datapath,
+            config = config,
+            validate = FALSE
+          )
+          md_model_type("featuretype")
+          md_model(dict$featuretypes)
+          md_model_draft_mode("edition")#triggers twice the render model
+          updateSelectInput(inputId = "meta_editor_entry_selector", selected = NULL)
+          postMessage(msg = i18n()$t("MD_EDITOR_D_FILE_LOAD_SUCCESS"), type = "success")
+        }
         shiny::removeModal()
         
       }, ignoreInit = TRUE)

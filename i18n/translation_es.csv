@@ -152,6 +152,8 @@ MD_EDITOR_TABLE_LOAD,Cargar tabla
 MD_EDITOR_NOVALIDATIONISSUES,Sin problemas de validación
 MD_EDITOR_C_NEW,Crear nuevo contacto
 MD_EDITOR_C_EDIT,Editar contacto
+MD_EDITOR_C_FILE_LOAD_SUCCESS,Archivo de contactos cargado con éxito
+MD_EDITOR_C_FILE_LOAD_ERROR,Error al cargar el archivo de contactos
 MD_EDITOR_C,Contactos
 MD_EDITOR_C_ONE,Contacto
 MD_EDITOR_C_SUBTITLE,Crear contactos para asociar a los conjuntos de datos
@@ -179,6 +181,8 @@ MD_EDITOR_C_CLOUD_UPLOAD_SUCCESS,¡Archivo de contactos subido correctamente a l
 MD_EDITOR_C_CLOUD_UPLOAD_ERROR,¡Error al subir el archivo de contactos!
 MD_EDITOR_E_NEW,Crear nueva entidad
 MD_EDITOR_E_EDIT,Editar entidad
+MD_EDITOR_E_FILE_LOAD_SUCCESS,Archivo de entitades cargado con éxito
+MD_EDITOR_E_FILE_LOAD_ERROR,Error al cargar el archivo de entidades
 MD_EDITOR_E,Entidades
 MD_EDITOR_E_SUBTITLE,Crear entidades para describir los conjuntos de datos
 MD_EDITOR_E_CREATE,Crear entidad
@@ -276,6 +280,8 @@ MD_EDITOR_E_WKT_VALID,Geometría válida
 MD_EDITOR_E_WKT_INVALID,Geometría inválida
 MD_EDITOR_D_NEW,Crear nuevo diccionario
 MD_EDITOR_D_EDIT,Editar diccionario
+MD_EDITOR_D_FILE_LOAD_SUCCESS,Archivo de diccionario cargado con éxito
+MD_EDITOR_D_FILE_LOAD_ERROR,Error al cargar el archivo de diccionario
 MD_EDITOR_D,Diccionario
 MD_EDITOR_D_FEATURETYPE,Tipo de entidad
 MD_EDITOR_D_SUBTITLE,Crear un diccionario de datos

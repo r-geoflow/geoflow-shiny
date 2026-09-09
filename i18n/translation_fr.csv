@@ -179,6 +179,8 @@ MD_EDITOR_C_CLOUD_UPLOAD_SUCCESS,Fichier de contacts téléversé avec succès d
 MD_EDITOR_C_CLOUD_UPLOAD_ERROR,Erreur lors du téléversement du fichier de contacts !
 MD_EDITOR_E_NEW,Créer une nouvelle entité
 MD_EDITOR_E_EDIT,Modifier l’entité
+MD_EDITOR_E_FILE_LOAD_SUCCESS,Fichier d'entités chargé avec succès
+MD_EDITOR_E_FILE_LOAD_ERROR,Erreur de chargement du fichier d'entités
 MD_EDITOR_E,Entités
 MD_EDITOR_E_SUBTITLE,Créer des entités pour décrire les jeux de données
 MD_EDITOR_E_CREATE,Créer une entité
@@ -276,6 +278,8 @@ MD_EDITOR_E_WKT_VALID,Géométrie valide
 MD_EDITOR_E_WKT_INVALID,Géométrie invalide
 MD_EDITOR_D_NEW,Créer un nouveau dictionnaire
 MD_EDITOR_D_EDIT,Modifier le dictionnaire
+MD_EDITOR_D_FILE_LOAD_SUCCESS,Fichier de dictionnaire chargé avec succès
+MD_EDITOR_D_FILE_LOAD_ERROR,Erreur de chargement du fichier de dictionnaire
 MD_EDITOR_D,Dictionnaire
 MD_EDITOR_D_FEATURETYPE,Type d'entité
 MD_EDITOR_D_SUBTITLE,Créer un dictionnaire de données

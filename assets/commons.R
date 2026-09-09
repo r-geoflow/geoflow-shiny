@@ -68,6 +68,9 @@ updateModuleUrl <- function(session, module, ...){
 
 #postMessage
 postMessage = function(msg, type = c("success","warning","error")){
+  shinyjs::runjs("
+    $('.toast').remove();
+  ")
   type = match.arg(type)
   bs4Dash::toast(
     title = stringr::str_to_title(type),
