@@ -946,11 +946,19 @@ config_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, geo
       colnames(data) <- c(i18n()$t("CFG_EDITOR_HANDLER"), i18n()$t("CFG_EDITOR_SOURCE"))
       if(validate) if(nrow(data)>0){
         data <- do.call("rbind", lapply(1:nrow(data), function(i){
+          
+            button_title = i18n()$t("CFG_EDITOR_METADATA_VALIDATION_CHECK")
+            disable_validation = FALSE
+            if(data[i, i18n()$t("CFG_EDITOR_HANDLER")] == "ocs" & is.null(ctrl_config()$software$input$ocs)){
+              button_title = i18n()$t("CFG_EDITOR_METADATA_VALIDATION_CHECK_DISABLED")
+              disable_validation = TRUE
+            }
+          
             out_tib <- tibble::tibble(
               Handler = data[i, i18n()$t("CFG_EDITOR_HANDLER")],
               Source = data[i, i18n()$t("CFG_EDITOR_SOURCE")],
-              Actions = as(actionButton(inputId = ns(paste0('button_validate_',type,'_', uuids[i])), class="btn btn-info", style = "margin-right: 2px;",
-                             title = i18n()$t("CFG_EDITOR_METADATA_VALIDATION_CHECK"), label = "", icon = icon("tasks")),"character")
+              Actions = as(shiny::actionButton(inputId = ns(paste0('button_validate_',type,'_', uuids[i])), class="btn btn-info", style = "margin-right: 2px;",
+                             title = button_title, label = "", icon = icon("tasks"), disabled = disable_validation),"character")
             )
             return(out_tib)
           }
@@ -1006,9 +1014,9 @@ config_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, geo
   
   #render tables
   observe({
-    renderMetadataTable(ctrl_metadata$contacts, "contacts", TRUE)
-    renderMetadataTable(ctrl_metadata$entities, "entities", TRUE)
-    renderMetadataTable(ctrl_metadata$dictionary, "dictionary", FALSE)
+    renderMetadataTable(data = ctrl_metadata$contacts, type = "contacts", validate = TRUE)
+    renderMetadataTable(data = ctrl_metadata$entities, type = "entities", validate = TRUE)
+    renderMetadataTable(data = ctrl_metadata$dictionary, type = "dictionary", validate = FALSE)
   })
   
   #contacts

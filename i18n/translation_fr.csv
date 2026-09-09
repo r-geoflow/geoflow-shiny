@@ -57,7 +57,8 @@ CFG_EDITOR_METADATA_VALIDATION_ROW,Ligne
 CFG_EDITOR_METADATA_VALIDATION_REPORT,Rapport de validation des métadonnées (%s)
 CFG_EDITOR_METADATA_VALIDATION_SMARTVIEW,Vue intelligente
 CFG_EDITOR_METADATA_VALIDATION_RAWVIEW,Vue brute
-CFG_EDITOR_METADATA_VALIDATION_CHECK,Vérifier les métadonnées
+CFG_EDITOR_METADATA_VALIDATION_CHECK,Vérifier la validité des métadonnées
+CFG_EDITOR_METADATA_VALIDATION_CHECK_DISABLED,Validation des métadonnées désactivée! Configurez un logiciel OCS pour activer la validation des métadonées
 CFG_EDITOR_METADATA_VALIDATION_OK,Aucun problème de validation détecté !
 CFG_EDITOR_SOFTWARE,Logiciel
 CFG_EDITOR_SOFTWARE_ADD,Ajouter un logiciel
