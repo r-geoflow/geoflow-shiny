@@ -855,9 +855,9 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
     }
     
     #update_metadata_form
-    update_metadata_form = function(){
-      model = md_model_draft()
-      switch(md_model_type(),
+    update_metadata_form = function(model_type, model, contacts, bbox){
+
+      switch(model_type,
              "contact" = {
                updateTextInput(session, inputId = "contact_org", value = model$organizationName)
                updateTextInput(session, inputId = "contact_firstname", value = model$firstName)
@@ -874,10 +874,13 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
                updateTextInput(session, inputId = "contact_websitename", value = model$websiteName)
              },
              "entity" = {
+               print("DEBUG entity language")
+               print(model$language)
+                updateSelectInput(session, inputId = "entity_language", selected = model$language)
                #re-fill the select input for entity contacts
-               updateSelectInput(session, inputId = "entity_contact", choices = get_contact_names(ref_contacts()))
+               updateSelectInput(session, inputId = "entity_contact", choices = get_contact_names(contacts))
                #re-fill SpatialCoverage WKT
-               shinyWidgets::updateTextInputIcon(session, inputId = "entity_wkt", value = md_model_bbox())
+               shinyWidgets::updateTextInputIcon(session, inputId = "entity_wkt", value = bbox)
                #re-fill map widget (TODO --> doesn't work)
                # bbox_polygon <- try(sf::st_as_sfc(md_model_bbox(), crs = input$entity_srid), silent = TRUE) # Convert WKT to sfc object
                # print(bbox_polygon)
@@ -910,34 +913,41 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
                # }
                # 
                #re-fill provenance statement
-               updateTextInput(session, inputId = "entity_prov_statement", value = md_model_draft()$provenance$statement)
+               print("DEBUG Provenance")
+               print(model$provenance)
+               if(!is.null(model$provenance)){
+                 updateTextInput(session, inputId = "entity_prov_statement", value = model$provenance$statement)
+               }
                
                #re-fill data
                #data access & information
-               updateSelectInput(session, inputId = "entity_data_access", selected = md_model_draft()$data$access)
-               if(!is.null(md_model_draft()$data$dir)){
-                 updateSelectInput(session, inputId = "entity_data_type", selected = "dir")
-                 updateTextInput(session, inputId = "entity_data_dir", value = md_model_draft()$data$dir)
-               }else{
-                 updateSelectInput(session, inputId = "entity_data_type", selected = "source")
+               if(!is.null(model$data)){
+                 print("DEBUG Data provenance")
+                 print(model$data$dir)
+                 updateSelectInput(session, inputId = "entity_data_access", selected = model$data$access)
+                 if(!is.null(model$data$dir)){
+                    updateSelectInput(session, inputId = "entity_data_type", selected = "dir")
+                    updateTextInput(session, inputId = "entity_data_dir", value = model$data$dir)
+                 }else{
+                   updateSelectInput(session, inputId = "entity_data_type", selected = "source")
+                 }
+                 updateSelectInput(session, inputId = "entity_data_sourcetype", selected = model$data$sourceType)
+                 updateTextAreaInput(session, inputId = "entity_data_sourcesql", value = model$data$sourceSql)
+                 #data characteristics
+                 updateSelectInput(session, inputId = "entity_data_spatialrepresentationtype", selected = model$data$spatialRepresentationType)
+                 updateTextInput(session, inputId = "entity_data_featuretype", value = model$data$featureType)
+                 #data upload
+                 updateSelectInput(session, inputId = "entity_data_upload", selected = model$data$upload)
+                 updateSelectInput(session, inputId = "entity_data_uploadtype", selected = model$data$uploadType)
+                 if(length(model$data$uploadSource)>0) updateTextInput(session, inputId = "entity_data_uploadsource", value = model$data$uploadSource[[1]])
+                 #data upload - geoserver
+                 updateTextAreaInput(session, inputId = "entity_data_sql", value = model$data$sql)
+                 updateTextInput(session, inputId = "entity_data_geometry_field", value = model$data$geometryField)
+                 updateSelectInput(session, inputId = "entity_data_geometry_type", selected = model$data$geometryType)
                }
-               updateSelectInput(session, inputId = "entity_data_sourcetype", selected = md_model_draft()$data$sourceType)
-               updateTextAreaInput(session, inputId = "entity_data_sourcesql", value = md_model_draft()$data$sourceSql)
-               #data characteristics
-               updateSelectInput(session, inputId = "entity_data_spatialrepresentationtype", selected = md_model_draft()$data$spatialRepresentationType)
-               updateTextInput(session, inputId = "entity_data_featuretype", value = md_model_draft()$data$featureType)
-               #data upload
-               updateSelectInput(session, inputId = "entity_data_upload", selected = md_model_draft()$data$upload)
-               updateSelectInput(session, inputId = "entity_data_uploadtype", selected = md_model_draft()$data$uploadType)
-               if(length(md_model_draft()$data$uploadSource)>0) updateTextInput(session, inputId = "entity_data_uploadsource", value = md_model_draft()$data$uploadSource[[1]])
-               #data upload - geoserver
-               updateTextAreaInput(session, inputId = "entity_data_sql", value = md_model_draft()$data$sql)
-               updateTextInput(session, inputId = "entity_data_geometry_field", value = md_model_draft()$data$geometryField)
-               updateSelectInput(session, inputId = "entity_data_geometry_type", selected = md_model_draft()$data$geometryType)
-               
              },
              "featuretype" = {
-               updateTextInput(session, inputId = "featuretype_identifier", value = md_model_draft()$id)
+               updateTextInput(session, inputId = "featuretype_identifier", value = model$id)
              }
       )
     }
@@ -1016,6 +1026,8 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
       )
       
       #perform validation
+      print("DEBUG model before validation")
+      print(md_model_draft()$asDataFrame())
       meta_validator = switch(type,
                               "contact" = geoflow_validator_contacts$new(source = md_model_draft()$asDataFrame()),
                               "entity" = geoflow_validator_entities$new(source = md_model_draft()$asDataFrame())
@@ -1799,7 +1811,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
       )
     })
     output$entity_data_type_source_ui <- renderUI({
-      req(input$entity_data_type == "source")
+     #req(input$entity_data_type == "source")
      tagList(
         fluidRow(
           column(4,textInput(ns("entity_data_source_name"), i18n()$t("MD_EDITOR_E_DATA_SOURCE_NAME"),value = NULL, width = NULL)),
@@ -1813,7 +1825,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
       )
     })
     output$entity_data_type_dir_ui <- renderUI({
-      req(input$entity_data_type == "dir")
+      #req(input$entity_data_type == "dir")
       fluidRow(
         column(12,textInput(ns("entity_data_dir"), i18n()$t("MD_EDITOR_E_DATA_SOURCE_DIRECTORY"),value = "", width = NULL)),
       )
@@ -2365,10 +2377,9 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
       },
       ignoreInit = TRUE
     )
-    #TODO main event to update inputs (those needed, some textInputs eg. processes statement, selectInputs, eg. contacts)
+
     observeEvent(md_model_draft_mode(),{
       WARN("Observing change on the model draft mode (creation -> edition, or edition -> creation)")
-      update_metadata_form()
     }, ignoreInit = TRUE)
     
     #core - check_metadata
@@ -2444,8 +2455,15 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
           md_model_bbox(geom_wkt)
         }
       }
-      
-      update_metadata_form()
+      print("DEBUG From observer on entity selector!!!")
+      # Force a delay, THEN update
+      model_type = md_model_type()
+      model = md_model_draft()
+      contacts = ref_contacts()
+      bbox = md_model_bbox()
+      later::later(function() {
+        update_metadata_form(model_type, model, contacts, bbox)
+      }, delay = 0.5)
     })
     
     #entities
