@@ -311,3 +311,4 @@ MD_EDITOR_LOAD_CONTACTS,Charger la liste des contacts
 MD_EDITOR_LOAD_ENTITIES,Charger la liste des entités
 MD_EDITOR_LOAD_DICTIONARY,Charger le dictionnaire
 MD_EDITOR_DANGER,Danger
+GEOFLOW_VALIDATION_ERROR,"Erreur de validation inattendue avec geoflow, veuillez contacter le responsable de geoflow"

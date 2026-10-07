@@ -313,3 +313,4 @@ MD_EDITOR_LOAD_CONTACTS, Load list of contacts
 MD_EDITOR_LOAD_ENTITIES, Load list of entities
 MD_EDITOR_LOAD_DICTIONARY, Load dictionary
 MD_EDITOR_DANGER,Danger
+GEOFLOW_VALIDATION_ERROR,"Unexpected validation error with geoflow, please contact geoflow maintainer"

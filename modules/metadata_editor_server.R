@@ -541,7 +541,18 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
                     ))
                   ),
                   hr(),
-                  uiOutput(ns("entity_data_type_entry")),
+                  fluidRow(
+                    column(4,textInput(ns("entity_data_source_name"), i18n()$t("MD_EDITOR_E_DATA_SOURCE_NAME"),value = NULL, width = NULL)),
+                    column(6,textInput(ns("entity_data_source_uri"), i18n()$t("MD_EDITOR_E_DATA_SOURCE_URL"),value = NULL, width = NULL)),
+                    column(1,
+                           actionButton(ns("entity_data_source_button_add"), title=i18n()$t("MD_EDITOR_E_DATA_SOURCE_ADD"),size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;")
+                    )
+                  ),
+                  hr(),
+                  uiOutput(ns("entity_data_sources_table_wrapper")),
+                  fluidRow(
+                    column(12,textInput(ns("entity_data_dir"), i18n()$t("MD_EDITOR_E_DATA_SOURCE_DIRECTORY"),value = "", width = NULL)),
+                  ),
                   hr(),
                   fluidRow(
                     column(12, textAreaInput(
@@ -855,7 +866,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
     }
     
     #update_metadata_form
-    update_metadata_form = function(model_type, model, contacts, bbox){
+    update_metadata_form = function(session, model_type, model, contacts, bbox){
 
       switch(model_type,
              "contact" = {
@@ -1033,23 +1044,27 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
                               "entity" = geoflow_validator_entities$new(source = md_model_draft()$asDataFrame())
       )
       if(!is.null(meta_validator) & validate){
-        qa_errors = meta_validator$validate_content()
+        qa_errors = try(meta_validator$validate_content(), silent = TRUE)
         print(qa_errors)
         valid = FALSE
-        if(nrow(qa_errors)==0){
-          INFO(paste0("No validation errors with the ", type,". Saving data to geoflow pivot model"))
-          valid = TRUE
-        }else{
-          if(nrow(qa_errors[qa_errors$type == "ERROR",]>0)){
-            ERROR(paste0("Validation errors with the ", type,". Aborting saving the data to geoflow pivot model"))
-            valid = FALSE
-          }else{
-            WARN(paste0("Validation warnings with the ", type,". Saving data to geoflow pivot model"))
+        if(!is(qa_errors, "try-error")){
+          if(nrow(qa_errors)==0){
+            INFO(paste0("No validation errors with the ", type,". Saving data to geoflow pivot model"))
             valid = TRUE
+          }else{
+            if(nrow(qa_errors[qa_errors$type == "ERROR",]>0)){
+              ERROR(paste0("Validation errors with the ", type,". Aborting saving the data to geoflow pivot model"))
+              valid = FALSE
+            }else{
+              WARN(paste0("Validation warnings with the ", type,". Saving data to geoflow pivot model"))
+              valid = TRUE
+            }
           }
+          md_model_draft_validation_report(qa_errors)
+        }else{
+          postMessage(msg = i18n()$t("GEOFLOW_VALIDATION_ERROR"), type = "error")
         }
         md_model_draft_valid(valid)
-        md_model_draft_validation_report(qa_errors)
       }else{
         md_model_draft_valid(TRUE)
         md_model_draft_validation_report(
@@ -1194,6 +1209,11 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
           model[[field]][[object_field]] <- list()
         }
         if(length(model[[field]][[object_field]])==0) model[[field]][[object_field]] = list()
+      }
+      if(!is.null(object_field)){
+        print("DEBUG")
+        print(object_field)
+        print(model[[field]][[object_field]])
       }
       check_model(type = md_model_type(), model = model, validate = FALSE)
     }
@@ -1803,33 +1823,6 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
         btn_remove_id = ns("entity_prov_process_button_remove")
       )
     })
-    #entity -> Data
-    output$entity_data_type_entry <- renderUI({
-      tagList(
-        uiOutput(ns("entity_data_type_source_ui")),
-        uiOutput(ns("entity_data_type_dir_ui"))
-      )
-    })
-    output$entity_data_type_source_ui <- renderUI({
-     #req(input$entity_data_type == "source")
-     tagList(
-        fluidRow(
-          column(4,textInput(ns("entity_data_source_name"), i18n()$t("MD_EDITOR_E_DATA_SOURCE_NAME"),value = NULL, width = NULL)),
-          column(6,textInput(ns("entity_data_source_uri"), i18n()$t("MD_EDITOR_E_DATA_SOURCE_URL"),value = NULL, width = NULL)),
-          column(1,
-                 actionButton(ns("entity_data_source_button_add"), title=i18n()$t("MD_EDITOR_E_DATA_SOURCE_ADD"),size="sm",label="",icon=icon("plus"),class = "btn-success", style = "margin-top:35px;")
-          )
-        ),
-        hr(),
-        uiOutput(ns("entity_data_sources_table_wrapper"))
-      )
-    })
-    output$entity_data_type_dir_ui <- renderUI({
-      #req(input$entity_data_type == "dir")
-      fluidRow(
-        column(12,textInput(ns("entity_data_dir"), i18n()$t("MD_EDITOR_E_DATA_SOURCE_DIRECTORY"),value = "", width = NULL)),
-      )
-    })
     
     output$entity_data_sources_table <- DT::renderDT(server = FALSE, {
       render_field_elements_table(
@@ -2273,11 +2266,17 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
     #events entity -> Data
     observeEvent(input$entity_data_type,{
       if(input$entity_data_type == "dir"){
-        shinyjs::hide(id = "entity_data_uploadsource")
-        shinyjs::hide(id = "entity_data_layer_identification")
+        shinyjs::disable(id = "entity_data_source_name")
+        shinyjs::disable(id = "entity_data_source_uri")
+        shinyjs::enable(id = "entity_data_dir")
+        shinyjs::disable(id = "entity_data_uploadsource")
+        shinyjs::disable(id = "entity_data_layer_identification")
       }else{
-        shinyjs::show(id = "entity_data_uploadsource")
-        shinyjs::show(id = "entity_data_layer_identification")
+        shinyjs::enable(id = "entity_data_source_name")
+        shinyjs::enable(id = "entity_data_source_uri")
+        shinyjs::disable(id = "entity_data_dir")
+        shinyjs::enable(id = "entity_data_uploadsource")
+        shinyjs::enable(id = "entity_data_layer_identification")
       }
     })
     observeEvent(input$entity_data_source_button_add,{
@@ -2461,8 +2460,25 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
       model = md_model_draft()
       contacts = ref_contacts()
       bbox = md_model_bbox()
+      
+      if(model_type == "entity" && !is.null(model$data)){
+        if(!is.null(model$data$dir)){
+          shinyjs::disable(id = "entity_data_source_name")
+          shinyjs::disable(id = "entity_data_source_uri")
+          shinyjs::enable(id = "entity_data_dir")
+          shinyjs::disable(id = "entity_data_uploadsource")
+          shinyjs::disable(id = "entity_data_layer_identification")
+        }else{
+          shinyjs::enable(id = "entity_data_source_name")
+          shinyjs::enable(id = "entity_data_source_uri")
+          shinyjs::disable(id = "entity_data_dir")
+          shinyjs::enable(id = "entity_data_uploadsource")
+          shinyjs::enable(id = "entity_data_layer_identification")
+        }
+      }
+      
       later::later(function() {
-        update_metadata_form(model_type, model, contacts, bbox)
+        update_metadata_form(session, model_type, model, contacts, bbox)
       }, delay = 0.5)
     })
     
