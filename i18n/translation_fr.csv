@@ -156,6 +156,7 @@ MD_EDITOR_C,Contacts
 MD_EDITOR_C_ONE,Contact
 MD_EDITOR_C_SUBTITLE,Créer des contacts à associer aux jeux de données
 MD_EDITOR_C_CREATE,Créer un contact
+MD_EDITOR_C_DISCARD,Supprimer le brouillon de contact
 MD_EDITOR_C_IDENTIFIERS,Identifiant(s)
 MD_EDITOR_C_IDENTIFIER,Identifiant
 MD_EDITOR_C_IDENTIFIER_ADD,Ajouter un identifiant
@@ -184,6 +185,7 @@ MD_EDITOR_E_FILE_LOAD_ERROR,Erreur de chargement du fichier d'entités
 MD_EDITOR_E,Entités
 MD_EDITOR_E_SUBTITLE,Créer des entités pour décrire les jeux de données
 MD_EDITOR_E_CREATE,Créer une entité
+MD_EDITOR_E_DISCARD,Supprimer le brouillon d'entité
 MD_EDITOR_E_IDENTIFIERS,Identifiant(s)
 MD_EDITOR_E_IDENTIFIER,Identifiant
 MD_EDITOR_E_IDENTIFIER_ADD,Ajouter un identifiant
@@ -284,6 +286,7 @@ MD_EDITOR_D,Dictionnaire
 MD_EDITOR_D_FEATURETYPE,Type d'entité
 MD_EDITOR_D_SUBTITLE,Créer un dictionnaire de données
 MD_EDITOR_D_CREATE,Créer un dictionnaire
+MD_EDITOR_D_DISCARD,Supprimer le brouillon de dictionnaire
 MD_EDITOR_D_MEMBERS,Membres
 MD_EDITOR_D_ATTRIBUTE,Attribut
 MD_EDITOR_D_VARIABLE,Variable

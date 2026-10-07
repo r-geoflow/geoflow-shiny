@@ -158,6 +158,7 @@ MD_EDITOR_C,Contactos
 MD_EDITOR_C_ONE,Contacto
 MD_EDITOR_C_SUBTITLE,Crear contactos para asociar a los conjuntos de datos
 MD_EDITOR_C_CREATE,Crear contacto
+MD_EDITOR_C_DISCARD,Desechar el borrador de contacto
 MD_EDITOR_C_IDENTIFIERS,Identificador(es)
 MD_EDITOR_C_IDENTIFIER,Identificador
 MD_EDITOR_C_IDENTIFIER_ADD,Añadir identificador
@@ -186,6 +187,7 @@ MD_EDITOR_E_FILE_LOAD_ERROR,Error al cargar el archivo de entidades
 MD_EDITOR_E,Entidades
 MD_EDITOR_E_SUBTITLE,Crear entidades para describir los conjuntos de datos
 MD_EDITOR_E_CREATE,Crear entidad
+MD_EDITOR_E_DISCARD,Desechar el borrador de entidad
 MD_EDITOR_E_IDENTIFIERS,Identificador(es)
 MD_EDITOR_E_IDENTIFIER,Identificador
 MD_EDITOR_E_IDENTIFIER_ADD,Añadir identificador
@@ -286,6 +288,7 @@ MD_EDITOR_D,Diccionario
 MD_EDITOR_D_FEATURETYPE,Tipo de entidad
 MD_EDITOR_D_SUBTITLE,Crear un diccionario de datos
 MD_EDITOR_D_CREATE,Crear diccionario
+MD_EDITOR_D_DISCARD,Desechar el borrador de diccionario
 MD_EDITOR_D_MEMBERS,Miembros
 MD_EDITOR_D_ATTRIBUTE,Atributo
 MD_EDITOR_D_VARIABLE,Variable

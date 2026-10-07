@@ -158,6 +158,7 @@ MD_EDITOR_C,Contacts
 MD_EDITOR_C_ONE,Contact
 MD_EDITOR_C_SUBTITLE,Create contacts to attach to datasets
 MD_EDITOR_C_CREATE,Create contact
+MD_EDITOR_C_DISCARD,Discard draft contact
 MD_EDITOR_C_IDENTIFIERS,Identifier(s)
 MD_EDITOR_C_IDENTIFIER,Identifier
 MD_EDITOR_C_IDENTIFIER_ADD,Add identifier
@@ -186,6 +187,7 @@ MD_EDITOR_E_FILE_LOAD_ERROR,Error during entity file load
 MD_EDITOR_E,Entities,
 MD_EDITOR_E_SUBTITLE,Create entities to describe datasets
 MD_EDITOR_E_CREATE,Create entity
+MD_EDITOR_E_DISCARD,Discard draft entity
 MD_EDITOR_E_IDENTIFIERS,Identifier(s)
 MD_EDITOR_E_IDENTIFIER,Identifier
 MD_EDITOR_E_IDENTIFIER_ADD,Add identifier
@@ -286,6 +288,7 @@ MD_EDITOR_D,Dictionary
 MD_EDITOR_D_FEATURETYPE,Feature type
 MD_EDITOR_D_SUBTITLE,Create a data dictionary
 MD_EDITOR_D_CREATE,Create dictionary
+MD_EDITOR_D_DISCARD,Discard draft dictionary
 MD_EDITOR_D_MEMBERS,Members
 MD_EDITOR_D_ATTRIBUTE,Attribute
 MD_EDITOR_D_VARIABLE,Variable

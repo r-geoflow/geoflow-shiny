@@ -963,6 +963,64 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
       )
     }
     
+    #update_metadata_form_wrapper
+    update_metadata_form_wrapper <- function(session){
+      has_entry = sapply(md_model(), function(x){ 
+        if(md_model_type() %in% c("contact","entity")){
+          input$meta_editor_entry_selector %in% c(x$identifiers,"?") 
+        }else{
+          input$meta_editor_entry_selector %in% c(x$id,"?") 
+        }
+      })
+      selected_entry = md_model()[has_entry][[1]]
+      md_model_draft_idx(which(has_entry))
+      entry = selected_entry$clone(deep = TRUE)
+      md_model_draft(entry)
+      
+      if(is(entry, "geoflow_entity")){
+        #spatial information
+        bbox = entry$spatial_bbox
+        if(!is.null(bbox)){
+          geom = sf::st_polygon(list(
+            rbind(
+              c(bbox$xmin, bbox$ymin),
+              c(bbox$xmin, bbox$ymax),
+              c(bbox$xmax, bbox$ymax),
+              c(bbox$xmax, bbox$ymin),
+              c(bbox$xmin, bbox$ymin))
+          ))
+          geom_wkt = sf::st_as_text(geom)
+          md_model_bbox(geom_wkt)
+        }
+      }
+      print("DEBUG From observer on entity selector!!!")
+      # Force a delay, THEN update
+      model_type = md_model_type()
+      model = md_model_draft()
+      contacts = ref_contacts()
+      bbox = md_model_bbox()
+      
+      if(model_type == "entity" && !is.null(model$data)){
+        if(!is.null(model$data$dir)){
+          shinyjs::disable(id = "entity_data_source_name")
+          shinyjs::disable(id = "entity_data_source_uri")
+          shinyjs::enable(id = "entity_data_dir")
+          shinyjs::disable(id = "entity_data_uploadsource")
+          shinyjs::disable(id = "entity_data_layer_identification")
+        }else{
+          shinyjs::enable(id = "entity_data_source_name")
+          shinyjs::enable(id = "entity_data_source_uri")
+          shinyjs::disable(id = "entity_data_dir")
+          shinyjs::enable(id = "entity_data_uploadsource")
+          shinyjs::enable(id = "entity_data_layer_identification")
+        }
+      }
+      
+      later::later(function() {
+        update_metadata_form(session, model_type, model, contacts, bbox)
+      }, delay = 0.5)
+    }
+    
     #check_model
     check_model = function(type, model, validate = TRUE){
       INFO(sprintf("Check %s validity", type))
@@ -1526,9 +1584,24 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
       req(length(md_model())>0)
       
       switch(md_model_type(),
-         "contact" = bs4Dash::actionButton(inputId = ns("create_contact"), label = i18n()$t("MD_EDITOR_C_CREATE")),
+         "contact" = bs4Dash::actionButton(inputId = ns("create_contact"), label = i18n()$t("MD_EDITOR_C_CREATE_")),
          "entity" = bs4Dash::actionButton(inputId = ns("create_entity"), label = i18n()$t("MD_EDITOR_E_CREATE")),
          "dictionary" = bs4Dash::actionButton(inputId = ns("create_dictionary"), label = i18n()$t("MD_EDITOR_D_CREATE"))
+      )
+      
+    })
+    
+    #meta_editor_entry_new_discard_wrapper (for discarding of a new entry)
+    output$meta_editor_entry_new_discard_wrapper <- renderUI({
+      
+      req(!is.null(md_model_type()))
+      req(length(md_model())>0)
+      req(md_model_draft_idx() > length(md_model())) #means that we have a draft model pending that has not been saved in md_model()
+      
+      switch(md_model_type(),
+             "contact" = bs4Dash::actionButton(inputId = ns("discard_contact"), icon = icon("trash"), label = "", title = i18n()$t("MD_EDITOR_C_DISCARD")),
+             "entity" = bs4Dash::actionButton(inputId = ns("discard_entity"), icon = icon("trash"), label = "", title = i18n()$t("MD_EDITOR_E_DISCARD")),
+             "dictionary" = bs4Dash::actionButton(inputId = ns("discard_dictionary"), icon = icon("trash"), label = "", title = i18n()$t("MD_EDITOR_D_DISCARD"))
       )
       
     })
@@ -2426,60 +2499,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
     
     #core - select entry (meta_editor_entry_selector)
     observeEvent(input$meta_editor_entry_selector,{
-      has_entry = sapply(md_model(), function(x){ 
-        if(md_model_type() %in% c("contact","entity")){
-          input$meta_editor_entry_selector %in% c(x$identifiers,"?") 
-        }else{
-          input$meta_editor_entry_selector %in% c(x$id,"?") 
-        }
-      })
-      selected_entry = md_model()[has_entry][[1]]
-      md_model_draft_idx(which(has_entry))
-      entry = selected_entry$clone(deep = TRUE)
-      md_model_draft(entry)
-      
-      if(is(entry, "geoflow_entity")){
-        #spatial information
-        bbox = entry$spatial_bbox
-        if(!is.null(bbox)){
-          geom = sf::st_polygon(list(
-            rbind(
-              c(bbox$xmin, bbox$ymin),
-              c(bbox$xmin, bbox$ymax),
-              c(bbox$xmax, bbox$ymax),
-              c(bbox$xmax, bbox$ymin),
-              c(bbox$xmin, bbox$ymin))
-          ))
-          geom_wkt = sf::st_as_text(geom)
-          md_model_bbox(geom_wkt)
-        }
-      }
-      print("DEBUG From observer on entity selector!!!")
-      # Force a delay, THEN update
-      model_type = md_model_type()
-      model = md_model_draft()
-      contacts = ref_contacts()
-      bbox = md_model_bbox()
-      
-      if(model_type == "entity" && !is.null(model$data)){
-        if(!is.null(model$data$dir)){
-          shinyjs::disable(id = "entity_data_source_name")
-          shinyjs::disable(id = "entity_data_source_uri")
-          shinyjs::enable(id = "entity_data_dir")
-          shinyjs::disable(id = "entity_data_uploadsource")
-          shinyjs::disable(id = "entity_data_layer_identification")
-        }else{
-          shinyjs::enable(id = "entity_data_source_name")
-          shinyjs::enable(id = "entity_data_source_uri")
-          shinyjs::disable(id = "entity_data_dir")
-          shinyjs::enable(id = "entity_data_uploadsource")
-          shinyjs::enable(id = "entity_data_layer_identification")
-        }
-      }
-      
-      later::later(function() {
-        update_metadata_form(session, model_type, model, contacts, bbox)
-      }, delay = 0.5)
+      update_metadata_form_wrapper(session)
     })
     
     #entities
@@ -2639,6 +2659,16 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
       md_model_draft_mode("creation")
       md_model_draft_valid(NULL)
       md_model_draft_validation_report(NULL)
+      md_model_subject_selection(NULL)
+      md_model_subject_draft(geoflow_subject$new())
+      md_model_bbox(NULL)
+      shinyjs::disable(id = "create_entity")
+    })
+    #discard_entity
+    observeEvent(input$discard_entity,{
+      INFO("Discarding current draft entity")
+      update_metadata_form_wrapper(session)
+      shinyjs::enable(id = "create_entity")
     })
     #entity download CSV
     output$download_entity_table_csv <- downloadHandler(
@@ -2888,6 +2918,13 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
       md_model_draft_mode("creation")
       md_model_draft_valid(NULL)
       md_model_draft_validation_report(NULL)
+      shinyjs::disable(id = "create_contact")
+    })
+    #discard_contact
+    observeEvent(input$discard_contact,{
+      INFO("Discarding current draft contact")
+      update_metadata_form_wrapper(session)
+      shinyjs::enable(id = "create_contact")
     })
     #contacts download CSV
     output$download_contact_table_csv <- downloadHandler(
@@ -3130,6 +3167,13 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
       md_model_draft(ft)
       md_model_draft_idx(length(md_model())+1)
       md_model_draft_mode("creation")
+      shinyjs::disable(id = "create_dictionary")
+    })
+    #discard dictionary
+    observeEvent(input$discard_dictionary,{
+      INFO("Discarding current draft dictionary")
+      update_metadata_form_wrapper(session)
+      shinyjs::enable(id = "create_dictionary")
     })
     #dictionary download CSV
     output$download_featuretype_table_csv <- downloadHandler(
