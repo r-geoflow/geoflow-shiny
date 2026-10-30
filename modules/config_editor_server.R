@@ -1654,7 +1654,7 @@ config_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, geo
                     html += '<ul>';
                     for(var i=0;i<options.length;i++){
                       var option = options[i]
-                      html += '<li><b>'+option+'</b>: '+json.options[option] + '</li>';
+                      html += '<li><b>'+option+'</b>: '+ JSON.stringify(json.options[option]) + '</li>';
                     }
                      html += '</ul>';
                     html += '</div>';
@@ -1682,7 +1682,7 @@ config_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, geo
     title = ifelse(new,i18n()$t("CFG_EDITOR_ADD"),i18n()$t("CFG_EDITOR_MODIFY"))
     i18n_key_suffix <- ifelse(new, "ADD", "MODIFY")
     form_action <- tolower(title)
-    showModal(modalDialog(title = i18n()$t(sprintf("CFG_EDITOR_SOFTWARE_%s", i18n_key_suffix)),
+    showModal(modalDialog(title = i18n()$t(sprintf("CFG_EDITOR_ACTION_%s", i18n_key_suffix)),
                           selectInput(ns("action_form_id"), paste0(i18n()$t("CFG_EDITOR_ACTION_IDENTIFIER"),":"),choices=geoflow::list_actions()$id, selected = action$id),
                           selectInput(ns("action_form_run"), paste0(i18n()$t("CFG_EDITOR_ACTION_RUN"),":"),choices=c(TRUE,FALSE), selected = action$run),
                           uiOutput(ns("action_form_details")),
@@ -1738,7 +1738,7 @@ config_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, geo
                 selectizeInput(
                   inputId = ns(sprintf("action_form_options_%s", name)),
                   label = act_option$def, selected = if(!is.null(action$options[[name]])) unlist(action$options[[name]]) else unlist(act_option$default),
-                  choices = act_option$choices, multiple = multiple,
+                  choices = if(!multiple) act_option$choices else { if(!is.null(action$options[[name]])) unlist(action$options[[name]]) else unlist(act_option$default) }, multiple = multiple,
                   options = list(create = add_choices)
                 ) 
               }else{
