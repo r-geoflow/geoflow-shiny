@@ -1584,7 +1584,7 @@ metadata_editor_server<- function(id, auth_info = NULL, auth_api = NULL, i18n, g
       req(length(md_model())>0)
       
       switch(md_model_type(),
-         "contact" = bs4Dash::actionButton(inputId = ns("create_contact"), label = i18n()$t("MD_EDITOR_C_CREATE_")),
+         "contact" = bs4Dash::actionButton(inputId = ns("create_contact"), label = i18n()$t("MD_EDITOR_C_CREATE")),
          "entity" = bs4Dash::actionButton(inputId = ns("create_entity"), label = i18n()$t("MD_EDITOR_E_CREATE")),
          "dictionary" = bs4Dash::actionButton(inputId = ns("create_dictionary"), label = i18n()$t("MD_EDITOR_D_CREATE"))
       )
